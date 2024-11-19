@@ -5,11 +5,11 @@ export default function LoginPage() {
     <form
       action={async (formData) => {
         "use server";
-        await signIn("resend", formData);
+        await signIn("forwardemail", formData);
       }}
     >
       <input type="text" name="email" placeholder="Email" />
-      <button type="submit">Signin with Resend</button>
+      <button type="submit">Sign in</button>
     </form>
   );
 }

@@ -1,23 +1,21 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
-  BookOpen,
   Bot,
   Command,
   Frame,
+  Gift,
   LifeBuoy,
-  Map,
   PieChart,
   Send,
   Settings2,
-  SquareTerminal,
-} from "lucide-react"
+} from "lucide-react";
 
-import { NavMain } from "@/components/nav-main"
-import { NavProjects } from "@/components/nav-projects"
-import { NavSecondary } from "@/components/nav-secondary"
-import { NavUser } from "@/components/nav-user"
+import { NavMain } from "@/components/nav-main";
+import { NavProjects } from "@/components/nav-projects";
+import { NavSecondary } from "@/components/nav-secondary";
+import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -26,73 +24,46 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
+import Link from "next/link";
 
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+    name: "Jakob",
+    email: "jakobstaudal@outlook.com",
   },
   navMain: [
     {
-      title: "Playground",
+      title: "Wishlists",
       url: "#",
-      icon: SquareTerminal,
+      icon: Gift,
       isActive: true,
       items: [
         {
-          title: "History",
+          title: "All wishlists",
           url: "#",
         },
         {
-          title: "Starred",
+          title: "Favorites",
           url: "#",
         },
         {
-          title: "Settings",
+          title: "Shared",
           url: "#",
         },
       ],
     },
     {
-      title: "Models",
+      title: "Inspiration",
       url: "#",
       icon: Bot,
       items: [
         {
-          title: "Genesis",
+          title: "Trending",
           url: "#",
         },
         {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Documentation",
-      url: "#",
-      icon: BookOpen,
-      items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
+          title: "Generator",
           url: "#",
         },
       ],
@@ -107,15 +78,11 @@ const data = {
           url: "#",
         },
         {
-          title: "Team",
+          title: "Account",
           url: "#",
         },
         {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
+          title: "Notifications",
           url: "#",
         },
       ],
@@ -124,33 +91,28 @@ const data = {
   navSecondary: [
     {
       title: "Support",
-      url: "#",
+      url: "mailto:jakob@saveyourwish.com?subject=Question concerning SaveYourWish",
       icon: LifeBuoy,
     },
     {
       title: "Feedback",
-      url: "#",
+      url: "mailto:jakob@saveyourwish.com?subject=Feedback concerning SaveYourWish",
       icon: Send,
     },
   ],
   projects: [
     {
-      name: "Design Engineering",
+      name: "Birthday 2024",
       url: "#",
       icon: Frame,
     },
     {
-      name: "Sales & Marketing",
+      name: "Christmas 2024",
       url: "#",
       icon: PieChart,
     },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
-    },
   ],
-}
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -159,15 +121,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="#">
+              <Link href="/dashboard">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <Command className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Acme Inc</span>
-                  <span className="truncate text-xs">Enterprise</span>
+                  <span className="truncate font-semibold">saveyourwish</span>
+                  <span className="truncate text-xs">Home</span>
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -181,5 +143,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavUser user={data.user} />
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }
