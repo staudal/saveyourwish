@@ -2,7 +2,6 @@
 
 import { BadgeCheck, Bell, ChevronsUpDown, LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -29,7 +28,6 @@ export function NavUser({
   };
 }) {
   const { isMobile } = useSidebar();
-  const router = useRouter();
 
   const handleLogout = async () => {
     try {
