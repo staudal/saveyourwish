@@ -1,16 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  Bot,
-  Command,
-  Frame,
-  Gift,
-  LifeBuoy,
-  PieChart,
-  Send,
-  Settings2,
-} from "lucide-react";
+import { Bot, Command, Gift, LifeBuoy, Send, Settings2 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
 import { NavFavorites } from "@/components/nav-favorites";
