@@ -24,7 +24,7 @@ export function CreateWishlistDialog() {
         <DialogHeader>
           <DialogTitle>New wishlist</DialogTitle>
           <DialogDescription>
-            Name your wishlist and choose a category if you'd like.
+            Name your wishlist and choose a category if you&apos;d like.
           </DialogDescription>
         </DialogHeader>
         <CreateWishlistForm onSuccess={() => setOpen(false)} />
