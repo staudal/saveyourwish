@@ -1,14 +1,14 @@
-export default function WishlistsPage() {
+import { CreateWishlistDialog } from "@/components/dialogs/create-wishlist-dialog";
+import WishlistsTable from "@/components/tables/wishlists-table";
+import { getWishlists } from "@/actions/wishlist";
+
+export default async function WishlistsPage() {
+  const wishlists = await getWishlists();
+
   return (
-    <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-      <li className="mb-2">
-        Get started by editing{" "}
-        <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-          app/page.tsx
-        </code>
-        .
-      </li>
-      <li>Save and see your changes instantly.</li>
-    </ol>
+    <div>
+      <CreateWishlistDialog />
+      <WishlistsTable wishlists={wishlists} />
+    </div>
   );
 }

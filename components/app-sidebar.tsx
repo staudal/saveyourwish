@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
-import { NavProjects } from "@/components/nav-projects";
+import { NavFavorites } from "@/components/nav-favorites";
 import { NavSecondary } from "@/components/nav-secondary";
 import { NavUser } from "@/components/nav-user";
 import {
@@ -27,26 +27,27 @@ import {
 } from "@/components/ui/sidebar";
 import Link from "next/link";
 import { User } from "next-auth";
+import { getFavoriteWishlists } from "@/actions/wishlist";
 
 const data = {
   navMain: [
     {
       title: "Wishlists",
-      url: "#",
+      url: "/dashboard/wishlists",
       icon: Gift,
       isActive: true,
       items: [
         {
           title: "All wishlists",
-          url: "#",
+          url: "/dashboard/wishlists",
         },
         {
           title: "Favorites",
-          url: "#",
+          url: "/dashboard/wishlists/favorites",
         },
         {
           title: "Shared",
-          url: "#",
+          url: "/dashboard/wishlists/shared",
         },
       ],
     },
@@ -97,26 +98,16 @@ const data = {
       icon: Send,
     },
   ],
-  projects: [
-    {
-      name: "Birthday 2024",
-      url: "#",
-      icon: Frame,
-    },
-    {
-      name: "Christmas 2024",
-      url: "#",
-      icon: PieChart,
-    },
-  ],
 };
 
 interface Props {
   user: User;
+  favorites: Awaited<ReturnType<typeof getFavoriteWishlists>>;
 }
 
 export function AppSidebar({
   user,
+  favorites,
   ...props
 }: Props & React.ComponentProps<typeof Sidebar>) {
   return (
@@ -140,7 +131,14 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
+        <NavFavorites
+          favorites={(favorites ?? []).map((favorite) => ({
+            name: favorite.title,
+            url: `/dashboard/wishlists/${favorite.id}`,
+            icon: Gift,
+            id: favorite.id,
+          }))}
+        />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>

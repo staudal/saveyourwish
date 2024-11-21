@@ -88,3 +88,15 @@ export const authenticators = pgTable(
     }),
   })
 );
+
+export const wishlists = pgTable("wishlist", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  title: text("title").notNull(),
+  category: text("category").notNull(),
+  userId: text("userId")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  favorite: boolean("favorite").notNull().default(false),
+});

@@ -1,12 +1,5 @@
 import { AppSidebar } from "@/components/app-sidebar";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+import { DynamicBreadcrumb } from "@/components/dynamic-breadcrumbs";
 import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
@@ -14,6 +7,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { auth } from "@/lib/auth";
+import { getFavoriteWishlists } from "@/actions/wishlist";
 import { redirect } from "next/navigation";
 
 export default async function DashboardLayout({
@@ -27,30 +21,21 @@ export default async function DashboardLayout({
     return redirect("/login?redirect=dashboard");
   }
 
+  const favorites = await getFavoriteWishlists();
+
   return (
     <SidebarProvider>
-      <AppSidebar user={session.user} />
+      <AppSidebar user={session.user} favorites={favorites} />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
-                    Building Your Application
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Data Fetching</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
+            <DynamicBreadcrumb />
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</div>
+        <Separator orientation="horizontal" />
+        <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );

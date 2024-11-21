@@ -73,7 +73,7 @@ export default async function LoginPage() {
   };
 
   return (
-    <div className="flex h-screen w-full items-center justify-center px-4">
+    <div className="flex h-screen w-full items-center justify-center px-4 bg-sidebar">
       <Card className="mx-auto max-w-sm">
         <CardHeader>
           <CardTitle className="text-2xl">Login</CardTitle>
