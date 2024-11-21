@@ -19,13 +19,13 @@ import { redirect } from "next/navigation";
 export default async function Page() {
   const session = await auth();
 
-  if (!session) {
+  if (!session || !session.user) {
     return redirect("/login?redirect=dashboard");
   }
 
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar user={session.user} />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2">
           <div className="flex items-center gap-2 px-4">

@@ -2,7 +2,7 @@
 
 import { BadgeCheck, Bell, ChevronsUpDown, LogOut } from "lucide-react";
 import { signOut } from "next-auth/react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,15 +18,9 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { User } from "next-auth";
 
-export function NavUser({
-  user,
-}: {
-  user: {
-    name: string;
-    email: string;
-  };
-}) {
+export function NavUser({ user }: { user: User }) {
   const { isMobile } = useSidebar();
 
   const handleLogout = async () => {
@@ -47,13 +41,16 @@ export function NavUser({
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg">
+                {user.image && <AvatarImage src={user.image} />}
                 <AvatarFallback className="rounded-lg">
-                  {user.name.charAt(0)}
-                  {user.name.charAt(1)}
+                  {user.email?.charAt(0).toUpperCase()}
+                  {user.email?.charAt(1).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{user.name}</span>
+                {user.name && (
+                  <span className="truncate font-semibold">{user.name}</span>
+                )}
                 <span className="truncate text-xs">{user.email}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
@@ -68,13 +65,16 @@ export function NavUser({
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
+                  {user.image && <AvatarImage src={user.image} />}
                   <AvatarFallback className="rounded-lg">
-                    {user.name.charAt(0)}
-                    {user.name.charAt(1)}
+                    {user.email?.charAt(0).toUpperCase()}
+                    {user.email?.charAt(1).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{user.name}</span>
+                  {user.name && (
+                    <span className="truncate font-semibold">{user.name}</span>
+                  )}
                   <span className="truncate text-xs">{user.email}</span>
                 </div>
               </div>

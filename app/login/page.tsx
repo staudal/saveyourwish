@@ -10,7 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { auth, signIn } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { z } from "zod"; // Import Zod
+import { z } from "zod";
+import Google from "@/public/google.png";
+import Image from "next/image";
 
 // Define the schema using Zod
 const emailSchema = z.object({
@@ -29,7 +31,7 @@ export default async function LoginPage() {
   }
 
   // Handle form submission on the server side
-  const handleLogin = async (formData: FormData) => {
+  const handleLoginWithEmail = async (formData: FormData) => {
     "use server";
 
     // Extract the email from form data
@@ -56,18 +58,36 @@ export default async function LoginPage() {
     redirect(redirectUrl);
   };
 
+  const handleLoginWithGoogle = async (formData: FormData) => {
+    "use server";
+
+    // If the email is valid, proceed with sign-in
+    await signIn("google");
+
+    // Get the "redirect" query parameter (if any)
+    const searchParams = new URLSearchParams(window.location.search);
+    const redirectUrl = searchParams.get("redirect") || "/dashboard";
+
+    // Redirect after login
+    redirect(redirectUrl);
+  };
+
   return (
-    <form method="POST" action={handleLogin}>
-      <div className="flex h-screen w-full items-center justify-center px-4">
-        <Card className="mx-auto max-w-sm">
-          <CardHeader>
-            <CardTitle className="text-2xl">Login</CardTitle>
-            <CardDescription>
-              Enter your email below to login to your account
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4">
+    <div className="flex h-screen w-full items-center justify-center px-4">
+      <Card className="mx-auto max-w-sm">
+        <CardHeader>
+          <CardTitle className="text-2xl">Login</CardTitle>
+          <CardDescription>
+            Enter your email below to login to your account
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4">
+            <form
+              method="POST"
+              action={handleLoginWithEmail}
+              className="grid gap-4"
+            >
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -81,10 +101,20 @@ export default async function LoginPage() {
               <Button type="submit" className="w-full">
                 Login
               </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </form>
+            </form>
+            <form
+              method="POST"
+              action={handleLoginWithGoogle}
+              className="grid gap-4"
+            >
+              <Button type="submit" className="w-full" variant={"outline"}>
+                <Image height={20} src={Google} alt="Google logo" /> Login with
+                Google
+              </Button>
+            </form>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
