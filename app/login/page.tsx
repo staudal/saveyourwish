@@ -58,7 +58,7 @@ export default async function LoginPage() {
     redirect(redirectUrl);
   };
 
-  const handleLoginWithGoogle = async (formData: FormData) => {
+  const handleLoginWithGoogle = async () => {
     "use server";
 
     // If the email is valid, proceed with sign-in
