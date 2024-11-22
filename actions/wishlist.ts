@@ -30,35 +30,45 @@ export async function createWishlist(title: string, category: string) {
 }
 
 export async function deleteWishlist(id: string) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
+  try {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error("Unauthorized");
 
-  await db
-    .delete(wishlists)
-    .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)));
+    await db
+      .delete(wishlists)
+      .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)));
 
-  revalidatePath("/wishlists");
+    revalidatePath("/wishlists");
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "Failed to delete wishlist" };
+  }
 }
 
 export async function toggleWishlistFavorite(id: string) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
+  try {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error("Unauthorized");
 
-  const wishlist = await db
-    .select()
-    .from(wishlists)
-    .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)))
-    .then((rows) => rows[0]);
+    const wishlist = await db
+      .select()
+      .from(wishlists)
+      .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)))
+      .then((rows) => rows[0]);
 
-  if (!wishlist) throw new Error("Wishlist not found");
+    if (!wishlist) throw new Error("Wishlist not found");
 
-  await db
-    .update(wishlists)
-    .set({ favorite: !wishlist.favorite })
-    .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)));
+    await db
+      .update(wishlists)
+      .set({ favorite: !wishlist.favorite })
+      .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)));
 
-  revalidatePath("/wishlists");
-  revalidatePath("/dashboard");
+    revalidatePath("/wishlists");
+    revalidatePath("/dashboard");
+    return { success: true, isFavorite: !wishlist.favorite };
+  } catch (error) {
+    return { success: false, error: "Failed to update favorite status" };
+  }
 }
 
 export async function getFavoriteWishlists() {

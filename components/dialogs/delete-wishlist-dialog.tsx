@@ -13,6 +13,7 @@ import {
 import { deleteWishlist } from "@/actions/wishlist";
 import { useRouter } from "next/navigation";
 import React from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface DeleteWishlistDialogProps {
   id: string;
@@ -26,11 +27,24 @@ export function DeleteWishlistDialog({
   onOpenChange,
 }: DeleteWishlistDialogProps) {
   const router = useRouter();
+  const { toast } = useToast();
 
   async function handleDelete() {
-    await deleteWishlist(id);
-    router.refresh();
-    onOpenChange(false);
+    const result = await deleteWishlist(id);
+    if (result.success) {
+      toast({
+        title: "Wishlist deleted",
+        description: "Your wishlist has been successfully deleted.",
+      });
+      router.refresh();
+      onOpenChange(false);
+    } else {
+      toast({
+        title: "Error",
+        description: result.error,
+        variant: "destructive",
+      });
+    }
   }
 
   return (

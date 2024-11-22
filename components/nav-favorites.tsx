@@ -25,6 +25,8 @@ import {
 } from "@/components/ui/sidebar";
 import React from "react";
 import { toggleWishlistFavorite } from "@/actions/wishlist";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 export function NavFavorites({
   favorites,
@@ -37,6 +39,25 @@ export function NavFavorites({
   }[];
 }) {
   const { isMobile } = useSidebar();
+  const { toast } = useToast();
+  const router = useRouter();
+
+  const handleUnfavorite = async (id: string) => {
+    const result = await toggleWishlistFavorite(id);
+    if (result.success) {
+      toast({
+        title: "Removed from favorites",
+        description: "Wishlist removed from favorites",
+      });
+      router.refresh();
+    } else {
+      toast({
+        title: "Error",
+        description: result.error,
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
@@ -74,9 +95,7 @@ export function NavFavorites({
                     <span>Share</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => toggleWishlistFavorite(item.id)}
-                  >
+                  <DropdownMenuItem onClick={() => handleUnfavorite(item.id)}>
                     <Star className="text-muted-foreground" />
                     <span>Unfavorite</span>
                   </DropdownMenuItem>

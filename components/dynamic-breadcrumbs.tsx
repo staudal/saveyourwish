@@ -9,43 +9,38 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { usePathname } from "next/navigation";
+import React from "react";
 
 export function DynamicBreadcrumb() {
-  const pathname = usePathname(); // Get current path
+  const pathname = usePathname();
   const segments = pathname
     .split("/")
-    .filter((segment) => segment && segment !== "dashboard"); // Exclude "dashboard"
+    .filter((segment) => segment && segment !== "dashboard");
 
   return (
     <Breadcrumb>
       <BreadcrumbList>
-        {segments.map((segment, index) => {
-          const isLast = index === segments.length - 1;
-          const url = "/" + segments.slice(0, index + 1).join("/");
-
-          return (
-            <BreadcrumbItem key={url}>
-              {isLast ? (
+        {segments.map((segment, index) => (
+          <React.Fragment key={segment}>
+            <BreadcrumbItem>
+              {index === segments.length - 1 ? (
                 <BreadcrumbPage>{formatSegment(segment)}</BreadcrumbPage>
               ) : (
-                <>
-                  <BreadcrumbLink href={url}>
-                    {formatSegment(segment)}
-                  </BreadcrumbLink>
-                  <BreadcrumbSeparator />
-                </>
+                <BreadcrumbLink
+                  href={"/dashboard/" + segments.slice(0, index + 1).join("/")}
+                >
+                  {formatSegment(segment)}
+                </BreadcrumbLink>
               )}
             </BreadcrumbItem>
-          );
-        })}
+            {index < segments.length - 1 && <BreadcrumbSeparator />}
+          </React.Fragment>
+        ))}
       </BreadcrumbList>
     </Breadcrumb>
   );
 }
 
-// Helper function to format the breadcrumb text
 function formatSegment(segment: string) {
-  return segment
-    .replace(/-/g, " ") // Replace hyphens with spaces
-    .replace(/^\w/, (c) => c.toUpperCase()); // Capitalize first letter
+  return segment.replace(/-/g, " ").replace(/^\w/, (c) => c.toUpperCase());
 }
