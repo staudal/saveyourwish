@@ -8,6 +8,7 @@ import {
   timestamp,
   primaryKey,
   boolean,
+  real,
 } from "drizzle-orm/pg-core";
 
 export const db = drizzle(neon(process.env.DATABASE_URL!));
@@ -99,4 +100,19 @@ export const wishlists = pgTable("wishlist", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   favorite: boolean("favorite").notNull().default(false),
+});
+
+export const wishes = pgTable("wish", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  title: text("title").notNull(),
+  price: real("price"),
+  imageUrl: text("imageUrl"),
+  destinationUrl: text("destinationUrl"),
+  description: text("description"),
+  quantity: integer("quantity").notNull().default(1),
+  wishlistId: text("wishlistId")
+    .notNull()
+    .references(() => wishlists.id, { onDelete: "cascade" }),
 });

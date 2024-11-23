@@ -1,0 +1,1 @@
+ALTER TABLE "wish" ALTER COLUMN "price" SET DATA TYPE real;

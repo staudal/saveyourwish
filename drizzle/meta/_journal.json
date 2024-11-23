@@ -15,6 +15,20 @@
       "when": 1732177858682,
       "tag": "0001_eager_chat",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1732340972018,
+      "tag": "0002_jazzy_triathlon",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1732342169555,
+      "tag": "0003_tense_quicksilver",
+      "breakpoints": true
     }
   ]
 }

@@ -1,19 +1,32 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { wishlists } from "@/lib/db";
+import { wishlists, wishes } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 
 export async function getWishlists() {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
   return await db
-    .select()
+    .select({
+      id: wishlists.id,
+      title: wishlists.title,
+      category: wishlists.category,
+      favorite: wishlists.favorite,
+      wishCount: sql<number>`count(${wishes.id})::integer`,
+    })
     .from(wishlists)
-    .where(eq(wishlists.userId, session.user.id));
+    .leftJoin(wishes, eq(wishes.wishlistId, wishlists.id))
+    .where(eq(wishlists.userId, session.user.id))
+    .groupBy(
+      wishlists.id,
+      wishlists.title,
+      wishlists.category,
+      wishlists.favorite
+    );
 }
 
 export async function createWishlist(title: string, category: string) {
@@ -81,4 +94,20 @@ export async function getFavoriteWishlists() {
     .where(
       and(eq(wishlists.userId, session.user.id), eq(wishlists.favorite, true))
     );
+}
+
+export async function getWishlist(id: string) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  return await db
+    .select({
+      id: wishlists.id,
+      title: wishlists.title,
+      category: wishlists.category,
+      favorite: wishlists.favorite,
+    })
+    .from(wishlists)
+    .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)))
+    .then((rows) => rows[0]);
 }

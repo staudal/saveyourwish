@@ -10,7 +10,13 @@ import { type InferSelectModel } from "drizzle-orm";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 
-type Wishlist = InferSelectModel<typeof wishlists>;
+type Wishlist = {
+  id: string;
+  title: string;
+  category: string;
+  favorite: boolean;
+  wishCount: number;
+};
 
 export default function WishlistsTable({
   wishlists,
@@ -30,7 +36,10 @@ export default function WishlistsTable({
                 <h3 className="font-medium text-lg">{wishlist.title}</h3>
               </div>
               <div className="flex-1 text-center">
-                <p className="text-muted-foreground">{wishlist.category}</p>
+                <p className="text-muted-foreground">
+                  {wishlist.category} • {wishlist.wishCount}{" "}
+                  {wishlist.wishCount === 1 ? "wish" : "wishes"}
+                </p>
               </div>
               <div className="flex gap-2 flex-1 justify-end">
                 <FavoriteButton id={wishlist.id} favorite={wishlist.favorite} />
