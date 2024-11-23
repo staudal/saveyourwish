@@ -5,8 +5,6 @@ import { DeleteWishlistDialog } from "@/components/dialogs/delete-wishlist-dialo
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import React from "react";
-import { type wishlists } from "@/lib/db";
-import { type InferSelectModel } from "drizzle-orm";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 
