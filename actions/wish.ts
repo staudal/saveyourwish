@@ -78,3 +78,59 @@ export async function deleteWish(id: string, wishlistId: string) {
     return { success: false, error: "Failed to delete wish" };
   }
 }
+
+export async function updateWishImagePosition(
+  id: string,
+  wishlistId: string,
+  position: {
+    vertical: number;
+    horizontal: number;
+    zoom: number;
+  }
+) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error("Unauthorized");
+
+    // Verify wishlist belongs to user
+    const wishlist = await db
+      .select()
+      .from(wishlists)
+      .where(
+        and(eq(wishlists.id, wishlistId), eq(wishlists.userId, session.user.id))
+      )
+      .then((rows) => rows[0]);
+
+    if (!wishlist) throw new Error("Wishlist not found");
+
+    console.log("Updating wish position:", {
+      id,
+      wishlistId,
+      position,
+    });
+
+    await db
+      .update(wishes)
+      .set({
+        verticalPosition: position.vertical,
+        horizontalPosition: position.horizontal,
+        imageZoom: position.zoom,
+      })
+      .where(eq(wishes.id, id));
+
+    // Verify the update
+    const updatedWish = await db
+      .select()
+      .from(wishes)
+      .where(eq(wishes.id, id))
+      .then((rows) => rows[0]);
+
+    console.log("Updated wish:", updatedWish);
+
+    revalidatePath(`/dashboard/wishlists/${wishlistId}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update position:", error);
+    return { success: false, error: "Failed to update image position" };
+  }
+}

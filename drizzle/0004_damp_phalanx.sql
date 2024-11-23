@@ -1,0 +1,1 @@
+ALTER TABLE "wish" ADD COLUMN "imagePosition" integer DEFAULT 50;

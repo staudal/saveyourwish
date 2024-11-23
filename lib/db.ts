@@ -115,4 +115,7 @@ export const wishes = pgTable("wish", {
   wishlistId: text("wishlistId")
     .notNull()
     .references(() => wishlists.id, { onDelete: "cascade" }),
+  verticalPosition: integer("verticalPosition").default(50),
+  horizontalPosition: integer("horizontalPosition").default(50),
+  imageZoom: real("imageZoom").default(1),
 });
