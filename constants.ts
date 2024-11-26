@@ -9,8 +9,9 @@ export const CURRENCIES = [
   { value: "USD", label: "US Dollar", symbol: "$" },
   { value: "EUR", label: "Euro", symbol: "€" },
   { value: "DKK", label: "Danish Krone", symbol: "kr" },
+  { value: "SEK", label: "Swedish Krona", symbol: "kr" },
 ] as const;
 
 export type Currency = (typeof CURRENCIES)[number]["value"];
 
-export const CURRENCY_VALUES = ["USD", "EUR", "DKK"] as const;
+export const CURRENCY_VALUES = ["USD", "EUR", "DKK", "SEK"] as const;
