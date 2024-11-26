@@ -2,9 +2,25 @@ import { Separator } from "@/components/ui/separator";
 import { type wishes } from "@/lib/db";
 import { type InferSelectModel } from "drizzle-orm";
 import { ImageContainer } from "./image-container";
-import { WishActions } from "./wish-actions";
 import { formatPrice } from "@/components/ui/currency-select";
 import { type Currency } from "@/constants";
+import {
+  MoreHorizontal,
+  PencilIcon,
+  Move,
+  Trash2Icon,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 type Wish = InferSelectModel<typeof wishes>;
 
@@ -26,6 +42,7 @@ interface WishCardProps {
   onEdit: (wish: Wish) => void;
   isFirst: boolean;
   isLast: boolean;
+  readonly?: boolean;
 }
 
 export function WishCard({
@@ -39,6 +56,7 @@ export function WishCard({
   onEdit,
   isFirst,
   isLast,
+  readonly = false,
 }: WishCardProps) {
   return (
     <div className="flex flex-col h-full rounded-t overflow-hidden">
@@ -48,16 +66,50 @@ export function WishCard({
           imageDimensions={imageDimensions}
           setImageDimensions={setImageDimensions}
         />
-        <WishActions
-          wish={wish}
-          onDelete={onDelete}
-          onAdjustImage={onAdjustImage}
-          onMoveUp={onMoveUp}
-          onMoveDown={onMoveDown}
-          onEdit={onEdit}
-          isFirst={isFirst}
-          isLast={isLast}
-        />
+        {!readonly && (
+          <div className="absolute right-2 top-2 z-10">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="h-8 w-8">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuLabel>Manage wish</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => onEdit(wish)}>
+                  <PencilIcon className="h-4 w-4 mr-2" />
+                  <span>Edit</span>
+                </DropdownMenuItem>
+                {wish.imageUrl && (
+                  <DropdownMenuItem onClick={() => onAdjustImage(wish)}>
+                    <Move className="h-4 w-4 mr-2" />
+                    <span>Adjust image</span>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={() => onDelete(wish)}>
+                  <Trash2Icon className="h-4 w-4 mr-2" />
+                  <span>Delete</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => onMoveUp(wish)}
+                  disabled={isFirst}
+                >
+                  <ArrowUp className="h-4 w-4 mr-2" />
+                  <span>Move up</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => onMoveDown(wish)}
+                  disabled={isLast}
+                >
+                  <ArrowDown className="h-4 w-4 mr-2" />
+                  <span>Move down</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </div>
       <div className="border rounded-b flex flex-col h-full">
         <div className="p-4">

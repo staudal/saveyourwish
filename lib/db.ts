@@ -100,6 +100,8 @@ export const wishlists = pgTable("wishlist", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   favorite: boolean("favorite").notNull().default(false),
+  shared: boolean("shared").notNull().default(false),
+  shareId: text("shareId").unique(),
 });
 
 export const wishes = pgTable("wish", {

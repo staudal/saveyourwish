@@ -17,7 +17,12 @@ interface ImageDimension {
   isImageTallerThanContainer: boolean;
 }
 
-export function WishesGrid({ wishes }: { wishes: Wish[] }) {
+interface WishesGridProps {
+  wishes: Wish[];
+  readonly?: boolean;
+}
+
+export function WishesGrid({ wishes, readonly = false }: WishesGridProps) {
   const { toast } = useToast();
   const [imageDimensions, setImageDimensions] = React.useState<
     Record<string, ImageDimension>
@@ -80,11 +85,12 @@ export function WishesGrid({ wishes }: { wishes: Wish[] }) {
             onEdit={handleEdit}
             isFirst={index === 0}
             isLast={index === wishes.length - 1}
+            readonly={readonly}
           />
         ))}
       </div>
 
-      {selectedWish?.imageUrl && (
+      {!readonly && selectedWish?.imageUrl && (
         <ImagePositionDialog
           wish={selectedWish}
           open={imagePositionOpen}
@@ -92,7 +98,7 @@ export function WishesGrid({ wishes }: { wishes: Wish[] }) {
         />
       )}
 
-      {selectedWish && (
+      {!readonly && selectedWish && (
         <DeleteWishDialog
           id={selectedWish.id}
           wishlistId={selectedWish.wishlistId}
@@ -101,7 +107,7 @@ export function WishesGrid({ wishes }: { wishes: Wish[] }) {
         />
       )}
 
-      {selectedWish && (
+      {!readonly && selectedWish && (
         <EditWishDialog
           wish={selectedWish}
           open={editDialogOpen}

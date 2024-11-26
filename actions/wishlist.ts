@@ -106,8 +106,56 @@ export async function getWishlist(id: string) {
       title: wishlists.title,
       category: wishlists.category,
       favorite: wishlists.favorite,
+      shared: wishlists.shared,
+      shareId: wishlists.shareId,
     })
     .from(wishlists)
     .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)))
+    .then((rows) => rows[0]);
+}
+
+export async function toggleWishlistSharing(id: string) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error("Unauthorized");
+
+    const wishlist = await db
+      .select()
+      .from(wishlists)
+      .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)))
+      .then((rows) => rows[0]);
+
+    if (!wishlist) throw new Error("Wishlist not found");
+
+    const shareId = !wishlist.shared ? crypto.randomUUID() : null;
+
+    await db
+      .update(wishlists)
+      .set({
+        shared: !wishlist.shared,
+        shareId: shareId,
+      })
+      .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)));
+
+    revalidatePath(`/dashboard/wishlists/${id}`);
+    if (wishlist.shareId) {
+      revalidatePath(`/shared/${wishlist.shareId}`);
+    }
+
+    return { success: true, isShared: !wishlist.shared, shareId };
+  } catch (error) {
+    return { success: false, error: "Failed to update sharing status" };
+  }
+}
+
+export async function getSharedWishlist(shareId: string) {
+  return await db
+    .select({
+      id: wishlists.id,
+      title: wishlists.title,
+      category: wishlists.category,
+    })
+    .from(wishlists)
+    .where(and(eq(wishlists.shareId, shareId), eq(wishlists.shared, true)))
     .then((rows) => rows[0]);
 }

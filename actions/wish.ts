@@ -52,9 +52,11 @@ export async function createWish(
   }
 }
 
-export async function getWishes(wishlistId: string) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
+export async function getWishes(wishlistId: string, isSharedAccess?: boolean) {
+  if (!isSharedAccess) {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error("Unauthorized");
+  }
 
   return await db
     .select()
