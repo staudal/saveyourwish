@@ -1,0 +1,1 @@
+ALTER TABLE "wish" ALTER COLUMN "position" SET NOT NULL;

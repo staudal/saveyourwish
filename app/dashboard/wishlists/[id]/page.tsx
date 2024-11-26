@@ -1,5 +1,5 @@
 import { CreateWishDialog } from "@/components/dialogs/create-wish-dialog";
-import { WishesGrid } from "@/components/wishes-grid";
+import { WishesGrid } from "@/components/wishes/grid/index";
 import { getWishes } from "@/actions/wish";
 import { getWishlist } from "@/actions/wishlist";
 import { notFound } from "next/navigation";

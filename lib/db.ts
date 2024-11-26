@@ -118,4 +118,5 @@ export const wishes = pgTable("wish", {
   verticalPosition: integer("verticalPosition").default(50),
   horizontalPosition: integer("horizontalPosition").default(50),
   imageZoom: real("imageZoom").default(1),
+  position: integer("position").notNull(),
 });
