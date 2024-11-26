@@ -31,15 +31,60 @@ export function convertToUSD(amount: number, fromCurrency: Currency): number {
   return amount / rate;
 }
 
+function getMostCommonCurrency(
+  wishes: { price: number | null; currency: Currency }[]
+): Currency {
+  const validWishes = wishes.filter((wish) => wish.price !== null);
+  if (validWishes.length === 0) return "USD"; // default fallback
+
+  // Count occurrences of each currency
+  const currencyCounts = validWishes.reduce((acc, wish) => {
+    acc[wish.currency] = (acc[wish.currency] || 0) + 1;
+    return acc;
+  }, {} as Record<Currency, number>);
+
+  // Find the currency with the highest count
+  return Object.entries(currencyCounts).reduce((a, b) =>
+    currencyCounts[a[0] as Currency] > b[1] ? a : b
+  )[0] as Currency;
+}
+
+function convertCurrency(
+  amount: number,
+  fromCurrency: Currency,
+  toCurrency: Currency
+): number {
+  if (fromCurrency === toCurrency) return amount;
+
+  // First convert to USD
+  const amountInUSD = convertToUSD(amount, fromCurrency);
+
+  // Then convert from USD to target currency
+  if (toCurrency === "USD") return amountInUSD;
+  return amountInUSD * EXCHANGE_RATES[toCurrency];
+}
+
 export function calculateAveragePrice(
   wishes: { price: number | null; currency: Currency }[]
-): number | null {
+): { amount: number; currency: Currency } | null {
   const validWishes = wishes.filter((wish) => wish.price !== null);
   if (validWishes.length === 0) return null;
 
-  const totalInUSD = validWishes.reduce((sum, wish) => {
-    return sum + convertToUSD(wish.price!, wish.currency);
+  // Determine the most common currency
+  const targetCurrency = getMostCommonCurrency(validWishes);
+
+  // Convert all prices to the target currency and calculate average
+  const total = validWishes.reduce((sum, wish) => {
+    const convertedAmount = convertCurrency(
+      wish.price!,
+      wish.currency,
+      targetCurrency
+    );
+    return sum + convertedAmount;
   }, 0);
 
-  return totalInUSD / validWishes.length;
+  return {
+    amount: total / validWishes.length,
+    currency: targetCurrency,
+  };
 }

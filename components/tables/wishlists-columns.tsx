@@ -51,15 +51,15 @@ export const columns: ColumnDef<Wishlist>[] = [
     header: "Average Price",
     cell: ({ row }) => {
       const wishes = row.original.wishes;
-      const averagePrice = calculateAveragePrice(wishes);
+      const result = calculateAveragePrice(wishes);
 
-      if (averagePrice === null) {
+      if (!result) {
         return <span className="text-muted-foreground">-</span>;
       }
 
       return (
         <span className="text-muted-foreground">
-          {formatPrice(averagePrice, "USD")}
+          {formatPrice(result.amount, result.currency)}
         </span>
       );
     },
