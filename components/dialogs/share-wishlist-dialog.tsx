@@ -24,6 +24,13 @@ interface ShareWishlistDialogProps {
   shareId?: string | null;
 }
 
+interface ToggleWishlistSharingResult {
+  success: boolean;
+  isShared?: boolean;
+  shareId?: string | null;
+  error?: string;
+}
+
 export function ShareWishlistDialog({
   wishlistId,
   isShared,
@@ -44,8 +51,10 @@ export function ShareWishlistDialog({
   };
 
   const handleToggleSharing = async () => {
-    const result = await toggleWishlistSharing(wishlistId);
-    if (result.success) {
+    const result: ToggleWishlistSharingResult = await toggleWishlistSharing(
+      wishlistId
+    );
+    if (result.success && typeof result.isShared === "boolean") {
       setSharing(result.isShared);
       if (result.isShared) {
         toast({
@@ -58,6 +67,12 @@ export function ShareWishlistDialog({
           description: "This wishlist is now private",
         });
       }
+    } else if (result.error) {
+      toast({
+        title: "Error",
+        description: result.error,
+        variant: "destructive",
+      });
     }
   };
 
