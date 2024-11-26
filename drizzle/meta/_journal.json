@@ -57,6 +57,13 @@
       "when": 1732609451898,
       "tag": "0007_lazy_wilson_fisk",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1732610464615,
+      "tag": "0008_fixed_cyclops",
+      "breakpoints": true
     }
   ]
 }

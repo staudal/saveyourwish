@@ -1,0 +1,1 @@
+ALTER TABLE "wish" ADD COLUMN "currency" text DEFAULT 'USD' NOT NULL;

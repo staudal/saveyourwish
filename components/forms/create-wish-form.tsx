@@ -11,10 +11,13 @@ import { createWish } from "@/actions/wish";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import { CurrencySelect } from "@/components/ui/currency-select";
+import { CURRENCY_VALUES } from "@/constants";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters" }),
   price: z.number().min(0).optional(),
+  currency: z.enum(CURRENCY_VALUES).default("USD"),
   imageUrl: z
     .string()
     .url({ message: "Must be a valid URL" })
@@ -47,6 +50,7 @@ export function CreateWishForm({
     defaultValues: {
       title: "",
       price: undefined,
+      currency: "USD",
       imageUrl: "",
       destinationUrl: "",
       description: "",
@@ -89,15 +93,21 @@ export function CreateWishForm({
 
       <div className="grid gap-2">
         <Label htmlFor="price">Price</Label>
-        <Input
-          {...form.register("price", {
-            valueAsNumber: true,
-            setValueAs: (v: string) => (v === "" ? undefined : parseFloat(v)),
-          })}
-          id="price"
-          type="number"
-          step="0.01"
-        />
+        <div className="flex gap-2">
+          <Input
+            {...form.register("price", {
+              valueAsNumber: true,
+              setValueAs: (v: string) => (v === "" ? undefined : parseFloat(v)),
+            })}
+            id="price"
+            type="number"
+            step="0.01"
+          />
+          <CurrencySelect
+            value={form.watch("currency")}
+            onValueChange={(value) => form.setValue("currency", value)}
+          />
+        </div>
       </div>
 
       <div className="grid gap-2">

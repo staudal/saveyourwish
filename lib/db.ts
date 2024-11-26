@@ -108,6 +108,7 @@ export const wishes = pgTable("wish", {
     .$defaultFn(() => crypto.randomUUID()),
   title: text("title").notNull(),
   price: real("price"),
+  currency: text("currency").notNull().default("USD"),
   imageUrl: text("imageUrl"),
   destinationUrl: text("destinationUrl"),
   description: text("description"),

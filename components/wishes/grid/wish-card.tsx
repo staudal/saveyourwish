@@ -3,6 +3,8 @@ import { type wishes } from "@/lib/db";
 import { type InferSelectModel } from "drizzle-orm";
 import { ImageContainer } from "./image-container";
 import { WishActions } from "./wish-actions";
+import { formatPrice } from "@/components/ui/currency-select";
+import { type Currency } from "@/constants";
 
 type Wish = InferSelectModel<typeof wishes>;
 
@@ -81,7 +83,7 @@ export function WishCard({
           )}
           {wish.price && (
             <p className="text-sm text-muted-foreground">
-              ${wish.price.toFixed(2)}
+              {formatPrice(wish.price, wish.currency as Currency)}
             </p>
           )}
         </div>
