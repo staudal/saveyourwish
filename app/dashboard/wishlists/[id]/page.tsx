@@ -4,6 +4,7 @@ import { getWishes } from "@/actions/wish";
 import { getWishlist } from "@/actions/wishlist";
 import { notFound } from "next/navigation";
 import { ShareWishlistDialog } from "@/components/dialogs/share-wishlist-dialog";
+import { FavoriteWishlistButton } from "@/components/favorite-wishlist-button";
 
 export default async function Page({ params }: { params: { id: string } }) {
   const [wishlist, wishes] = await Promise.all([
@@ -20,6 +21,10 @@ export default async function Page({ params }: { params: { id: string } }) {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold tracking-tight">{wishlist.title}</h2>
         <div className="flex gap-2">
+          <FavoriteWishlistButton
+            wishlistId={params.id}
+            isFavorite={wishlist.favorite}
+          />
           <ShareWishlistDialog
             wishlistId={params.id}
             isShared={wishlist.shared}

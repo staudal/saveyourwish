@@ -1,12 +1,21 @@
 "use client";
 
-import { FavoriteButton } from "@/components/favorite-button";
-import { DeleteWishlistDialog } from "@/components/dialogs/delete-wishlist-dialog";
-import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
-import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import Link from "next/link";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import { columns } from "./wishlists-columns";
+import { useRouter } from "next/navigation";
+import { Currency } from "@/constants";
 
 type Wishlist = {
   id: string;
@@ -14,6 +23,10 @@ type Wishlist = {
   category: string;
   favorite: boolean;
   wishCount: number;
+  wishes: {
+    price: number | null;
+    currency: Currency;
+  }[];
 };
 
 export default function WishlistsTable({
@@ -21,47 +34,61 @@ export default function WishlistsTable({
 }: {
   wishlists: Wishlist[];
 }) {
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [selectedId, setSelectedId] = React.useState<string | null>(null);
+  const router = useRouter();
+  const table = useReactTable({
+    data: wishlists,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
 
   return (
-    <div className="grid gap-4">
-      {wishlists.map((wishlist) => (
-        <Link key={wishlist.id} href={`/dashboard/wishlists/${wishlist.id}`}>
-          <Card>
-            <CardContent className="flex items-center p-6">
-              <div className="flex-1">
-                <h3 className="font-medium text-lg">{wishlist.title}</h3>
-              </div>
-              <div className="flex-1 text-center">
-                <p className="text-muted-foreground">
-                  {wishlist.category} • {wishlist.wishCount}{" "}
-                  {wishlist.wishCount === 1 ? "wish" : "wishes"}
-                </p>
-              </div>
-              <div className="flex gap-2 flex-1 justify-end">
-                <FavoriteButton id={wishlist.id} favorite={wishlist.favorite} />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setSelectedId(wishlist.id);
-                    setDeleteDialogOpen(true);
-                  }}
-                >
-                  <Trash2 size={16} />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
-      ))}
-      <DeleteWishlistDialog
-        id={selectedId!}
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-      />
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => (
+                <TableHead key={header.id}>
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows?.length ? (
+            table.getRowModel().rows.map((row) => (
+              <TableRow
+                key={row.id}
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={(e) => {
+                  // Only navigate if we didn't click a button or link
+                  if (!(e.target as HTMLElement).closest("button, a")) {
+                    router.push(`/dashboard/wishlists/${row.original.id}`);
+                  }
+                }}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={columns.length} className="h-24 text-center">
+                No wishlists found.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
     </div>
   );
 }

@@ -1,19 +1,6 @@
 "use client";
 
-import {
-  Folder,
-  MoreHorizontal,
-  Share,
-  Star,
-  type LucideIcon,
-} from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Star, type LucideIcon } from "lucide-react";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -21,12 +8,12 @@ import {
   SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import React from "react";
 import { toggleWishlistFavorite } from "@/actions/wishlist";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export function NavFavorites({
   favorites,
@@ -38,7 +25,6 @@ export function NavFavorites({
     id: string;
   }[];
 }) {
-  const { isMobile } = useSidebar();
   const { toast } = useToast();
   const router = useRouter();
 
@@ -67,40 +53,22 @@ export function NavFavorites({
           favorites.map((item) => (
             <SidebarMenuItem key={item.name}>
               <SidebarMenuButton asChild>
-                <a href={item.url}>
+                <Link href={item.url}>
                   <item.icon />
                   <span>{item.name}</span>
-                </a>
+                </Link>
               </SidebarMenuButton>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <SidebarMenuAction showOnHover>
-                    <MoreHorizontal />
-                    <span className="sr-only">More</span>
-                  </SidebarMenuAction>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className="w-48"
-                  side={isMobile ? "bottom" : "right"}
-                  align={isMobile ? "end" : "start"}
-                >
-                  <DropdownMenuItem asChild>
-                    <a href={item.url}>
-                      <Folder className="text-muted-foreground" />
-                      <span>View</span>
-                    </a>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Share className="text-muted-foreground" />
-                    <span>Share</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => handleUnfavorite(item.id)}>
-                    <Star className="text-muted-foreground" />
-                    <span>Unfavorite</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <SidebarMenuAction
+                showOnHover
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleUnfavorite(item.id);
+                }}
+                title="Remove from favorites"
+              >
+                <Star className="fill-yellow-400" />
+              </SidebarMenuAction>
             </SidebarMenuItem>
           ))
         ) : (

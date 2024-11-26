@@ -5,18 +5,27 @@ import { wishlists, wishes } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { eq, and, sql } from "drizzle-orm";
+import { type Currency } from "@/constants";
 
 export async function getWishlists() {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
-  return await db
+  const wishlistsWithWishes = await db
     .select({
       id: wishlists.id,
       title: wishlists.title,
       category: wishlists.category,
       favorite: wishlists.favorite,
       wishCount: sql<number>`count(${wishes.id})::integer`,
+      wishes: sql<{ price: number | null; currency: Currency }[]>`
+        json_agg(
+          json_build_object(
+            'price', ${wishes.price},
+            'currency', ${wishes.currency}::text
+          )
+        ) filter (where ${wishes.id} is not null)
+      `,
     })
     .from(wishlists)
     .leftJoin(wishes, eq(wishes.wishlistId, wishlists.id))
@@ -27,6 +36,14 @@ export async function getWishlists() {
       wishlists.category,
       wishlists.favorite
     );
+
+  return wishlistsWithWishes.map((wishlist) => ({
+    ...wishlist,
+    wishes: (wishlist.wishes || []).map((wish) => ({
+      ...wish,
+      currency: wish.currency as Currency, // Type assertion since we know the DB only contains valid currencies
+    })),
+  }));
 }
 
 export async function createWishlist(title: string, category: string) {
