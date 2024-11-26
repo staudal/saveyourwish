@@ -9,13 +9,33 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { usePathname } from "next/navigation";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { getWishlist } from "@/actions/wishlist";
 
 export function DynamicBreadcrumb() {
   const pathname = usePathname();
-  const segments = pathname
-    .split("/")
-    .filter((segment) => segment && segment !== "dashboard");
+  const [segments, setSegments] = useState<string[]>([]);
+
+  useEffect(() => {
+    async function processSegments() {
+      const rawSegments = pathname
+        .split("/")
+        .filter((segment) => segment && segment !== "dashboard");
+
+      // Check if we're in a wishlist route
+      if (rawSegments[0] === "wishlists" && rawSegments[1]) {
+        const wishlist = await getWishlist(rawSegments[1]);
+        if (wishlist) {
+          // Replace the ID with the title
+          rawSegments[1] = wishlist.title;
+        }
+      }
+
+      setSegments(rawSegments);
+    }
+
+    processSegments();
+  }, [pathname]);
 
   return (
     <Breadcrumb>
@@ -27,7 +47,13 @@ export function DynamicBreadcrumb() {
                 <BreadcrumbPage>{formatSegment(segment)}</BreadcrumbPage>
               ) : (
                 <BreadcrumbLink
-                  href={"/dashboard/" + segments.slice(0, index + 1).join("/")}
+                  href={
+                    "/dashboard/" +
+                    pathname
+                      .split("/")
+                      .slice(1, index + 2)
+                      .join("/")
+                  }
                 >
                   {formatSegment(segment)}
                 </BreadcrumbLink>
