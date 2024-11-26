@@ -22,6 +22,32 @@ type Wishlist = {
   }[];
 };
 
+// Separate component for the actions cell
+function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  return (
+    <div
+      className="flex justify-end gap-2"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <FavoriteButton id={wishlist.id} favorite={wishlist.favorite} />
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setShowDeleteDialog(true)}
+      >
+        <Trash2 size={16} />
+      </Button>
+      <DeleteWishlistDialog
+        id={wishlist.id}
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+      />
+    </div>
+  );
+}
+
 export const columns: ColumnDef<Wishlist>[] = [
   {
     accessorKey: "title",
@@ -66,30 +92,6 @@ export const columns: ColumnDef<Wishlist>[] = [
   },
   {
     id: "actions",
-    cell: ({ row }) => {
-      const wishlist = row.original;
-      const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
-      return (
-        <div
-          className="flex justify-end gap-2"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <FavoriteButton id={wishlist.id} favorite={wishlist.favorite} />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowDeleteDialog(true)}
-          >
-            <Trash2 size={16} />
-          </Button>
-          <DeleteWishlistDialog
-            id={wishlist.id}
-            open={showDeleteDialog}
-            onOpenChange={setShowDeleteDialog}
-          />
-        </div>
-      );
-    },
+    cell: ({ row }) => <WishlistActions wishlist={row.original} />,
   },
 ];
