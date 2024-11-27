@@ -163,6 +163,9 @@ export async function toggleWishlistSharing(id: string) {
     if (wishlist.shareId) {
       revalidatePath(`/shared/${wishlist.shareId}`);
     }
+    if (shareId) {
+      revalidatePath(`/shared/${shareId}`);
+    }
 
     return { success: true, isShared: !wishlist.shared, shareId };
   } catch (error) {
@@ -200,6 +203,18 @@ export async function updateWishlist(
 
     revalidatePath(`/dashboard/wishlists`);
     revalidatePath(`/dashboard/wishlists/${id}`);
+
+    // Get the wishlist to check if it's shared
+    const wishlist = await db
+    .select()
+    .from(wishlists)
+    .where(eq(wishlists.id, id))
+    .then((rows) => rows[0]);
+
+    // Revalidate the shared path if the wishlist is shared
+    if (wishlist?.shareId && wishlist.shared) {
+    revalidatePath(`/shared/${wishlist.shareId}`);
+    }
 
     return { success: true };
   } catch (error) {

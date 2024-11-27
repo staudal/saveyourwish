@@ -45,6 +45,10 @@ export async function createWish(
       position: highestPosition + 1,
     });
 
+    if (wishlist?.shareId && wishlist.shared) {
+      revalidatePath(`/shared/${wishlist.shareId}`);
+    }
+
     revalidatePath(`/dashboard/wishlists/${wishlistId}`);
     return { success: true };
   } catch (error) {
@@ -94,6 +98,10 @@ export async function deleteWish(id: string, wishlistId: string) {
 
     await db.delete(wishes).where(eq(wishes.id, id));
 
+    if (wishlist?.shareId && wishlist.shared) {
+      revalidatePath(`/shared/${wishlist.shareId}`);
+    }
+
     revalidatePath(`/dashboard/wishlists/${wishlistId}`);
     return { success: true };
   } catch (error) {
@@ -139,15 +147,17 @@ export async function updateWishImagePosition(
         imageZoom: position.zoom,
       })
       .where(eq(wishes.id, id));
-
-    // Verify the update
-    const updatedWish = await db
+      
+    await db
       .select()
       .from(wishes)
       .where(eq(wishes.id, id))
       .then((rows) => rows[0]);
 
-    console.log("Updated wish:", updatedWish);
+    // Revalidate the shared path if the wishlist is shared
+    if (wishlist?.shareId && wishlist.shared) {
+      revalidatePath(`/shared/${wishlist.shareId}`);
+    }
 
     revalidatePath(`/dashboard/wishlists/${wishlistId}`);
     return { success: true };
@@ -198,6 +208,18 @@ export async function updateWishPosition(
       .set({ position: currentWish.position })
       .where(eq(wishes.id, swapWish.id));
 
+    // Get the wishlist to check if it's shared
+    const wishlist = await db
+    .select()
+    .from(wishlists)
+    .where(eq(wishlists.id, wishlistId))
+    .then((rows) => rows[0]);
+
+    // Revalidate the shared path if the wishlist is shared
+    if (wishlist?.shareId && wishlist.shared) {
+    revalidatePath(`/shared/${wishlist.shareId}`);
+    }
+
     revalidatePath(`/dashboard/wishlists/${wishlistId}`);
     return { success: true };
   } catch (error) {
@@ -240,6 +262,10 @@ export async function updateWish(
     if (!wishlist) throw new Error("Wishlist not found");
 
     await db.update(wishes).set(data).where(eq(wishes.id, id));
+
+    if (wishlist?.shareId && wishlist.shared) {
+      revalidatePath(`/shared/${wishlist.shareId}`);
+    }
 
     revalidatePath(`/dashboard/wishlists/${wishlistId}`);
     return { success: true };
