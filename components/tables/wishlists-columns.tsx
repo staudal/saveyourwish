@@ -63,6 +63,13 @@ export const columns: ColumnDef<Wishlist>[] = [
     accessorKey: "category",
     header: "Category",
     sortingFn: sortingFns.alphanumeric,
+    cell: ({ row }) => {
+      return (
+        <span className="text-muted-foreground">
+          {row.getValue("category")}
+        </span>
+      );
+    },
   },
   {
     accessorKey: "wishCount",

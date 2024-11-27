@@ -21,6 +21,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import Link from "next/link";
 
 type Wish = InferSelectModel<typeof wishes>;
 
@@ -129,9 +130,13 @@ export function WishCard({
         <Separator orientation="horizontal" />
         <div className="flex justify-between items-center p-4">
           {wish.destinationUrl && (
-            <p className="text-sm text-muted-foreground">
+            <Link
+              className="text-sm text-muted-foreground"
+              href={wish.destinationUrl}
+              target="_blank"
+            >
               {new URL(wish.destinationUrl).host.replace("www.", "")}
-            </p>
+            </Link>
           )}
           {wish.price && (
             <p className="text-sm text-muted-foreground">
