@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { createWish } from "@/actions/wish";
 import { useState } from "react";
@@ -54,7 +53,7 @@ export function CreateWishForm({
 }) {
   const router = useRouter();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const [_, setIsLoading] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -89,7 +88,11 @@ export function CreateWishForm({
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
+    <form
+      id="create-wish-form"
+      onSubmit={form.handleSubmit(onSubmit)}
+      className="grid gap-4"
+    >
       <div className="grid gap-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="title">Title</Label>
@@ -183,10 +186,6 @@ export function CreateWishForm({
           min="1"
         />
       </div>
-
-      <Button type="submit" disabled={isLoading}>
-        {isLoading ? "Adding..." : "Add wish"}
-      </Button>
     </form>
   );
 }
