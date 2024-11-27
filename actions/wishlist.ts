@@ -176,3 +176,28 @@ export async function getSharedWishlist(shareId: string) {
     .where(and(eq(wishlists.shareId, shareId), eq(wishlists.shared, true)))
     .then((rows) => rows[0]);
 }
+
+export async function updateWishlist(
+  id: string,
+  data: { title: string; category: string }
+) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error("Unauthorized");
+
+    await db
+      .update(wishlists)
+      .set({
+        title: data.title,
+        category: data.category,
+      })
+      .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)));
+
+    revalidatePath(`/dashboard/wishlists`);
+    revalidatePath(`/dashboard/wishlists/${id}`);
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "Failed to update wishlist" };
+  }
+}

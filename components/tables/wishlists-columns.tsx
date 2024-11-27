@@ -9,6 +9,7 @@ import { useState } from "react";
 import { formatPrice } from "@/components/ui/currency-select";
 import { calculateAveragePrice } from "@/constants";
 import { type Currency } from "@/constants";
+import { EditWishlistDialog } from "@/components/dialogs/edit-wishlist-dialog";
 
 type Wishlist = {
   id: string;
@@ -32,12 +33,13 @@ function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
       onClick={(e) => e.stopPropagation()}
     >
       <FavoriteButton id={wishlist.id} favorite={wishlist.favorite} />
+      <EditWishlistDialog wishlist={wishlist} />
       <Button
         variant="ghost"
         size="icon"
         onClick={() => setShowDeleteDialog(true)}
       >
-        <Trash2 size={16} />
+        <Trash2 className="h-4 w-4" />
       </Button>
       <DeleteWishlistDialog
         id={wishlist.id}
