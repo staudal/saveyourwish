@@ -8,7 +8,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Drawer,
@@ -18,31 +17,26 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
-  DrawerTrigger,
 } from "@/components/ui/drawer";
-import { Pencil } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { EditWishlistForm } from "../forms/edit-wishlist-form";
+import { Wishlist } from "../tables/wishlists-columns";
 
-export const EditWishlistDialog = React.forwardRef<
-  HTMLButtonElement,
-  {
-    wishlist: { id: string; title: string; category: string };
-    className?: string;
-  }
->(({ wishlist }, ref) => {
-  const [open, setOpen] = React.useState(false);
+export function EditWishlistDialog({
+  open,
+  setOpen,
+  wishlist,
+}: {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  wishlist: Wishlist;
+}) {
   const [isLoading, setIsLoading] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <Button variant="ghost" size="icon">
-            <Pencil className="h-4 w-4" />
-          </Button>
-        </DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit wishlist</DialogTitle>
@@ -80,16 +74,6 @@ export const EditWishlistDialog = React.forwardRef<
 
   return (
     <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerTrigger asChild>
-        <Button
-          ref={ref}
-          variant="ghost"
-          className="w-full justify-start relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-        >
-          <Pencil className="mr-2 h-4 w-4" />
-          Edit
-        </Button>
-      </DrawerTrigger>
       <DrawerContent>
         <div className="mx-auto w-full">
           <DrawerHeader>
@@ -123,6 +107,4 @@ export const EditWishlistDialog = React.forwardRef<
       </DrawerContent>
     </Drawer>
   );
-});
-
-EditWishlistDialog.displayName = "EditWishlistDialog";
+}
