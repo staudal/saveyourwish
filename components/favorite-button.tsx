@@ -3,8 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { Star } from "lucide-react";
 import { toggleWishlistFavorite } from "@/actions/wishlist";
-import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 interface FavoriteButtonProps {
   id: string;
@@ -12,29 +12,27 @@ interface FavoriteButtonProps {
 }
 
 export function FavoriteButton({ id, favorite }: FavoriteButtonProps) {
-  const { toast } = useToast();
   const router = useRouter();
 
   const handleClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const result = await toggleWishlistFavorite(id);
-    if (result.success) {
-      toast({
-        title: favorite ? "Removed from favorites" : "Added to favorites",
-        description: favorite
-          ? "Wishlist removed from favorites"
-          : "Wishlist added to favorites",
-      });
-      router.refresh();
-    } else {
-      toast({
-        title: "Error",
-        description: result.error,
-        variant: "destructive",
-      });
-    }
+    await toast.promise(toggleWishlistFavorite(id), {
+      loading: favorite
+        ? "Removing from favorites..."
+        : "Adding to favorites...",
+      success: (result) => {
+        if (result.success) {
+          router.refresh();
+          return favorite
+            ? "Wishlist removed from favorites"
+            : "Wishlist added to favorites";
+        }
+        throw new Error(result.error || "Failed to update favorite status");
+      },
+      error: (err) => err.message || "Failed to update favorite status",
+    });
   };
 
   return (

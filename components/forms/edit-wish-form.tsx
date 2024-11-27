@@ -5,17 +5,16 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { updateWish } from "@/actions/wish";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/hooks/use-toast";
 import { type wishes } from "@/lib/db";
 import { type InferSelectModel } from "drizzle-orm";
 import { CurrencySelect } from "@/components/ui/currency-select";
 import { CURRENCY_VALUES } from "@/constants";
 import { type Currency } from "@/constants";
+import toast from "react-hot-toast";
 
 type Wish = InferSelectModel<typeof wishes>;
 
@@ -53,13 +52,18 @@ type FormData = z.infer<typeof formSchema>;
 export function EditWishForm({
   wish,
   onSuccess,
+  onLoadingChange,
 }: {
   wish: Wish;
   onSuccess?: () => void;
+  onLoadingChange?: (isLoading: boolean) => void;
 }) {
   const router = useRouter();
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    onLoadingChange?.(isLoading);
+  }, [isLoading, onLoadingChange]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -75,30 +79,33 @@ export function EditWishForm({
   });
 
   async function onSubmit(values: FormData) {
-    try {
-      setIsLoading(true);
-      await updateWish(wish.id, wish.wishlistId, formSchema.parse(values));
+    setIsLoading(true);
 
-      toast({
-        title: "Wish updated",
-        description: "Your wish has been updated successfully.",
-      });
-      router.refresh();
-      onSuccess?.();
-    } catch (error) {
-      console.error(error);
-      toast({
-        title: "Error",
-        description: "Failed to update wish.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    await toast.promise(
+      updateWish(wish.id, wish.wishlistId, formSchema.parse(values)),
+      {
+        loading: "Updating wish...",
+        success: (result) => {
+          if (result.success) {
+            router.refresh();
+            onSuccess?.();
+            return "Wish updated successfully!";
+          }
+          throw new Error(result.error || "Failed to update wish");
+        },
+        error: (err) => err.message || "Failed to update wish",
+      }
+    );
+
+    setIsLoading(false);
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
+    <form
+      id="edit-wish-form"
+      onSubmit={form.handleSubmit(onSubmit)}
+      className="grid gap-4"
+    >
       <div className="grid gap-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="title">Title</Label>
@@ -192,10 +199,6 @@ export function EditWishForm({
           min="1"
         />
       </div>
-
-      <Button type="submit" disabled={isLoading}>
-        {isLoading ? "Saving..." : "Save changes"}
-      </Button>
     </form>
   );
 }

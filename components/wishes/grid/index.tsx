@@ -8,7 +8,7 @@ import { DeleteWishDialog } from "@/components/dialogs/delete-wish-dialog";
 import { EditWishDialog } from "@/components/dialogs/edit-wish-dialog";
 import { WishCard } from "./wish-card";
 import { updateWishPosition } from "@/actions/wish";
-import { useToast } from "@/hooks/use-toast";
+import toast from "react-hot-toast";
 
 type Wish = InferSelectModel<typeof wishes>;
 
@@ -23,7 +23,6 @@ interface WishesGridProps {
 }
 
 export function WishesGrid({ wishes, readonly = false }: WishesGridProps) {
-  const { toast } = useToast();
   const [imageDimensions, setImageDimensions] = React.useState<
     Record<string, ImageDimension>
   >({});
@@ -43,25 +42,29 @@ export function WishesGrid({ wishes, readonly = false }: WishesGridProps) {
   };
 
   const handleMoveUp = async (wish: Wish) => {
-    const result = await updateWishPosition(wish.id, wish.wishlistId, "up");
-    if (!result.success) {
-      toast({
-        title: "Error",
-        description: result.error,
-        variant: "destructive",
-      });
-    }
+    await toast.promise(updateWishPosition(wish.id, wish.wishlistId, "up"), {
+      loading: "Moving wish up...",
+      success: (result) => {
+        if (result.success) {
+          return "Wish moved up successfully";
+        }
+        throw new Error(result.error || "Failed to move wish up");
+      },
+      error: (err) => err.message || "Failed to move wish up",
+    });
   };
 
   const handleMoveDown = async (wish: Wish) => {
-    const result = await updateWishPosition(wish.id, wish.wishlistId, "down");
-    if (!result.success) {
-      toast({
-        title: "Error",
-        description: result.error,
-        variant: "destructive",
-      });
-    }
+    await toast.promise(updateWishPosition(wish.id, wish.wishlistId, "down"), {
+      loading: "Moving wish down...",
+      success: (result) => {
+        if (result.success) {
+          return "Wish moved down successfully";
+        }
+        throw new Error(result.error || "Failed to move wish down");
+      },
+      error: (err) => err.message || "Failed to move wish down",
+    });
   };
 
   const handleEdit = (wish: Wish) => {
@@ -111,6 +114,7 @@ export function WishesGrid({ wishes, readonly = false }: WishesGridProps) {
         <EditWishDialog
           wish={selectedWish}
           open={editDialogOpen}
+          setOpen={setEditDialogOpen}
           onOpenChange={setEditDialogOpen}
         />
       )}

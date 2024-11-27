@@ -11,9 +11,9 @@ import {
 } from "@/components/ui/sidebar";
 import React from "react";
 import { toggleWishlistFavorite } from "@/actions/wishlist";
-import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 export function NavFavorites({
   favorites,
@@ -25,24 +25,20 @@ export function NavFavorites({
     id: string;
   }[];
 }) {
-  const { toast } = useToast();
   const router = useRouter();
 
   const handleUnfavorite = async (id: string) => {
-    const result = await toggleWishlistFavorite(id);
-    if (result.success) {
-      toast({
-        title: "Removed from favorites",
-        description: "Wishlist removed from favorites",
-      });
-      router.refresh();
-    } else {
-      toast({
-        title: "Error",
-        description: result.error,
-        variant: "destructive",
-      });
-    }
+    await toast.promise(toggleWishlistFavorite(id), {
+      loading: "Removing from favorites...",
+      success: (result) => {
+        if (result.success) {
+          router.refresh();
+          return "Wishlist removed from favorites";
+        }
+        throw new Error(result.error || "Failed to remove from favorites");
+      },
+      error: (err) => err.message || "Failed to remove from favorites",
+    });
   };
 
   return (

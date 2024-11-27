@@ -9,9 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { createWish } from "@/actions/wish";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/hooks/use-toast";
 import { CurrencySelect } from "@/components/ui/currency-select";
 import { CURRENCY_VALUES } from "@/constants";
+import toast from "react-hot-toast";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters" }),
@@ -54,7 +54,6 @@ export function CreateWishForm({
   onLoadingChange?: (isLoading: boolean) => void;
 }) {
   const router = useRouter();
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -75,22 +74,23 @@ export function CreateWishForm({
   });
 
   async function onSubmit(values: FormData) {
-    try {
-      setIsLoading(true);
-      await createWish(wishlistId, formSchema.parse(values));
+    setIsLoading(true);
 
-      toast({
-        title: "Wish created",
-        description: "Your wish has been added to the wishlist.",
-      });
-      form.reset();
-      router.refresh();
-      onSuccess?.();
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
+    await toast.promise(createWish(wishlistId, formSchema.parse(values)), {
+      loading: "Creating wish...",
+      success: (result) => {
+        if (result.success) {
+          form.reset();
+          router.refresh();
+          onSuccess?.();
+          return "Wish created successfully!";
+        }
+        throw new Error(result.error || "Failed to create wish");
+      },
+      error: (err) => err.message || "Failed to create wish",
+    });
+
+    setIsLoading(false);
   }
 
   return (

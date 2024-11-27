@@ -79,7 +79,7 @@ export function CreateWishDialog({ wishlistId }: { wishlistId: string }) {
         <Button>Add wish</Button>
       </DrawerTrigger>
       <DrawerContent>
-        <div className="mx-auto w-full max-w-sm">
+        <div className="mx-auto w-full">
           <DrawerHeader>
             <DrawerTitle>Add new wish</DrawerTitle>
             <DrawerDescription>

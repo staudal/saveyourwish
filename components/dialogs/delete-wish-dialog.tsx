@@ -1,18 +1,27 @@
 "use client";
 
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import { Button } from "@/components/ui/button";
 import { deleteWish } from "@/actions/wish";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/hooks/use-toast";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import React from "react";
+import toast from "react-hot-toast";
 
 interface DeleteWishDialogProps {
   id: string;
@@ -28,41 +37,89 @@ export function DeleteWishDialog({
   onOpenChange,
 }: DeleteWishDialogProps) {
   const router = useRouter();
-  const { toast } = useToast();
+  const [isLoading, setIsLoading] = React.useState(false);
+  const isDesktop = useMediaQuery("(min-width: 768px)");
 
   async function handleDelete() {
-    const result = await deleteWish(id, wishlistId);
-    if (result.success) {
-      toast({
-        title: "Wish deleted",
-        description: "Your wish has been successfully deleted.",
-      });
-      router.refresh();
-      onOpenChange(false);
-    } else {
-      toast({
-        title: "Error",
-        description: result.error,
-        variant: "destructive",
-      });
-    }
+    setIsLoading(true);
+
+    await toast.promise(deleteWish(id, wishlistId), {
+      loading: "Deleting wish...",
+      success: (result) => {
+        if (result.success) {
+          router.refresh();
+          onOpenChange(false);
+          return "Wish deleted successfully!";
+        }
+        throw new Error(result.error || "Failed to delete wish");
+      },
+      error: (err) => err.message || "Failed to delete wish",
+    });
+
+    setIsLoading(false);
+  }
+
+  if (isDesktop) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Are you absolutely sure?</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. This will permanently delete this
+              wish.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+            <Button
+              className="w-full"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="w-full"
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isLoading}
+            >
+              {isLoading ? "Deleting..." : "Delete wish"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
   }
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete this
-            wish.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent>
+        <div className="mx-auto w-full">
+          <DrawerHeader>
+            <DrawerTitle>Are you absolutely sure?</DrawerTitle>
+            <DrawerDescription>
+              This action cannot be undone. This will permanently delete this
+              wish.
+            </DrawerDescription>
+          </DrawerHeader>
+          <DrawerFooter className="pt-2">
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isLoading}
+            >
+              {isLoading ? "Deleting..." : "Delete wish"}
+            </Button>
+            <DrawerClose asChild>
+              <Button variant="outline" disabled={isLoading}>
+                Cancel
+              </Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 }

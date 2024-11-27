@@ -65,7 +65,7 @@ export const columns: ColumnDef<Wishlist>[] = [
     sortingFn: sortingFns.alphanumeric,
     cell: ({ row }) => {
       return (
-        <span className="text-muted-foreground">
+        <span className="text-muted-foreground hidden md:table-cell">
           {row.getValue("category")}
         </span>
       );
@@ -77,7 +77,7 @@ export const columns: ColumnDef<Wishlist>[] = [
     cell: ({ row }) => {
       const count = row.getValue("wishCount") as number;
       return (
-        <span className="text-muted-foreground">
+        <span className="text-muted-foreground hidden md:table-cell">
           {count} {count === 1 ? "wish" : "wishes"}
         </span>
       );
@@ -92,11 +92,13 @@ export const columns: ColumnDef<Wishlist>[] = [
       const result = calculateAveragePrice(wishes);
 
       if (!result) {
-        return <span className="text-muted-foreground">-</span>;
+        return (
+          <span className="text-muted-foreground hidden md:table-cell">-</span>
+        );
       }
 
       return (
-        <span className="text-muted-foreground">
+        <span className="text-muted-foreground hidden md:table-cell">
           {formatPrice(result.amount, result.currency)}
         </span>
       );

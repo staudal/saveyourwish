@@ -9,6 +9,7 @@ import { updateWishImagePosition } from "@/actions/wish";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
+import toast from "react-hot-toast";
 
 type Wish = InferSelectModel<typeof wishes>;
 
@@ -21,6 +22,7 @@ export function ImagePositionDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const [isLoading, setIsLoading] = useState(false);
   const [verticalPosition, setVerticalPosition] = useState(
     wish.verticalPosition ?? 50
   );
@@ -71,19 +73,28 @@ export function ImagePositionDialog({
   };
 
   const handleSave = async () => {
-    console.log("Saving position:", {
-      vertical: verticalPosition,
-      horizontal: horizontalPosition,
-      zoom,
-    });
+    setIsLoading(true);
 
-    const result = await updateWishImagePosition(wish.id, wish.wishlistId, {
-      vertical: verticalPosition,
-      horizontal: horizontalPosition,
-      zoom,
-    });
+    await toast.promise(
+      updateWishImagePosition(wish.id, wish.wishlistId, {
+        vertical: verticalPosition,
+        horizontal: horizontalPosition,
+        zoom,
+      }),
+      {
+        loading: "Updating image position...",
+        success: (result) => {
+          if (result.success) {
+            onOpenChange(false);
+            return "Image position updated successfully!";
+          }
+          throw new Error(result.error || "Failed to update image position");
+        },
+        error: (err) => err.message || "Failed to update image position",
+      }
+    );
 
-    console.log("Save result:", result);
+    setIsLoading(false);
   };
 
   const containerAspectRatio = 16 / 9;
@@ -189,16 +200,15 @@ export function ImagePositionDialog({
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isLoading}
+            >
               Cancel
             </Button>
-            <Button
-              onClick={async () => {
-                await handleSave();
-                onOpenChange(false);
-              }}
-            >
-              Save changes
+            <Button onClick={handleSave} disabled={isLoading}>
+              {isLoading ? "Saving..." : "Save changes"}
             </Button>
           </div>
         </div>

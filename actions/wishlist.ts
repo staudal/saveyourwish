@@ -47,16 +47,21 @@ export async function getWishlists() {
 }
 
 export async function createWishlist(title: string, category: string) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
+  try {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error("Unauthorized");
 
-  await db.insert(wishlists).values({
-    title,
-    category,
-    userId: session.user.id,
-  });
+    await db.insert(wishlists).values({
+      title,
+      category,
+      userId: session.user.id,
+    });
 
-  revalidatePath("/wishlists");
+    revalidatePath("/wishlists");
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "Failed to create wishlist" };
+  }
 }
 
 export async function deleteWishlist(id: string) {

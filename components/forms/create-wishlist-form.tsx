@@ -11,10 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { createWishlist } from "@/actions/wishlist";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 // Create the Zod enum dynamically based on the categories from constants.ts
 const CategoryEnum = z.enum(WISHLIST_CATEGORIES);
@@ -26,11 +26,20 @@ const formSchema = z.object({
   category: CategoryEnum,
 });
 
-export function CreateWishlistForm({ onSuccess }: { onSuccess?: () => void }) {
+export function CreateWishlistForm({
+  onSuccess,
+  onLoadingChange,
+}: {
+  onSuccess?: () => void;
+  onLoadingChange?: (isLoading: boolean) => void;
+}) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  // 1. Define your form.
+  useEffect(() => {
+    onLoadingChange?.(isLoading);
+  }, [isLoading, onLoadingChange]);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -39,23 +48,29 @@ export function CreateWishlistForm({ onSuccess }: { onSuccess?: () => void }) {
     },
   });
 
-  // 2. Define a submit handler.
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    try {
-      setIsLoading(true);
-      await createWishlist(values.title, values.category);
-      form.reset();
-      router.refresh();
-      onSuccess?.();
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
+    setIsLoading(true);
+
+    await toast.promise(createWishlist(values.title, values.category), {
+      loading: "Creating wishlist...",
+      success: (result) => {
+        if (result.success) {
+          form.reset();
+          router.refresh();
+          onSuccess?.();
+          return "Wishlist created successfully!";
+        }
+        throw new Error(result.error || "Failed to create wishlist");
+      },
+      error: (err) => err.message || "Failed to create wishlist",
+    });
+
+    setIsLoading(false);
   }
 
   return (
     <form
+      id="create-wishlist-form"
       onSubmit={form.handleSubmit(onSubmit)}
       className="grid items-start gap-4"
     >
@@ -63,7 +78,7 @@ export function CreateWishlistForm({ onSuccess }: { onSuccess?: () => void }) {
         <div className="flex justify-between items-center">
           <Label htmlFor="title">Title</Label>
           {form.formState.errors.title && (
-            <p className="text-sm text-red-600">
+            <p className="text-sm text-red-600 leading-none">
               {form.formState.errors.title?.message}
             </p>
           )}
@@ -75,7 +90,7 @@ export function CreateWishlistForm({ onSuccess }: { onSuccess?: () => void }) {
         <div className="flex justify-between items-center">
           <Label htmlFor="category">Category</Label>
           {form.formState.errors.category && (
-            <p className="text-sm text-red-600">
+            <p className="text-sm text-red-600 leading-none">
               {form.formState.errors.category?.message}
             </p>
           )}
@@ -98,14 +113,7 @@ export function CreateWishlistForm({ onSuccess }: { onSuccess?: () => void }) {
             </Select>
           )}
         />
-        {form.formState.errors.category && (
-          <p>{form.formState.errors.category?.message}</p>
-        )}
       </div>
-
-      <Button type="submit" disabled={isLoading}>
-        {isLoading ? "Creating..." : "Create"}
-      </Button>
     </form>
   );
 }
