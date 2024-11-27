@@ -1,6 +1,6 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef, sortingFns } from "@tanstack/react-table";
 import { FavoriteButton } from "@/components/favorite-button";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
@@ -57,10 +57,12 @@ export const columns: ColumnDef<Wishlist>[] = [
     cell: ({ row }) => {
       return <span className="font-medium">{row.getValue("title")}</span>;
     },
+    sortingFn: sortingFns.alphanumeric,
   },
   {
     accessorKey: "category",
     header: "Category",
+    sortingFn: sortingFns.alphanumeric,
   },
   {
     accessorKey: "wishCount",
@@ -73,6 +75,7 @@ export const columns: ColumnDef<Wishlist>[] = [
         </span>
       );
     },
+    sortingFn: sortingFns.basic,
   },
   {
     accessorKey: "averagePrice",
@@ -91,9 +94,20 @@ export const columns: ColumnDef<Wishlist>[] = [
         </span>
       );
     },
+    sortingFn: (rowA, rowB) => {
+      const aPrice = calculateAveragePrice(rowA.original.wishes);
+      const bPrice = calculateAveragePrice(rowB.original.wishes);
+
+      if (!aPrice && !bPrice) return 0;
+      if (!aPrice) return 1;
+      if (!bPrice) return -1;
+
+      return aPrice.amount - bPrice.amount;
+    },
   },
   {
     id: "actions",
     cell: ({ row }) => <WishlistActions wishlist={row.original} />,
+    enableSorting: false,
   },
 ];

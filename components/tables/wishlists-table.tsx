@@ -11,11 +11,15 @@ import {
 import {
   flexRender,
   getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
   useReactTable,
 } from "@tanstack/react-table";
 import { columns } from "./wishlists-columns";
 import { useRouter } from "next/navigation";
 import { Currency } from "@/constants";
+import { useState } from "react";
+import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 
 type Wishlist = {
   id: string;
@@ -35,10 +39,17 @@ export default function WishlistsTable({
   wishlists: Wishlist[];
 }) {
   const router = useRouter();
+  const [sorting, setSorting] = useState<SortingState>([]);
+
   const table = useReactTable({
     data: wishlists,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    onSortingChange: setSorting,
+    state: {
+      sorting,
+    },
   });
 
   return (
@@ -48,13 +59,32 @@ export default function WishlistsTable({
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
+                <TableHead
+                  key={header.id}
+                  className={
+                    header.column.getCanSort()
+                      ? "cursor-pointer select-none hover:bg-muted/50"
+                      : ""
+                  }
+                  onClick={header.column.getToggleSortingHandler()}
+                >
+                  <div className="flex items-center gap-2">
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+                    {header.column.getCanSort() ? (
+                      header.column.getIsSorted() ? (
+                        header.column.getIsSorted() === "desc" ? (
+                          <ArrowDown className="h-4 w-4" />
+                        ) : (
+                          <ArrowUp className="h-4 w-4" />
+                        )
+                      ) : (
+                        <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                      )
+                    ) : null}
+                  </div>
                 </TableHead>
               ))}
             </TableRow>

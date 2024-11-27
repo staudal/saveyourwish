@@ -18,16 +18,18 @@ export function DynamicBreadcrumb() {
 
   useEffect(() => {
     async function processSegments() {
+      // Filter out empty segments and 'dashboard'
       const rawSegments = pathname
         .split("/")
         .filter((segment) => segment && segment !== "dashboard");
 
       // Check if we're in a wishlist route
-      if (rawSegments[0] === "wishlists" && rawSegments[1]) {
-        const wishlist = await getWishlist(rawSegments[1]);
+      if (rawSegments.includes("wishlists") && rawSegments.length > 1) {
+        const wishlistId = rawSegments[rawSegments.length - 1];
+        const wishlist = await getWishlist(wishlistId);
         if (wishlist) {
           // Replace the ID with the title
-          rawSegments[1] = wishlist.title;
+          rawSegments[rawSegments.length - 1] = wishlist.title;
         }
       }
 
@@ -47,13 +49,7 @@ export function DynamicBreadcrumb() {
                 <BreadcrumbPage>{formatSegment(segment)}</BreadcrumbPage>
               ) : (
                 <BreadcrumbLink
-                  href={
-                    "/dashboard/" +
-                    pathname
-                      .split("/")
-                      .slice(1, index + 2)
-                      .join("/")
-                  }
+                  href={"/dashboard/" + segments.slice(0, index + 1).join("/")}
                 >
                   {formatSegment(segment)}
                 </BreadcrumbLink>
