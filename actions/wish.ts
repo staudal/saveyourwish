@@ -56,6 +56,17 @@ export async function getWishes(wishlistId: string, isSharedAccess?: boolean) {
   if (!isSharedAccess) {
     const session = await auth();
     if (!session?.user?.id) throw new Error("Unauthorized");
+
+    // Verify wishlist belongs to user
+    const wishlist = await db
+      .select()
+      .from(wishlists)
+      .where(
+        and(eq(wishlists.id, wishlistId), eq(wishlists.userId, session.user.id))
+      )
+      .then((rows) => rows[0]);
+
+    if (!wishlist) throw new Error("Wishlist not found");
   }
 
   return await db
