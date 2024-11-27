@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Bot, Command, Gift, LifeBuoy, Send, Settings2 } from "lucide-react";
+import { Command, Gift, LifeBuoy, Send, Settings2 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
 import { NavFavorites } from "@/components/nav-favorites";
@@ -26,55 +26,11 @@ const data = {
       title: "Wishlists",
       url: "/dashboard/wishlists",
       icon: Gift,
-      isActive: true,
-      items: [
-        {
-          title: "All wishlists",
-          url: "/dashboard/wishlists",
-        },
-        {
-          title: "Favorites",
-          url: "/dashboard/wishlists/favorites",
-        },
-        {
-          title: "Shared",
-          url: "/dashboard/wishlists/shared",
-        },
-      ],
-    },
-    {
-      title: "Inspiration",
-      url: "#",
-      icon: Bot,
-      items: [
-        {
-          title: "Trending",
-          url: "#",
-        },
-        {
-          title: "Generator",
-          url: "#",
-        },
-      ],
     },
     {
       title: "Settings",
-      url: "#",
+      url: "/dashboard/settings",
       icon: Settings2,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Account",
-          url: "#",
-        },
-        {
-          title: "Notifications",
-          url: "#",
-        },
-      ],
     },
   ],
   navSecondary: [
