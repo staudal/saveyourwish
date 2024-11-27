@@ -20,128 +20,17 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, Controller } from "react-hook-form";
-import { z } from "zod";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { updateWishlist } from "@/actions/wishlist";
-import { useRouter } from "next/navigation";
 import { Pencil } from "lucide-react";
-import { WISHLIST_CATEGORIES } from "@/constants";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import toast from "react-hot-toast";
+import { EditWishlistForm } from "../forms/edit-wishlist-form";
 
-// Create the Zod enum dynamically based on the categories from constants.ts
-const CategoryEnum = z.enum(WISHLIST_CATEGORIES);
-
-const formSchema = z.object({
-  title: z.string().min(2, { message: "Title must be at least 2 characters" }),
-  category: CategoryEnum,
-});
-
-type FormData = z.infer<typeof formSchema>;
-
-function EditWishlistForm({
-  wishlist,
-  onSuccess,
-  onLoadingChange,
-}: {
-  wishlist: { id: string; title: string; category: string };
-  onSuccess?: () => void;
-  onLoadingChange?: (isLoading: boolean) => void;
-}) {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = React.useState(false);
-
-  React.useEffect(() => {
-    onLoadingChange?.(isLoading);
-  }, [isLoading, onLoadingChange]);
-
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: wishlist.title,
-      category: wishlist.category as z.infer<typeof CategoryEnum>,
-    },
-  });
-
-  async function onSubmit(values: FormData) {
-    setIsLoading(true);
-
-    await toast.promise(updateWishlist(wishlist.id, values), {
-      loading: "Updating wishlist...",
-      success: (result) => {
-        if (result.success) {
-          router.refresh();
-          onSuccess?.();
-          return "Wishlist updated successfully!";
-        }
-        throw new Error(result.error || "Failed to update wishlist");
-      },
-      error: (err) => err.message || "Failed to update wishlist",
-    });
-
-    setIsLoading(false);
+export const EditWishlistDialog = React.forwardRef<
+  HTMLButtonElement,
+  {
+    wishlist: { id: string; title: string; category: string };
+    className?: string;
   }
-
-  return (
-    <form
-      id="edit-wishlist-form"
-      onSubmit={form.handleSubmit(onSubmit)}
-      className="space-y-4"
-    >
-      <div className="space-y-2">
-        <Label htmlFor="title">Title</Label>
-        <Input {...form.register("title")} id="title" />
-        {form.formState.errors.title && (
-          <span className="text-sm text-red-600">
-            {form.formState.errors.title.message}
-          </span>
-        )}
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="category">Category</Label>
-        <Controller
-          control={form.control}
-          name="category"
-          render={({ field }) => (
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <SelectTrigger>
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                {WISHLIST_CATEGORIES.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        />
-        {form.formState.errors.category && (
-          <span className="text-sm text-red-600">
-            {form.formState.errors.category.message}
-          </span>
-        )}
-      </div>
-    </form>
-  );
-}
-
-export function EditWishlistDialog({
-  wishlist,
-}: {
-  wishlist: { id: string; title: string; category: string };
-}) {
+>(({ wishlist }, ref) => {
   const [open, setOpen] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -150,15 +39,11 @@ export function EditWishlistDialog({
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <Button variant="ghost" size="icon">
             <Pencil className="h-4 w-4" />
           </Button>
         </DialogTrigger>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit wishlist</DialogTitle>
             <DialogDescription>
@@ -197,11 +82,12 @@ export function EditWishlistDialog({
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
         <Button
+          ref={ref}
           variant="ghost"
-          size="icon"
-          onClick={(e) => e.stopPropagation()}
+          className="w-full justify-start relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
         >
-          <Pencil className="h-4 w-4" />
+          <Pencil className="mr-2 h-4 w-4" />
+          Edit
         </Button>
       </DrawerTrigger>
       <DrawerContent>
@@ -237,4 +123,6 @@ export function EditWishlistDialog({
       </DrawerContent>
     </Drawer>
   );
-}
+});
+
+EditWishlistDialog.displayName = "EditWishlistDialog";

@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import { Currency } from "@/constants";
 import { useState } from "react";
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type Wishlist = {
   id: string;
@@ -63,18 +64,28 @@ export default function WishlistsTable({
                   {headerGroup.headers.map((header) => (
                     <TableHead
                       key={header.id}
-                      className={`${
-                        header.id !== "title" && header.id !== "actions"
-                          ? "hidden md:table-cell"
-                          : ""
-                      } ${
+                      className={cn(
+                        "h-10 px-2 text-left align-middle font-medium text-muted-foreground",
+                        header.id !== "title" &&
+                          header.id !== "actions" &&
+                          header.id !== "category" &&
+                          "hidden md:table-cell",
+                        header.id === "title" && "w-[35%] md:w-auto",
+                        header.id === "category" && "w-[25%] md:w-auto",
+                        header.id === "actions" &&
+                          "!w-[40%] text-right md:w-auto",
                         header.column.getCanSort()
                           ? "cursor-pointer select-none hover:bg-muted/50"
                           : ""
-                      }`}
+                      )}
                       onClick={header.column.getToggleSortingHandler()}
                     >
-                      <div className="flex items-center gap-2">
+                      <div
+                        className={cn(
+                          "flex items-center gap-2",
+                          header.id === "actions" && "justify-end w-full"
+                        )}
+                      >
                         {flexRender(
                           header.column.columnDef.header,
                           header.getContext()

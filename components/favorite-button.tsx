@@ -5,13 +5,20 @@ import { Star } from "lucide-react";
 import { toggleWishlistFavorite } from "@/actions/wishlist";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { cn } from "@/lib/utils";
+import React from "react";
 
 interface FavoriteButtonProps {
   id: string;
   favorite: boolean;
+  children?: React.ReactNode;
+  className?: string;
 }
 
-export function FavoriteButton({ id, favorite }: FavoriteButtonProps) {
+export const FavoriteButton = React.forwardRef<
+  HTMLButtonElement,
+  FavoriteButtonProps
+>(({ id, favorite, children, className }, ref) => {
   const router = useRouter();
 
   const handleClick = async (e: React.MouseEvent) => {
@@ -37,12 +44,17 @@ export function FavoriteButton({ id, favorite }: FavoriteButtonProps) {
 
   return (
     <Button
+      ref={ref}
       variant="ghost"
-      size="icon"
+      size={children ? "default" : "icon"}
+      className={cn(children && "w-full justify-start", className)}
       onClick={handleClick}
-      title={favorite ? "Remove from favorites" : "Add to favorites"}
     >
-      <Star className={favorite ? "fill-yellow-400" : ""} size={16} />
+      {children || (
+        <Star className={favorite ? "fill-yellow-400" : ""} size={16} />
+      )}
     </Button>
   );
-}
+});
+
+FavoriteButton.displayName = "FavoriteButton";

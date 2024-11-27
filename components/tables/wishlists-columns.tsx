@@ -1,15 +1,21 @@
 "use client";
 
 import { ColumnDef, sortingFns } from "@tanstack/react-table";
-import { FavoriteButton } from "@/components/favorite-button";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { MoreHorizontal, Trash2, Star } from "lucide-react";
 import { DeleteWishlistDialog } from "@/components/dialogs/delete-wishlist-dialog";
 import { useState } from "react";
 import { formatPrice } from "@/components/ui/currency-select";
 import { calculateAveragePrice } from "@/constants";
 import { type Currency } from "@/constants";
 import { EditWishlistDialog } from "@/components/dialogs/edit-wishlist-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { FavoriteButton } from "@/components/favorite-button";
 
 type Wishlist = {
   id: string;
@@ -29,18 +35,52 @@ function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
 
   return (
     <div
-      className="flex justify-end gap-2"
       onClick={(e) => e.stopPropagation()}
+      className="flex justify-end gap-2"
     >
-      <FavoriteButton id={wishlist.id} favorite={wishlist.favorite} />
-      <EditWishlistDialog wishlist={wishlist} />
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setShowDeleteDialog(true)}
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
+      {/* Mobile dropdown */}
+      <div className="md:hidden">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuItem asChild>
+              <EditWishlistDialog wishlist={wishlist} />
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <FavoriteButton id={wishlist.id} favorite={wishlist.favorite}>
+                <Star className="mr-2 h-4 w-4" />
+                {wishlist.favorite ? "Unfavorite" : "Favorite"}
+              </FavoriteButton>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setShowDeleteDialog(true)}
+              className="text-destructive"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Desktop buttons */}
+      <div className="hidden md:flex gap-2">
+        <FavoriteButton id={wishlist.id} favorite={wishlist.favorite} />
+        <EditWishlistDialog wishlist={wishlist} />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setShowDeleteDialog(true)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Delete Dialog */}
       <DeleteWishlistDialog
         id={wishlist.id}
         open={showDeleteDialog}
@@ -55,7 +95,11 @@ export const columns: ColumnDef<Wishlist>[] = [
     accessorKey: "title",
     header: "Title",
     cell: ({ row }) => {
-      return <span className="font-medium">{row.getValue("title")}</span>;
+      return (
+        <div className="flex flex-col gap-1">
+          <span className="font-medium">{row.getValue("title")}</span>
+        </div>
+      );
     },
     sortingFn: sortingFns.alphanumeric,
   },
@@ -65,7 +109,7 @@ export const columns: ColumnDef<Wishlist>[] = [
     sortingFn: sortingFns.alphanumeric,
     cell: ({ row }) => {
       return (
-        <span className="text-muted-foreground hidden md:table-cell">
+        <span className="text-muted-foreground">
           {row.getValue("category")}
         </span>
       );
@@ -116,6 +160,7 @@ export const columns: ColumnDef<Wishlist>[] = [
   },
   {
     id: "actions",
+    header: "",
     cell: ({ row }) => <WishlistActions wishlist={row.original} />,
     enableSorting: false,
   },
