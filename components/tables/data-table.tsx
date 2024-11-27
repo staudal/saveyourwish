@@ -14,6 +14,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
+import { type Wishlist } from "./wishlists-columns";
 
 import {
   Table,
@@ -38,7 +39,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
 }
 
-export function DataTable<TData, TValue>({
+export function DataTable<TData extends Wishlist, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
@@ -140,7 +141,7 @@ export function DataTable<TData, TValue>({
                         onClick={(e) => {
                           if (!(e.target as HTMLElement).closest("button, a")) {
                             router.push(
-                              `/dashboard/wishlists/${(row.original as any).id}`
+                              `/dashboard/wishlists/${row.original.id}`
                             );
                           }
                         }}
