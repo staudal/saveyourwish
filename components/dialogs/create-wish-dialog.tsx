@@ -26,6 +26,7 @@ import { BadgePlus } from "lucide-react";
 
 export function CreateWishDialog({ wishlistId }: { wishlistId: string }) {
   const [open, setOpen] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   if (isDesktop) {
@@ -47,17 +48,24 @@ export function CreateWishDialog({ wishlistId }: { wishlistId: string }) {
           <CreateWishForm
             wishlistId={wishlistId}
             onSuccess={() => setOpen(false)}
+            onLoadingChange={setIsLoading}
           />
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-4 w-full">
             <Button
               className="w-full"
               variant="outline"
               onClick={() => setOpen(false)}
+              disabled={isLoading}
             >
               Cancel
             </Button>
-            <Button className="w-full" type="submit" form="create-wish-form">
-              Add wish
+            <Button
+              className="w-full"
+              type="submit"
+              form="create-wish-form"
+              disabled={isLoading}
+            >
+              {isLoading ? "Adding..." : "Add wish"}
             </Button>
           </div>
         </DialogContent>
@@ -82,14 +90,17 @@ export function CreateWishDialog({ wishlistId }: { wishlistId: string }) {
             <CreateWishForm
               wishlistId={wishlistId}
               onSuccess={() => setOpen(false)}
+              onLoadingChange={setIsLoading}
             />
           </div>
           <DrawerFooter className="pt-2">
-            <Button type="submit" form="create-wish-form">
-              Add wish
+            <Button type="submit" form="create-wish-form" disabled={isLoading}>
+              {isLoading ? "Adding..." : "Add wish"}
             </Button>
             <DrawerClose asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline" disabled={isLoading}>
+                Cancel
+              </Button>
             </DrawerClose>
           </DrawerFooter>
         </div>

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createWish } from "@/actions/wish";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { CurrencySelect } from "@/components/ui/currency-select";
@@ -47,13 +47,19 @@ type FormData = z.infer<typeof formSchema>;
 export function CreateWishForm({
   wishlistId,
   onSuccess,
+  onLoadingChange,
 }: {
   wishlistId: string;
   onSuccess?: () => void;
+  onLoadingChange?: (isLoading: boolean) => void;
 }) {
   const router = useRouter();
   const { toast } = useToast();
-  const [_, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    onLoadingChange?.(isLoading);
+  }, [isLoading, onLoadingChange]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
