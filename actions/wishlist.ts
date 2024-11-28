@@ -149,25 +149,34 @@ export async function toggleWishlistSharing(id: string) {
 
     if (!wishlist) throw new Error("Wishlist not found");
 
-    const shareId = !wishlist.shared ? crypto.randomUUID() : null;
+    const wasShared = wishlist.shared;
+    const oldShareId = wishlist.shareId;
 
     await db
       .update(wishlists)
       .set({
-        shared: !wishlist.shared,
-        shareId: shareId,
+        shared: !wasShared,
+        shareId: !wasShared ? id : null,
       })
       .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)));
 
+    // Always revalidate the dashboard path
     revalidatePath(`/dashboard/wishlists/${id}`);
-    if (wishlist.shareId) {
-      revalidatePath(`/shared/${wishlist.shareId}`);
+
+    // If we're disabling sharing, revalidate the old share URL
+    if (wasShared && oldShareId) {
+      revalidatePath(`/shared/${oldShareId}`);
     }
-    if (shareId) {
-      revalidatePath(`/shared/${shareId}`);
+    // If we're enabling sharing, revalidate the new share URL
+    if (!wasShared) {
+      revalidatePath(`/shared/${id}`);
     }
 
-    return { success: true, isShared: !wishlist.shared, shareId };
+    return {
+      success: true,
+      isShared: !wasShared,
+      shareId: !wasShared ? id : null,
+    };
   } catch (error) {
     return { success: false, error: "Failed to update sharing status" };
   }
@@ -179,6 +188,8 @@ export async function getSharedWishlist(shareId: string) {
       id: wishlists.id,
       title: wishlists.title,
       category: wishlists.category,
+      shared: wishlists.shared,
+      shareId: wishlists.shareId,
     })
     .from(wishlists)
     .where(and(eq(wishlists.shareId, shareId), eq(wishlists.shared, true)))
@@ -206,14 +217,14 @@ export async function updateWishlist(
 
     // Get the wishlist to check if it's shared
     const wishlist = await db
-    .select()
-    .from(wishlists)
-    .where(eq(wishlists.id, id))
-    .then((rows) => rows[0]);
+      .select()
+      .from(wishlists)
+      .where(eq(wishlists.id, id))
+      .then((rows) => rows[0]);
 
     // Revalidate the shared path if the wishlist is shared
     if (wishlist?.shareId && wishlist.shared) {
-    revalidatePath(`/shared/${wishlist.shareId}`);
+      revalidatePath(`/shared/${wishlist.shareId}`);
     }
 
     return { success: true };

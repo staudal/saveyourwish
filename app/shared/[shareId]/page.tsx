@@ -16,9 +16,9 @@ export default async function SharedWishlistPage({
   const wishes = await getWishes(wishlist.id, true);
 
   return (
-    <div className="container max-w-4xl py-6 space-y-4 mx-auto">
+    <div className="container mx-auto max-w-screen-lg my-8 px-4 space-y-4">
       <h2 className="text-2xl font-bold tracking-tight">{wishlist.title}</h2>
-      <WishesGrid wishes={wishes} readonly />
+      <WishesGrid wishes={wishes} readonly wishlist={wishlist} />
     </div>
   );
 }

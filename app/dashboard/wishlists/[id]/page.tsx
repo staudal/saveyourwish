@@ -1,39 +1,29 @@
-import { CreateWishDialog } from "@/components/dialogs/create-wish-dialog";
-import { WishesGrid } from "@/components/wishes/grid/index";
 import { getWishes } from "@/actions/wish";
 import { getWishlist } from "@/actions/wishlist";
 import { notFound } from "next/navigation";
-import { ShareWishlistDialog } from "@/components/dialogs/share-wishlist-dialog";
-import { FavoriteWishlistButton } from "@/components/favorite-wishlist-button";
+import { WishesGrid } from "@/components/wishes/grid";
 
-export default async function Page({ params }: { params: { id: string } }) {
+export default async function WishlistPage({
+  params,
+}: {
+  params: { id: string };
+}) {
   const [wishlist, wishes] = await Promise.all([
     getWishlist(params.id),
     getWishes(params.id),
   ]);
 
-  if (!wishlist) {
-    notFound();
-  }
+  if (!wishlist) notFound();
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold tracking-tight">{wishlist.title}</h2>
-        <div className="flex gap-2">
-          <FavoriteWishlistButton
-            wishlistId={params.id}
-            isFavorite={wishlist.favorite}
-          />
-          <ShareWishlistDialog
-            wishlistId={params.id}
-            isShared={wishlist.shared}
-            shareId={wishlist.shareId}
-          />
-          <CreateWishDialog wishlistId={params.id} />
-        </div>
-      </div>
-      <WishesGrid wishes={wishes} />
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <WishesGrid
+        wishes={wishes}
+        wishlistId={wishlist.id}
+        isShared={wishlist.shared}
+        shareId={wishlist.shareId}
+        title={wishlist.title}
+      />
     </div>
   );
 }

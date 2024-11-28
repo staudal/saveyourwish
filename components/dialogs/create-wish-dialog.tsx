@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/drawer";
 import { CreateWishForm } from "../forms/create-wish-form";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { BadgePlus } from "lucide-react";
 
 export function CreateWishDialog({ wishlistId }: { wishlistId: string }) {
   const [open, setOpen] = React.useState(false);
@@ -33,10 +32,7 @@ export function CreateWishDialog({ wishlistId }: { wishlistId: string }) {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button>
-            <BadgePlus className="mr-2 h-4 w-4" />
-            Add wish
-          </Button>
+          <Button>Add wish</Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>

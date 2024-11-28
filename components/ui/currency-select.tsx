@@ -33,9 +33,10 @@ export function CurrencySelect({ value, onValueChange }: CurrencySelectProps) {
 }
 
 export function formatPrice(price: number, currency: Currency) {
-  const formatter = new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency,
-  });
-  return formatter.format(price);
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(price);
 }

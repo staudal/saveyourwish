@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Copy, Share2 } from "lucide-react";
+import { Copy, Check } from "lucide-react";
 import { toggleWishlistSharing } from "@/actions/wishlist";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import toast from "react-hot-toast";
@@ -40,13 +40,24 @@ export function ShareWishlistDialog({
 }: ShareWishlistDialogProps) {
   const [open, setOpen] = React.useState(false);
   const [sharing, setSharing] = React.useState(isShared);
+  const [shareUrl, setShareUrl] = React.useState("");
   const isDesktop = useMediaQuery("(min-width: 768px)");
+  const [showCheck, setShowCheck] = React.useState(false);
 
-  const shareUrl = shareId ? `${window.location.origin}/shared/${shareId}` : "";
+  React.useEffect(() => {
+    if (shareId) {
+      setShareUrl(`${window.location.origin}/shared/${shareId}`);
+    }
+  }, [shareId]);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(shareUrl);
+    setShowCheck(true);
     toast.success("Share link copied to clipboard");
+
+    setTimeout(() => {
+      setShowCheck(false);
+    }, 2000);
   };
 
   const handleToggleSharing = async () => {
@@ -55,6 +66,11 @@ export function ShareWishlistDialog({
       success: (result) => {
         if (result.success && typeof result.isShared === "boolean") {
           setSharing(result.isShared);
+          if (result.isShared && result.shareId) {
+            setShareUrl(`${window.location.origin}/shared/${result.shareId}`);
+          } else {
+            setShareUrl("");
+          }
           return result.isShared
             ? "Anyone with the link can now view this wishlist"
             : "This wishlist is now private";
@@ -65,14 +81,27 @@ export function ShareWishlistDialog({
     });
   };
 
+  const CopyButton = () => (
+    <Button
+      onClick={copyToClipboard}
+      type="button"
+      size="icon"
+      variant="outline"
+      className="transition-colors"
+    >
+      {showCheck ? (
+        <Check className="h-4 w-4 text-green-500" />
+      ) : (
+        <Copy className="h-4 w-4" />
+      )}
+    </Button>
+  );
+
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline">
-            <Share2 className="mr-2 h-4 w-4" />
-            Share
-          </Button>
+          <Button variant="outline">Share</Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -94,14 +123,7 @@ export function ShareWishlistDialog({
                     readOnly
                     className="flex-1"
                   />
-                  <Button
-                    onClick={copyToClipboard}
-                    type="button"
-                    size="icon"
-                    variant="outline"
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
+                  <CopyButton />
                 </div>
               </div>
             </div>
@@ -130,10 +152,7 @@ export function ShareWishlistDialog({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button variant="outline">
-          <Share2 className="mr-2 h-4 w-4" />
-          Share
-        </Button>
+        <Button variant="outline">Share</Button>
       </DrawerTrigger>
       <DrawerContent>
         <div className="mx-auto w-full max-w-sm">
@@ -156,14 +175,7 @@ export function ShareWishlistDialog({
                     readOnly
                     className="flex-1"
                   />
-                  <Button
-                    onClick={copyToClipboard}
-                    type="button"
-                    size="icon"
-                    variant="outline"
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
+                  <CopyButton />
                 </div>
               </div>
             </div>

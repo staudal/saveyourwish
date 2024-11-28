@@ -1,14 +1,18 @@
 "use client";
 
-import * as React from "react";
+import { ReactSortable } from "react-sortablejs";
+import { WishCard } from "./wish-card";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { updateBulkWishPositions } from "@/actions/wish";
+import toast from "react-hot-toast";
 import { type wishes } from "@/lib/db";
 import { type InferSelectModel } from "drizzle-orm";
-import { ImagePositionDialog } from "@/components/dialogs/image-position-dialog";
-import { DeleteWishDialog } from "@/components/dialogs/delete-wish-dialog";
 import { EditWishDialog } from "@/components/dialogs/edit-wish-dialog";
-import { WishCard } from "./wish-card";
-import { updateWishPosition } from "@/actions/wish";
-import toast from "react-hot-toast";
+import { DeleteWishDialog } from "@/components/dialogs/delete-wish-dialog";
+import { ImagePositionDialog } from "@/components/dialogs/image-position-dialog";
+import { ShareWishlistDialog } from "@/components/dialogs/share-wishlist-dialog";
+import { CreateWishDialog } from "@/components/dialogs/create-wish-dialog";
 
 type Wish = InferSelectModel<typeof wishes>;
 
@@ -19,17 +23,32 @@ interface ImageDimension {
 
 interface WishesGridProps {
   wishes: Wish[];
+  wishlistId: string;
   readonly?: boolean;
+  isShared?: boolean;
+  shareId?: string | null;
+  title: string;
 }
 
-export function WishesGrid({ wishes, readonly = false }: WishesGridProps) {
-  const [imageDimensions, setImageDimensions] = React.useState<
+export function WishesGrid({
+  wishes,
+  wishlistId,
+  readonly,
+  isShared = false,
+  shareId = null,
+  title,
+}: WishesGridProps) {
+  const [items, setItems] = useState(wishes);
+  const [isReordering, setIsReordering] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [imageDimensions, setImageDimensions] = useState<
     Record<string, ImageDimension>
   >({});
-  const [selectedWish, setSelectedWish] = React.useState<Wish | null>(null);
-  const [imagePositionOpen, setImagePositionOpen] = React.useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [editDialogOpen, setEditDialogOpen] = React.useState(false);
+  const [selectedWish, setSelectedWish] = useState<Wish | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [imagePositionOpen, setImagePositionOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const handleDelete = (wish: Wish) => {
     setSelectedWish(wish);
@@ -41,83 +60,180 @@ export function WishesGrid({ wishes, readonly = false }: WishesGridProps) {
     setImagePositionOpen(true);
   };
 
-  const handleMoveUp = async (wish: Wish) => {
-    await toast.promise(updateWishPosition(wish.id, wish.wishlistId, "up"), {
-      loading: "Moving wish up...",
-      success: (result) => {
-        if (result.success) {
-          return "Wish moved up successfully";
-        }
-        throw new Error(result.error || "Failed to move wish up");
-      },
-      error: (err) => err.message || "Failed to move wish up",
-    });
-  };
-
-  const handleMoveDown = async (wish: Wish) => {
-    await toast.promise(updateWishPosition(wish.id, wish.wishlistId, "down"), {
-      loading: "Moving wish down...",
-      success: (result) => {
-        if (result.success) {
-          return "Wish moved down successfully";
-        }
-        throw new Error(result.error || "Failed to move wish down");
-      },
-      error: (err) => err.message || "Failed to move wish down",
-    });
-  };
-
   const handleEdit = (wish: Wish) => {
     setSelectedWish(wish);
     setEditDialogOpen(true);
   };
 
-  return (
-    <>
+  // Reset items when wishes prop changes
+  useEffect(() => {
+    if (!isReordering) {
+      setItems(wishes);
+      setHasChanges(false);
+    }
+  }, [wishes, isReordering]);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+
+    const positions = items.map((item, index) => ({
+      id: item.id,
+      position: index + 1,
+    }));
+
+    const result = await toast.promise(
+      updateBulkWishPositions(wishlistId, positions),
+      {
+        loading: "Saving order...",
+        success: "Order updated",
+        error: "Failed to update order",
+      }
+    );
+
+    if (result.success) {
+      setIsReordering(false);
+      setHasChanges(false);
+    }
+
+    setIsSaving(false);
+  };
+
+  const handleCancel = () => {
+    setItems(wishes);
+    setIsReordering(false);
+    setHasChanges(false);
+  };
+
+  const handleSetList = (newList: Wish[]) => {
+    setItems(newList);
+    // Check if the order has changed
+    const hasOrderChanged = newList.some(
+      (item, index) => wishes[index]?.id !== item.id
+    );
+    setHasChanges(hasOrderChanged);
+  };
+
+  if (readonly) {
+    return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {wishes.map((wish, index) => (
+        {wishes.map((wish) => (
           <WishCard
             key={wish.id}
             wish={wish}
+            readonly
+            imageDimensions={imageDimensions}
+            setImageDimensions={setImageDimensions}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">{title}</h1>
+        <div className="flex items-center gap-2">
+          {isReordering ? (
+            <>
+              <Button
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isSaving}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleSave} disabled={!hasChanges || isSaving}>
+                {isSaving ? (
+                  <>
+                    <svg
+                      className="animate-spin h-4 w-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    <span className="mr-2">Saving...</span>
+                  </>
+                ) : (
+                  "Save Order"
+                )}
+              </Button>
+            </>
+          ) : (
+            <>
+              <ShareWishlistDialog
+                wishlistId={wishlistId}
+                isShared={isShared}
+                shareId={shareId}
+              />
+              <Button variant="outline" onClick={() => setIsReordering(true)}>
+                Reorder
+              </Button>
+              <CreateWishDialog wishlistId={wishlistId} />
+            </>
+          )}
+        </div>
+      </div>
+
+      <ReactSortable
+        list={items}
+        setList={handleSetList}
+        disabled={!isReordering}
+        handle=".drag-handle"
+        animation={200}
+        className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+      >
+        {items.map((wish) => (
+          <WishCard
+            key={wish.id}
+            wish={wish}
+            isReordering={isReordering}
             imageDimensions={imageDimensions}
             setImageDimensions={setImageDimensions}
             onDelete={handleDelete}
             onAdjustImage={handleAdjustImage}
-            onMoveUp={handleMoveUp}
-            onMoveDown={handleMoveDown}
             onEdit={handleEdit}
-            isFirst={index === 0}
-            isLast={index === wishes.length - 1}
-            readonly={readonly}
           />
         ))}
-      </div>
+      </ReactSortable>
 
-      {!readonly && selectedWish?.imageUrl && (
-        <ImagePositionDialog
-          wish={selectedWish}
-          open={imagePositionOpen}
-          onOpenChange={setImagePositionOpen}
-        />
+      {selectedWish && (
+        <>
+          <EditWishDialog
+            wish={selectedWish}
+            open={editDialogOpen}
+            setOpen={setEditDialogOpen}
+            onOpenChange={setEditDialogOpen}
+          />
+          <DeleteWishDialog
+            id={selectedWish.id}
+            wishlistId={selectedWish.wishlistId}
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+          />
+          {selectedWish.imageUrl && (
+            <ImagePositionDialog
+              wish={selectedWish}
+              open={imagePositionOpen}
+              onOpenChange={setImagePositionOpen}
+            />
+          )}
+        </>
       )}
-
-      {!readonly && selectedWish && (
-        <DeleteWishDialog
-          id={selectedWish.id}
-          wishlistId={selectedWish.wishlistId}
-          open={deleteDialogOpen}
-          onOpenChange={setDeleteDialogOpen}
-        />
-      )}
-
-      {!readonly && selectedWish && (
-        <EditWishDialog
-          wish={selectedWish}
-          open={editDialogOpen}
-          setOpen={setEditDialogOpen}
-          onOpenChange={setEditDialogOpen}
-        />
-      )}
-    </>
+    </div>
   );
 }

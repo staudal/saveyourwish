@@ -147,7 +147,7 @@ export async function updateWishImagePosition(
         imageZoom: position.zoom,
       })
       .where(eq(wishes.id, id));
-      
+
     await db
       .select()
       .from(wishes)
@@ -210,14 +210,14 @@ export async function updateWishPosition(
 
     // Get the wishlist to check if it's shared
     const wishlist = await db
-    .select()
-    .from(wishlists)
-    .where(eq(wishlists.id, wishlistId))
-    .then((rows) => rows[0]);
+      .select()
+      .from(wishlists)
+      .where(eq(wishlists.id, wishlistId))
+      .then((rows) => rows[0]);
 
     // Revalidate the shared path if the wishlist is shared
     if (wishlist?.shareId && wishlist.shared) {
-    revalidatePath(`/shared/${wishlist.shareId}`);
+      revalidatePath(`/shared/${wishlist.shareId}`);
     }
 
     revalidatePath(`/dashboard/wishlists/${wishlistId}`);
@@ -272,5 +272,40 @@ export async function updateWish(
   } catch (error) {
     console.error("Failed to update wish:", error);
     return { success: false, error: "Failed to update wish" };
+  }
+}
+
+export async function updateBulkWishPositions(
+  wishlistId: string,
+  positions: { id: string; position: number }[]
+) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error("Unauthorized");
+
+    // Verify wishlist belongs to user
+    const wishlist = await db
+      .select()
+      .from(wishlists)
+      .where(
+        and(eq(wishlists.id, wishlistId), eq(wishlists.userId, session.user.id))
+      )
+      .then((rows) => rows[0]);
+
+    if (!wishlist) throw new Error("Wishlist not found");
+
+    // Update positions one by one
+    for (const { id, position } of positions) {
+      await db.update(wishes).set({ position }).where(eq(wishes.id, id));
+    }
+
+    revalidatePath(`/dashboard/wishlists/${wishlistId}`);
+    if (wishlist.shareId && wishlist.shared) {
+      revalidatePath(`/shared/${wishlist.shareId}`);
+    }
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "Failed to update positions" };
   }
 }

@@ -1,12 +1,5 @@
 import { Button } from "@/components/ui/button";
-import {
-  MoreHorizontal,
-  PencilIcon,
-  Trash2Icon,
-  Move,
-  ArrowUp,
-  ArrowDown,
-} from "lucide-react";
+import { MoreHorizontal, PencilIcon, Trash2Icon, Move } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,22 +17,14 @@ interface WishActionsProps {
   wish: Wish;
   onDelete: (wish: Wish) => void;
   onAdjustImage: (wish: Wish) => void;
-  onMoveUp: (wish: Wish) => void;
-  onMoveDown: (wish: Wish) => void;
   onEdit: (wish: Wish) => void;
-  isFirst: boolean;
-  isLast: boolean;
 }
 
 export function WishActions({
   wish,
   onDelete,
   onAdjustImage,
-  onMoveUp,
-  onMoveDown,
   onEdit,
-  isFirst,
-  isLast,
 }: WishActionsProps) {
   return (
     <div className="absolute right-2 top-2 z-10">
@@ -51,15 +36,6 @@ export function WishActions({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-40">
           <DropdownMenuLabel>Manage wish</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem disabled={isFirst} onClick={() => onMoveUp(wish)}>
-            <ArrowUp className="h-4 w-4 mr-2" />
-            <span>Move up</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem disabled={isLast} onClick={() => onMoveDown(wish)}>
-            <ArrowDown className="h-4 w-4 mr-2" />
-            <span>Move down</span>
-          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => onEdit(wish)}>
             <PencilIcon className="h-4 w-4 mr-2" />
