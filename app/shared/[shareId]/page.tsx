@@ -16,9 +16,15 @@ export default async function SharedWishlistPage({
   const wishes = await getWishes(wishlist.id, true);
 
   return (
-    <div className="container mx-auto max-w-screen-lg my-8 px-4 space-y-4">
-      <h2 className="text-2xl font-bold tracking-tight">{wishlist.title}</h2>
-      <WishesGrid wishes={wishes} readonly wishlist={wishlist} />
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <WishesGrid
+        wishes={wishes}
+        wishlistId={wishlist.id}
+        readonly
+        isShared={wishlist.shared}
+        shareId={wishlist.shareId}
+        title={wishlist.title}
+      />
     </div>
   );
 }
