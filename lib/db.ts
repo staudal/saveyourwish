@@ -95,7 +95,6 @@ export const wishlists = pgTable("wishlist", {
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   title: text("title").notNull(),
-  category: text("category").notNull(),
   userId: text("userId")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),

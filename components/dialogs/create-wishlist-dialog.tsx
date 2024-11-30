@@ -21,23 +21,25 @@ import {
 } from "@/components/ui/drawer";
 import { CreateWishlistForm } from "../forms/create-wishlist-form";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { useTranslations } from "@/hooks/use-translations";
 
 export function CreateWishlistDialog() {
   const [open, setOpen] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
+  const t = useTranslations();
 
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button>New wishlist</Button>
+          <Button>{t.wishlists.createDialog.trigger}</Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>New wishlist</DialogTitle>
+            <DialogTitle>{t.wishlists.createDialog.headline}</DialogTitle>
             <DialogDescription>
-              Name your wishlist and choose a category if you&apos;d like.
+              {t.wishlists.createDialog.description}
             </DialogDescription>
           </DialogHeader>
           <CreateWishlistForm
@@ -51,7 +53,7 @@ export function CreateWishlistDialog() {
               onClick={() => setOpen(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t.wishlists.createDialog.cancel}
             </Button>
             <Button
               className="w-full"
@@ -59,7 +61,9 @@ export function CreateWishlistDialog() {
               form="create-wishlist-form"
               disabled={isLoading}
             >
-              {isLoading ? "Creating..." : "Create wishlist"}
+              {isLoading
+                ? t.wishlists.createDialog.loading
+                : t.wishlists.createDialog.create}
             </Button>
           </div>
         </DialogContent>

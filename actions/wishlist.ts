@@ -15,7 +15,6 @@ export async function getWishlists() {
     .select({
       id: wishlists.id,
       title: wishlists.title,
-      category: wishlists.category,
       favorite: wishlists.favorite,
       wishCount: sql<number>`count(${wishes.id})::integer`,
       wishes: sql<{ price: number | null; currency: Currency }[]>`
@@ -30,12 +29,7 @@ export async function getWishlists() {
     .from(wishlists)
     .leftJoin(wishes, eq(wishes.wishlistId, wishlists.id))
     .where(eq(wishlists.userId, session.user.id))
-    .groupBy(
-      wishlists.id,
-      wishlists.title,
-      wishlists.category,
-      wishlists.favorite
-    );
+    .groupBy(wishlists.id, wishlists.title, wishlists.favorite);
 
   return wishlistsWithWishes.map((wishlist) => ({
     ...wishlist,
@@ -46,14 +40,13 @@ export async function getWishlists() {
   }));
 }
 
-export async function createWishlist(title: string, category: string) {
+export async function createWishlist(title: string) {
   try {
     const session = await auth();
     if (!session?.user?.id) throw new Error("Unauthorized");
 
     await db.insert(wishlists).values({
       title,
-      category,
       userId: session.user.id,
     });
 
@@ -80,44 +73,6 @@ export async function deleteWishlist(id: string) {
   }
 }
 
-export async function toggleWishlistFavorite(id: string) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) throw new Error("Unauthorized");
-
-    const wishlist = await db
-      .select()
-      .from(wishlists)
-      .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)))
-      .then((rows) => rows[0]);
-
-    if (!wishlist) throw new Error("Wishlist not found");
-
-    await db
-      .update(wishlists)
-      .set({ favorite: !wishlist.favorite })
-      .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)));
-
-    revalidatePath("/wishlists");
-    revalidatePath("/dashboard");
-    return { success: true, isFavorite: !wishlist.favorite };
-  } catch (error) {
-    return { success: false, error: "Failed to update favorite status" };
-  }
-}
-
-export async function getFavoriteWishlists() {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-
-  return await db
-    .select()
-    .from(wishlists)
-    .where(
-      and(eq(wishlists.userId, session.user.id), eq(wishlists.favorite, true))
-    );
-}
-
 export async function getWishlist(id: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
@@ -126,7 +81,6 @@ export async function getWishlist(id: string) {
     .select({
       id: wishlists.id,
       title: wishlists.title,
-      category: wishlists.category,
       favorite: wishlists.favorite,
       shared: wishlists.shared,
       shareId: wishlists.shareId,
@@ -187,7 +141,6 @@ export async function getSharedWishlist(shareId: string) {
     .select({
       id: wishlists.id,
       title: wishlists.title,
-      category: wishlists.category,
       shared: wishlists.shared,
       shareId: wishlists.shareId,
     })
@@ -208,7 +161,6 @@ export async function updateWishlist(
       .update(wishlists)
       .set({
         title: data.title,
-        category: data.category,
       })
       .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)));
 
