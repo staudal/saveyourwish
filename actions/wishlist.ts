@@ -149,10 +149,7 @@ export async function getSharedWishlist(shareId: string) {
     .then((rows) => rows[0]);
 }
 
-export async function updateWishlist(
-  id: string,
-  data: { title: string; category: string }
-) {
+export async function updateWishlist(id: string, data: { title: string }) {
   try {
     const session = await auth();
     if (!session?.user?.id) throw new Error("Unauthorized");

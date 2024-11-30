@@ -2,28 +2,16 @@
 
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { updateWishlist } from "@/actions/wishlist";
 import { useRouter } from "next/navigation";
-import { WISHLIST_CATEGORIES } from "@/constants";
 import toast from "react-hot-toast";
-
-// Create the Zod enum dynamically based on the categories from constants.ts
-const CategoryEnum = z.enum(WISHLIST_CATEGORIES);
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters" }),
-  category: CategoryEnum,
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -33,7 +21,7 @@ export function EditWishlistForm({
   onSuccess,
   onLoadingChange,
 }: {
-  wishlist: { id: string; title: string; category: string };
+  wishlist: { id: string; title: string };
   onSuccess?: () => void;
   onLoadingChange?: (isLoading: boolean) => void;
 }) {
@@ -48,7 +36,6 @@ export function EditWishlistForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: wishlist.title,
-      category: wishlist.category as z.infer<typeof CategoryEnum>,
     },
   });
 
@@ -87,34 +74,6 @@ export function EditWishlistForm({
           )}
         </div>
         <Input {...form.register("title")} id="title" />
-      </div>
-      <div className="grid gap-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="category">Category</Label>
-          {form.formState.errors.category && (
-            <span className="text-sm text-red-600 leading-none">
-              {form.formState.errors.category.message}
-            </span>
-          )}
-        </div>
-        <Controller
-          control={form.control}
-          name="category"
-          render={({ field }) => (
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <SelectTrigger>
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                {WISHLIST_CATEGORIES.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        />
       </div>
     </form>
   );
