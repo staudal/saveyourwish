@@ -5,7 +5,6 @@ import {
   ArrowUpDown,
   MoreHorizontal,
   Pencil,
-  Star,
   Trash2,
   Package,
   DollarSign,
@@ -24,14 +23,10 @@ import { calculateAveragePrice, Currency } from "@/constants";
 import { EditWishlistDialog } from "@/components/dialogs/edit-wishlist-dialog";
 import { DeleteWishlistDialog } from "@/components/dialogs/delete-wishlist-dialog";
 import { useState } from "react";
-import toast from "react-hot-toast";
-import { toggleWishlistFavorite } from "@/actions/wishlist";
-import { useRouter } from "next/navigation";
 
 export type Wishlist = {
   id: string;
   title: string;
-  category: string;
   favorite: boolean;
   wishCount: number;
   wishes: {
@@ -41,7 +36,6 @@ export type Wishlist = {
 };
 
 function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
-  const router = useRouter();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -64,34 +58,6 @@ function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
           >
             <Pencil className="mr-2 h-4 w-4" />
             Edit
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={async (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-
-              await toast.promise(toggleWishlistFavorite(wishlist.id), {
-                loading: wishlist.favorite
-                  ? "Removing from favorites..."
-                  : "Adding to favorites...",
-                success: (result) => {
-                  if (result.success) {
-                    router.refresh();
-                    return wishlist.favorite
-                      ? "Wishlist removed from favorites"
-                      : "Wishlist added to favorites";
-                  }
-                  throw new Error(
-                    result.error || "Failed to update favorite status"
-                  );
-                },
-                error: (err) =>
-                  err.message || "Failed to update favorite status",
-              });
-            }}
-          >
-            <Star className="mr-2 h-4 w-4" />
-            {wishlist.favorite ? "Unfavorite" : "Favorite"}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
