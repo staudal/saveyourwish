@@ -22,6 +22,7 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import toast from "react-hot-toast";
+import { useTranslations } from "@/hooks/use-translations";
 
 interface DeleteWishlistDialogProps {
   id: string;
@@ -37,21 +38,22 @@ export function DeleteWishlistDialog({
   const router = useRouter();
   const [isLoading, setIsLoading] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
+  const t = useTranslations();
 
   async function handleDelete() {
     setIsLoading(true);
 
     await toast.promise(deleteWishlist(id), {
-      loading: "Deleting wishlist...",
+      loading: t.wishlists.deleteDialog.loading,
       success: (result) => {
         if (result.success) {
           router.refresh();
           onOpenChange(false);
-          return "Your wishlist has been successfully deleted.";
+          return t.wishlists.deleteDialog.success;
         }
-        throw new Error(result.error || "Failed to delete wishlist");
+        throw new Error(result.error || t.wishlists.deleteDialog.error);
       },
-      error: (err) => err.message || "Failed to delete wishlist",
+      error: (err) => err.message || t.wishlists.deleteDialog.error,
     });
 
     setIsLoading(false);
@@ -62,10 +64,9 @@ export function DeleteWishlistDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Are you absolutely sure?</DialogTitle>
+            <DialogTitle>{t.wishlists.deleteDialog.headline}</DialogTitle>
             <DialogDescription>
-              This action cannot be undone. This will permanently delete your
-              wishlist and all items within it.
+              {t.wishlists.deleteDialog.description}
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
@@ -75,7 +76,7 @@ export function DeleteWishlistDialog({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t.wishlists.deleteDialog.cancel}
             </Button>
             <Button
               className="w-full"
@@ -83,7 +84,9 @@ export function DeleteWishlistDialog({
               onClick={handleDelete}
               disabled={isLoading}
             >
-              {isLoading ? "Deleting..." : "Delete wishlist"}
+              {isLoading
+                ? t.wishlists.deleteDialog.loading
+                : t.wishlists.deleteDialog.delete}
             </Button>
           </div>
         </DialogContent>
@@ -96,10 +99,9 @@ export function DeleteWishlistDialog({
       <DrawerContent>
         <div className="mx-auto w-full">
           <DrawerHeader>
-            <DrawerTitle>Are you absolutely sure?</DrawerTitle>
+            <DrawerTitle>{t.wishlists.deleteDialog.headline}</DrawerTitle>
             <DrawerDescription>
-              This action cannot be undone. This will permanently delete your
-              wishlist and all items within it.
+              {t.wishlists.deleteDialog.description}
             </DrawerDescription>
           </DrawerHeader>
           <DrawerFooter className="pt-2">
@@ -108,11 +110,13 @@ export function DeleteWishlistDialog({
               onClick={handleDelete}
               disabled={isLoading}
             >
-              {isLoading ? "Deleting..." : "Delete wishlist"}
+              {isLoading
+                ? t.wishlists.deleteDialog.loading
+                : t.wishlists.deleteDialog.delete}
             </Button>
             <DrawerClose asChild>
               <Button variant="outline" disabled={isLoading}>
-                Cancel
+                {t.wishlists.deleteDialog.cancel}
               </Button>
             </DrawerClose>
           </DrawerFooter>

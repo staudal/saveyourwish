@@ -21,6 +21,7 @@ import {
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { EditWishlistForm } from "../forms/edit-wishlist-form";
 import { Wishlist } from "../tables/wishlists-columns";
+import { useTranslations } from "@/hooks/use-translations";
 
 export function EditWishlistDialog({
   open,
@@ -33,15 +34,16 @@ export function EditWishlistDialog({
 }) {
   const [isLoading, setIsLoading] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
+  const t = useTranslations();
 
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Edit wishlist</DialogTitle>
+            <DialogTitle>{t.wishlists.editDialog.headline}</DialogTitle>
             <DialogDescription>
-              Change the title and category of your wishlist.
+              {t.wishlists.editDialog.description}
             </DialogDescription>
           </DialogHeader>
           <EditWishlistForm
@@ -56,7 +58,7 @@ export function EditWishlistDialog({
               onClick={() => setOpen(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t.wishlists.editDialog.cancel}
             </Button>
             <Button
               className="w-full"
@@ -64,7 +66,9 @@ export function EditWishlistDialog({
               form="edit-wishlist-form"
               disabled={isLoading}
             >
-              {isLoading ? "Saving..." : "Save changes"}
+              {isLoading
+                ? t.wishlists.editDialog.loading
+                : t.wishlists.editDialog.save}
             </Button>
           </div>
         </DialogContent>
@@ -77,9 +81,9 @@ export function EditWishlistDialog({
       <DrawerContent>
         <div className="mx-auto w-full">
           <DrawerHeader>
-            <DrawerTitle>Edit wishlist</DrawerTitle>
+            <DrawerTitle>{t.wishlists.editDialog.headline}</DrawerTitle>
             <DrawerDescription>
-              Change the title and category of your wishlist.
+              {t.wishlists.editDialog.description}
             </DrawerDescription>
           </DrawerHeader>
           <div className="p-4">
@@ -95,11 +99,13 @@ export function EditWishlistDialog({
               form="edit-wishlist-form"
               disabled={isLoading}
             >
-              {isLoading ? "Saving..." : "Save changes"}
+              {isLoading
+                ? t.wishlists.editDialog.loading
+                : t.wishlists.editDialog.save}
             </Button>
             <DrawerClose asChild>
               <Button variant="outline" disabled={isLoading}>
-                Cancel
+                {t.wishlists.editDialog.cancel}
               </Button>
             </DrawerClose>
           </DrawerFooter>

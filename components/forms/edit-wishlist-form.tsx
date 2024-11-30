@@ -9,12 +9,7 @@ import { Input } from "@/components/ui/input";
 import { updateWishlist } from "@/actions/wishlist";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-
-const formSchema = z.object({
-  title: z.string().min(2, { message: "Title must be at least 2 characters" }),
-});
-
-type FormData = z.infer<typeof formSchema>;
+import { useTranslations } from "@/hooks/use-translations";
 
 export function EditWishlistForm({
   wishlist,
@@ -27,6 +22,12 @@ export function EditWishlistForm({
 }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = React.useState(false);
+  const t = useTranslations();
+
+  const formSchema = z.object({
+    title: z.string().min(2, { message: t.wishlists.editDialog.titleError }),
+  });
+  type FormData = z.infer<typeof formSchema>;
 
   React.useEffect(() => {
     onLoadingChange?.(isLoading);
@@ -43,16 +44,16 @@ export function EditWishlistForm({
     setIsLoading(true);
 
     await toast.promise(updateWishlist(wishlist.id, values), {
-      loading: "Updating wishlist...",
+      loading: t.wishlists.editDialog.loading,
       success: (result) => {
         if (result.success) {
           router.refresh();
           onSuccess?.();
-          return "Wishlist updated successfully!";
+          return t.wishlists.editDialog.success;
         }
-        throw new Error(result.error || "Failed to update wishlist");
+        throw new Error(result.error || t.wishlists.editDialog.error);
       },
-      error: (err) => err.message || "Failed to update wishlist",
+      error: (err) => err.message || t.wishlists.editDialog.error,
     });
 
     setIsLoading(false);
@@ -66,14 +67,18 @@ export function EditWishlistForm({
     >
       <div className="grid gap-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="title">Title</Label>
+          <Label htmlFor="title">{t.wishlists.editDialog.titleLabel}</Label>
           {form.formState.errors.title && (
             <span className="text-sm text-red-600 leading-none">
               {form.formState.errors.title.message}
             </span>
           )}
         </div>
-        <Input {...form.register("title")} id="title" />
+        <Input
+          {...form.register("title")}
+          id="title"
+          placeholder={t.wishlists.editDialog.titlePlaceholder}
+        />
       </div>
     </form>
   );

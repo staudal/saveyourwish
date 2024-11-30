@@ -26,14 +26,8 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
 import { CreateWishlistDialog } from "../dialogs/create-wishlist-dialog";
+import { useTranslations } from "@/hooks/use-translations";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -68,6 +62,7 @@ export function DataTable<TData extends Wishlist, TValue>({
       columnVisibility,
     },
   });
+  const t = useTranslations();
 
   return (
     <div className="w-full space-y-4">
@@ -76,41 +71,15 @@ export function DataTable<TData extends Wishlist, TValue>({
           <CreateWishlistDialog />
           <div className="flex items-center gap-4">
             <Input
-              placeholder="Filter titles..."
+              placeholder={t.wishlists.dataTable.searchPlaceholder}
               value={
                 (table.getColumn("title")?.getFilterValue() as string) ?? ""
               }
               onChange={(event) =>
                 table.getColumn("title")?.setFilterValue(event.target.value)
               }
-              className="max-w-xs hidden sm:block"
+              className="max-w-xs"
             />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="ml-auto">
-                  Columns <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {table
-                  .getAllColumns()
-                  .filter((column) => column.getCanHide())
-                  .map((column) => {
-                    return (
-                      <DropdownMenuCheckboxItem
-                        key={column.id}
-                        className="capitalize"
-                        checked={column.getIsVisible()}
-                        onCheckedChange={(value) =>
-                          column.toggleVisibility(!!value)
-                        }
-                      >
-                        {column.id}
-                      </DropdownMenuCheckboxItem>
-                    );
-                  })}
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </div>
       </div>
@@ -145,7 +114,11 @@ export function DataTable<TData extends Wishlist, TValue>({
                         key={row.id}
                         className="cursor-pointer hover:bg-muted/50"
                         onClick={(e) => {
-                          if (!(e.target as HTMLElement).closest("button, a")) {
+                          if (
+                            !(e.target as HTMLElement).closest(
+                              "button, a, [role='dialog'], [data-state='open']"
+                            )
+                          ) {
                             router.push(
                               `/dashboard/wishlists/${row.original.id}`
                             );
@@ -189,7 +162,7 @@ export function DataTable<TData extends Wishlist, TValue>({
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
-            Previous
+            {t.wishlists.dataTable.previous}
           </Button>
           <Button
             variant="outline"
@@ -197,7 +170,7 @@ export function DataTable<TData extends Wishlist, TValue>({
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
-            Next
+            {t.wishlists.dataTable.next}
           </Button>
         </div>
       </div>

@@ -3,13 +3,17 @@
 import { ColumnDef } from "@tanstack/react-table";
 import {
   ArrowUpDown,
+  Package,
+  DollarSign,
   MoreHorizontal,
   Pencil,
   Trash2,
-  Package,
-  DollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatPrice } from "@/components/ui/currency-select";
+import { calculateAveragePrice, convertToUSD, Currency } from "@/constants";
+import { useTranslations } from "@/hooks/use-translations";
+import { useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,11 +22,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { formatPrice } from "@/components/ui/currency-select";
-import { calculateAveragePrice, Currency } from "@/constants";
-import { EditWishlistDialog } from "@/components/dialogs/edit-wishlist-dialog";
-import { DeleteWishlistDialog } from "@/components/dialogs/delete-wishlist-dialog";
-import { useState } from "react";
+import { DeleteWishlistDialog } from "../dialogs/delete-wishlist-dialog";
+import { EditWishlistDialog } from "../dialogs/edit-wishlist-dialog";
 
 export type Wishlist = {
   id: string;
@@ -38,6 +39,7 @@ export type Wishlist = {
 function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const t = useTranslations();
 
   return (
     <>
@@ -49,7 +51,7 @@ function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuLabel>{t.wishlists.dataTable.actions}</DropdownMenuLabel>
           <DropdownMenuItem
             onClick={(e) => {
               e.stopPropagation();
@@ -57,7 +59,7 @@ function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
             }}
           >
             <Pencil className="mr-2 h-4 w-4" />
-            Edit
+            {t.wishlists.editDialog.trigger}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -68,7 +70,7 @@ function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
             className="text-destructive"
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            Delete
+            {t.wishlists.deleteDialog.trigger}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -87,95 +89,113 @@ function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
   );
 }
 
-export const columns: ColumnDef<Wishlist>[] = [
-  {
-    accessorKey: "title",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Title
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const title = row.getValue("title") as string;
-      const wishCount = row.getValue("wishCount") as number;
-      const averagePriceResult = calculateAveragePrice(row.original.wishes);
-      const averagePrice = averagePriceResult
-        ? formatPrice(averagePriceResult.amount, averagePriceResult.currency)
-        : "-";
+export function useWishlistColumns() {
+  const t = useTranslations();
 
-      return (
-        <div className="flex flex-col gap-1">
-          <span>{title}</span>
-          <div className="flex gap-3 text-sm text-muted-foreground sm:hidden">
-            <span className="flex items-center gap-1">
-              <Package className="h-4 w-4" />
-              {wishCount} {wishCount === 1 ? "wish" : "wishes"}
-            </span>
-            <span className="flex items-center gap-1">
-              <DollarSign className="h-4 w-4" />
-              {averagePrice}
-            </span>
+  const columns: ColumnDef<Wishlist>[] = [
+    {
+      accessorKey: "title",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            {t.wishlists.dataTable.title}
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        const title = row.getValue("title") as string;
+        const wishCount = row.getValue("wishCount") as number;
+        const averagePriceResult = calculateAveragePrice(row.original.wishes);
+        const averagePrice = averagePriceResult
+          ? formatPrice(averagePriceResult.amount, averagePriceResult.currency)
+          : "-";
+
+        return (
+          <div className="flex flex-col gap-1">
+            <span>{title}</span>
+            <div className="flex gap-3 text-sm text-muted-foreground sm:hidden">
+              <span className="flex items-center gap-1">
+                <Package className="h-4 w-4" />
+                {wishCount} {wishCount === 1 ? "wish" : "wishes"}
+              </span>
+              <span className="flex items-center gap-1">
+                <DollarSign className="h-4 w-4" />
+                {averagePrice}
+              </span>
+            </div>
           </div>
+        );
+      },
+    },
+    {
+      accessorKey: "wishCount",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="hidden sm:flex"
+          >
+            {t.wishlists.dataTable.wishCount}
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        const count = row.getValue("wishCount") as number;
+        return (
+          <div className="hidden sm:block text-muted-foreground">
+            {count} {count === 1 ? "wish" : "wishes"}
+          </div>
+        );
+      },
+    },
+    {
+      id: "averagePrice",
+      accessorFn: (row) => {
+        const result = calculateAveragePrice(row.wishes);
+        if (!result) return null;
+        // Convert to USD for consistent sorting
+        return convertToUSD(result.amount, result.currency);
+      },
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="hidden sm:flex"
+          >
+            {t.wishlists.dataTable.averagePrice}
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        const result = calculateAveragePrice(row.original.wishes);
+        if (!result)
+          return <div className="hidden sm:block text-muted-foreground">-</div>;
+        return (
+          <div className="hidden sm:block text-muted-foreground">
+            {formatPrice(result.amount, result.currency)}
+          </div>
+        );
+      },
+      sortingFn: "basic",
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => (
+        <div className="flex justify-end">
+          <WishlistActions wishlist={row.original} />
         </div>
-      );
+      ),
+      enableHiding: false,
     },
-  },
-  {
-    accessorKey: "wishCount",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="hidden sm:flex"
-        >
-          # of wishes
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const count = row.getValue("wishCount") as number;
-      return (
-        <div className="hidden sm:block text-muted-foreground">
-          {count} {count === 1 ? "wish" : "wishes"}
-        </div>
-      );
-    },
-  },
-  {
-    id: "averagePrice",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="hidden sm:flex"
-        >
-          Average price
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const result = calculateAveragePrice(row.original.wishes);
-      if (!result)
-        return <div className="hidden sm:block text-muted-foreground">-</div>;
-      return (
-        <div className="hidden sm:block text-muted-foreground">
-          {formatPrice(result.amount, result.currency)}
-        </div>
-      );
-    },
-  },
-  {
-    id: "actions",
-    cell: ({ row }) => <WishlistActions wishlist={row.original} />,
-  },
-];
+  ];
+
+  return columns;
+}
