@@ -1,9 +1,12 @@
+"use client";
+
 import { Separator } from "@/components/ui/separator";
 import { LanguageSelector } from "@/components/language-selector";
 import { useTranslations } from "@/hooks/use-translations";
 
 export default function SettingsPage() {
   const t = useTranslations();
+
   return (
     <div className="space-y-6">
       <div>
