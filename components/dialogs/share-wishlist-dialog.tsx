@@ -26,6 +26,7 @@ import { Copy, Check } from "lucide-react";
 import { toggleWishlistSharing } from "@/actions/wishlist";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import toast from "react-hot-toast";
+import { useTranslations } from "@/hooks/use-translations";
 
 interface ShareWishlistDialogProps {
   wishlistId: string;
@@ -43,7 +44,7 @@ export function ShareWishlistDialog({
   const [shareUrl, setShareUrl] = React.useState("");
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const [showCheck, setShowCheck] = React.useState(false);
-
+  const t = useTranslations();
   React.useEffect(() => {
     if (shareId) {
       setShareUrl(`${window.location.origin}/shared/${shareId}`);
@@ -53,7 +54,7 @@ export function ShareWishlistDialog({
   const copyToClipboard = () => {
     navigator.clipboard.writeText(shareUrl);
     setShowCheck(true);
-    toast.success("Share link copied to clipboard");
+    toast.success(t.wishes.shareDialog.copiedToClipboard);
 
     setTimeout(() => {
       setShowCheck(false);
@@ -62,7 +63,9 @@ export function ShareWishlistDialog({
 
   const handleToggleSharing = async () => {
     await toast.promise(toggleWishlistSharing(wishlistId), {
-      loading: sharing ? "Disabling sharing..." : "Enabling sharing...",
+      loading: sharing
+        ? t.wishes.shareDialog.disableLoading
+        : t.wishes.shareDialog.enableLoading,
       success: (result) => {
         if (result.success && typeof result.isShared === "boolean") {
           setSharing(result.isShared);
@@ -72,12 +75,12 @@ export function ShareWishlistDialog({
             setShareUrl("");
           }
           return result.isShared
-            ? "Anyone with the link can now view this wishlist"
-            : "This wishlist is now private";
+            ? t.wishes.shareDialog.enableSuccess
+            : t.wishes.shareDialog.disableSuccess;
         }
-        throw new Error(result.error || "Failed to update sharing status");
+        throw new Error(result.error || t.wishes.shareDialog.error);
       },
-      error: (err) => err.message || "Failed to update sharing status",
+      error: (err) => err.message || t.wishes.shareDialog.error,
     });
   };
 
@@ -101,21 +104,23 @@ export function ShareWishlistDialog({
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline">Share</Button>
+          <Button variant="outline">{t.wishes.shareDialog.button}</Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Share wishlist</DialogTitle>
+            <DialogTitle>{t.wishes.shareDialog.headline}</DialogTitle>
             <DialogDescription>
               {sharing
-                ? "Anyone with this link can view this wishlist"
-                : "Enable sharing to get a shareable link"}
+                ? t.wishes.shareDialog.descriptionEnabled
+                : t.wishes.shareDialog.descriptionDisabled}
             </DialogDescription>
           </DialogHeader>
           {sharing && (
             <div className="flex flex-col gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="link">Share link</Label>
+                <Label htmlFor="link">
+                  {t.wishes.shareDialog.shareLinkLabel}
+                </Label>
                 <div className="flex items-center space-x-2">
                   <Input
                     id="link"
@@ -134,14 +139,16 @@ export function ShareWishlistDialog({
               variant="outline"
               onClick={() => setOpen(false)}
             >
-              Cancel
+              {t.wishes.shareDialog.cancelButton}
             </Button>
             <Button
               className="w-full"
               onClick={handleToggleSharing}
               variant={sharing ? "destructive" : "default"}
             >
-              {sharing ? "Disable sharing" : "Enable sharing"}
+              {sharing
+                ? t.wishes.shareDialog.disableButton
+                : t.wishes.shareDialog.enableButton}
             </Button>
           </div>
         </DialogContent>
@@ -152,22 +159,24 @@ export function ShareWishlistDialog({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button variant="outline">Share</Button>
+        <Button variant="outline">{t.wishes.shareDialog.button}</Button>
       </DrawerTrigger>
       <DrawerContent>
         <div className="mx-auto w-full max-w-sm">
           <DrawerHeader>
-            <DrawerTitle>Share wishlist</DrawerTitle>
+            <DrawerTitle>{t.wishes.shareDialog.headline}</DrawerTitle>
             <DrawerDescription>
               {sharing
-                ? "Anyone with this link can view this wishlist"
-                : "Enable sharing to get a shareable link"}
+                ? t.wishes.shareDialog.descriptionEnabled
+                : t.wishes.shareDialog.descriptionDisabled}
             </DrawerDescription>
           </DrawerHeader>
           {sharing && (
             <div className="p-4">
               <div className="grid gap-2">
-                <Label htmlFor="mobile-link">Share link</Label>
+                <Label htmlFor="mobile-link">
+                  {t.wishes.shareDialog.shareLinkLabel}
+                </Label>
                 <div className="flex items-center space-x-2">
                   <Input
                     id="mobile-link"
@@ -185,10 +194,14 @@ export function ShareWishlistDialog({
               onClick={handleToggleSharing}
               variant={sharing ? "destructive" : "default"}
             >
-              {sharing ? "Disable sharing" : "Enable sharing"}
+              {sharing
+                ? t.wishes.shareDialog.disableButton
+                : t.wishes.shareDialog.enableButton}
             </Button>
             <DrawerClose asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline">
+                {t.wishes.shareDialog.cancelButton}
+              </Button>
             </DrawerClose>
           </DrawerFooter>
         </div>

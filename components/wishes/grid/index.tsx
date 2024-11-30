@@ -13,6 +13,7 @@ import { DeleteWishDialog } from "@/components/dialogs/delete-wish-dialog";
 import { ImagePositionDialog } from "@/components/dialogs/image-position-dialog";
 import { ShareWishlistDialog } from "@/components/dialogs/share-wishlist-dialog";
 import { CreateWishDialog } from "@/components/dialogs/create-wish-dialog";
+import { useTranslations } from "@/hooks/use-translations";
 
 type Wish = InferSelectModel<typeof wishes>;
 
@@ -49,6 +50,7 @@ export function WishesGrid({
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [imagePositionOpen, setImagePositionOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const t = useTranslations();
 
   const handleDelete = (wish: Wish) => {
     setSelectedWish(wish);
@@ -84,9 +86,9 @@ export function WishesGrid({
     const result = await toast.promise(
       updateBulkWishPositions(wishlistId, positions),
       {
-        loading: "Saving order...",
-        success: "Order updated",
-        error: "Failed to update order",
+        loading: t.wishes.reorderMode.saving,
+        success: t.wishes.reorderMode.success,
+        error: t.wishes.reorderMode.error,
       }
     );
 
@@ -141,7 +143,7 @@ export function WishesGrid({
                 onClick={handleCancel}
                 disabled={isSaving}
               >
-                Cancel
+                {t.wishes.reorderMode.cancelButton}
               </Button>
               <Button onClick={handleSave} disabled={!hasChanges || isSaving}>
                 {isSaving ? (
@@ -166,10 +168,10 @@ export function WishesGrid({
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       />
                     </svg>
-                    <span className="mr-2">Saving...</span>
+                    <span className="mr-2">{t.wishes.reorderMode.saving}</span>
                   </>
                 ) : (
-                  "Save Order"
+                  t.wishes.reorderMode.saveButton
                 )}
               </Button>
             </>
@@ -181,7 +183,7 @@ export function WishesGrid({
                 shareId={shareId}
               />
               <Button variant="outline" onClick={() => setIsReordering(true)}>
-                Reorder
+                {t.wishes.reorderMode.button}
               </Button>
               <CreateWishDialog wishlistId={wishlistId} />
             </>

@@ -22,6 +22,7 @@ import { EditWishForm } from "../forms/edit-wish-form";
 import { type wishes } from "@/lib/db";
 import { type InferSelectModel } from "drizzle-orm";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { useTranslations } from "@/hooks/use-translations";
 
 type Wish = InferSelectModel<typeof wishes>;
 
@@ -38,15 +39,16 @@ export function EditWishDialog({
 }) {
   const [isLoading, setIsLoading] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
+  const t = useTranslations();
 
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Edit wish</DialogTitle>
+            <DialogTitle>{t.wishes.editDialog.headline}</DialogTitle>
             <DialogDescription>
-              Update the details of your wish.
+              {t.wishes.editDialog.description}
             </DialogDescription>
           </DialogHeader>
           <EditWishForm
@@ -61,7 +63,7 @@ export function EditWishDialog({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t.wishes.editDialog.cancel}
             </Button>
             <Button
               className="w-full"
@@ -69,7 +71,9 @@ export function EditWishDialog({
               form="edit-wish-form"
               disabled={isLoading}
             >
-              {isLoading ? "Saving..." : "Save changes"}
+              {isLoading
+                ? t.wishes.editDialog.loading
+                : t.wishes.editDialog.save}
             </Button>
           </div>
         </DialogContent>
@@ -82,9 +86,9 @@ export function EditWishDialog({
       <DrawerContent>
         <div className="mx-auto w-full">
           <DrawerHeader>
-            <DrawerTitle>Edit wish</DrawerTitle>
+            <DrawerTitle>{t.wishes.editDialog.headline}</DrawerTitle>
             <DrawerDescription>
-              Update the details of your wish.
+              {t.wishes.editDialog.description}
             </DrawerDescription>
           </DrawerHeader>
           <div className="p-4">
@@ -96,11 +100,13 @@ export function EditWishDialog({
           </div>
           <DrawerFooter className="pt-2">
             <Button type="submit" form="edit-wish-form" disabled={isLoading}>
-              {isLoading ? "Saving..." : "Save wish"}
+              {isLoading
+                ? t.wishes.editDialog.loading
+                : t.wishes.editDialog.save}
             </Button>
             <DrawerClose asChild>
               <Button variant="outline" disabled={isLoading}>
-                Cancel
+                {t.wishes.editDialog.cancel}
               </Button>
             </DrawerClose>
           </DrawerFooter>

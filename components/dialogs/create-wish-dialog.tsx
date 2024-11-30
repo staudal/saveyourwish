@@ -22,23 +22,25 @@ import {
 } from "@/components/ui/drawer";
 import { CreateWishForm } from "../forms/create-wish-form";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { useTranslations } from "@/hooks/use-translations";
 
 export function CreateWishDialog({ wishlistId }: { wishlistId: string }) {
   const [open, setOpen] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
+  const t = useTranslations();
 
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button>Add wish</Button>
+          <Button>{t.wishes.createDialog.trigger}</Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Add new wish</DialogTitle>
+            <DialogTitle>{t.wishes.createDialog.headline}</DialogTitle>
             <DialogDescription>
-              Add details about the item you wish for.
+              {t.wishes.createDialog.description}
             </DialogDescription>
           </DialogHeader>
           <CreateWishForm
@@ -53,7 +55,7 @@ export function CreateWishDialog({ wishlistId }: { wishlistId: string }) {
               onClick={() => setOpen(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t.wishes.createDialog.cancel}
             </Button>
             <Button
               className="w-full"
@@ -61,7 +63,9 @@ export function CreateWishDialog({ wishlistId }: { wishlistId: string }) {
               form="create-wish-form"
               disabled={isLoading}
             >
-              {isLoading ? "Adding..." : "Add wish"}
+              {isLoading
+                ? t.wishes.createDialog.loading
+                : t.wishes.createDialog.create}
             </Button>
           </div>
         </DialogContent>
@@ -72,14 +76,14 @@ export function CreateWishDialog({ wishlistId }: { wishlistId: string }) {
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button>Add wish</Button>
+        <Button>{t.wishes.createDialog.trigger}</Button>
       </DrawerTrigger>
       <DrawerContent>
         <div className="mx-auto w-full">
           <DrawerHeader>
-            <DrawerTitle>Add new wish</DrawerTitle>
+            <DrawerTitle>{t.wishes.createDialog.headline}</DrawerTitle>
             <DrawerDescription>
-              Add details about the item you wish for.
+              {t.wishes.createDialog.description}
             </DrawerDescription>
           </DrawerHeader>
           <div className="p-4">
@@ -91,11 +95,13 @@ export function CreateWishDialog({ wishlistId }: { wishlistId: string }) {
           </div>
           <DrawerFooter className="pt-2">
             <Button type="submit" form="create-wish-form" disabled={isLoading}>
-              {isLoading ? "Adding..." : "Add wish"}
+              {isLoading
+                ? t.wishes.createDialog.loading
+                : t.wishes.createDialog.create}
             </Button>
             <DrawerClose asChild>
               <Button variant="outline" disabled={isLoading}>
-                Cancel
+                {t.wishes.createDialog.cancel}
               </Button>
             </DrawerClose>
           </DrawerFooter>

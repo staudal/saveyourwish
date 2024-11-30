@@ -18,33 +18,35 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
+import { useTranslations } from "@/hooks/use-translations";
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   user: User;
 }
 
 export function AppSidebar({ user, ...props }: AppSidebarProps) {
+  const t = useTranslations();
   const data = {
     navMain: [
       {
-        title: "Wishlists",
+        title: t.sidebar.wishlists,
         url: "/dashboard/wishlists",
         icon: List,
       },
       {
-        title: "Settings",
+        title: t.sidebar.settings,
         url: "/dashboard/settings",
         icon: Settings2,
       },
     ],
     navSecondary: [
       {
-        title: "Support",
+        title: t.sidebar.support,
         url: "mailto:jakob@saveyourwish.com?subject=Support",
         icon: LifeBuoy,
       },
       {
-        title: "Feedback",
+        title: t.sidebar.feedback,
         url: "mailto:jakob@saveyourwish.com?subject=Feedback",
         icon: Send,
       },

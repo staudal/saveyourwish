@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import toast from "react-hot-toast";
+import { useTranslations } from "@/hooks/use-translations";
 
 type Wish = InferSelectModel<typeof wishes>;
 
@@ -34,16 +35,12 @@ export function ImagePositionDialog({
     naturalWidth: number;
     naturalHeight: number;
   } | null>(null);
+  const t = useTranslations();
 
   const handleImageLoad = (img: HTMLImageElement) => {
     setImageRatio({
       naturalWidth: img.naturalWidth,
       naturalHeight: img.naturalHeight,
-    });
-    console.log("Image loaded:", {
-      naturalWidth: img.naturalWidth,
-      naturalHeight: img.naturalHeight,
-      aspectRatio: img.naturalWidth / img.naturalHeight,
     });
   };
 
@@ -82,15 +79,15 @@ export function ImagePositionDialog({
         zoom,
       }),
       {
-        loading: "Updating image position...",
+        loading: t.wishes.imagePositionDialog.loading,
         success: (result) => {
           if (result.success) {
             onOpenChange(false);
-            return "Image position updated successfully!";
+            return t.wishes.imagePositionDialog.success;
           }
-          throw new Error(result.error || "Failed to update image position");
+          throw new Error(result.error || t.wishes.imagePositionDialog.error);
         },
-        error: (err) => err.message || "Failed to update image position",
+        error: (err) => err.message || t.wishes.imagePositionDialog.error,
       }
     );
 
@@ -161,7 +158,9 @@ export function ImagePositionDialog({
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Vertical Position</Label>
+              <Label>
+                {t.wishes.imagePositionDialog.verticalPositionLabel}
+              </Label>
               <Slider
                 value={[verticalPosition]}
                 onValueChange={([value]) => setVerticalPosition(value)}
@@ -173,7 +172,9 @@ export function ImagePositionDialog({
             </div>
 
             <div className="space-y-2">
-              <Label>Horizontal Position</Label>
+              <Label>
+                {t.wishes.imagePositionDialog.horizontalPositionLabel}
+              </Label>
               <Slider
                 value={[horizontalPosition]}
                 onValueChange={([value]) => {
@@ -188,7 +189,7 @@ export function ImagePositionDialog({
             </div>
 
             <div className="space-y-2">
-              <Label>Zoom</Label>
+              <Label>{t.wishes.imagePositionDialog.zoomLabel}</Label>
               <Slider
                 value={[zoom]}
                 onValueChange={([value]) => setZoom(value)}
@@ -205,10 +206,12 @@ export function ImagePositionDialog({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t.wishes.imagePositionDialog.cancel}
             </Button>
             <Button onClick={handleSave} disabled={isLoading}>
-              {isLoading ? "Saving..." : "Save changes"}
+              {isLoading
+                ? t.wishes.imagePositionDialog.loading
+                : t.wishes.imagePositionDialog.save}
             </Button>
           </div>
         </div>

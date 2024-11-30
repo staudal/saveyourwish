@@ -22,6 +22,7 @@ import { useRouter } from "next/navigation";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import React from "react";
 import toast from "react-hot-toast";
+import { useTranslations } from "@/hooks/use-translations";
 
 interface DeleteWishDialogProps {
   id: string;
@@ -39,21 +40,22 @@ export function DeleteWishDialog({
   const router = useRouter();
   const [isLoading, setIsLoading] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
+  const t = useTranslations();
 
   async function handleDelete() {
     setIsLoading(true);
 
     await toast.promise(deleteWish(id, wishlistId), {
-      loading: "Deleting wish...",
+      loading: t.wishes.deleteDialog.loading,
       success: (result) => {
         if (result.success) {
           router.refresh();
           onOpenChange(false);
-          return "Wish deleted successfully!";
+          return t.wishes.deleteDialog.success;
         }
-        throw new Error(result.error || "Failed to delete wish");
+        throw new Error(result.error || t.wishes.deleteDialog.error);
       },
-      error: (err) => err.message || "Failed to delete wish",
+      error: (err) => err.message || t.wishes.deleteDialog.error,
     });
 
     setIsLoading(false);
@@ -64,10 +66,9 @@ export function DeleteWishDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Are you absolutely sure?</DialogTitle>
+            <DialogTitle>{t.wishes.deleteDialog.headline}</DialogTitle>
             <DialogDescription>
-              This action cannot be undone. This will permanently delete this
-              wish.
+              {t.wishes.deleteDialog.description}
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
@@ -77,7 +78,7 @@ export function DeleteWishDialog({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t.wishes.deleteDialog.cancel}
             </Button>
             <Button
               className="w-full"
@@ -85,7 +86,9 @@ export function DeleteWishDialog({
               onClick={handleDelete}
               disabled={isLoading}
             >
-              {isLoading ? "Deleting..." : "Delete wish"}
+              {isLoading
+                ? t.wishes.deleteDialog.loading
+                : t.wishes.deleteDialog.delete}
             </Button>
           </div>
         </DialogContent>
@@ -98,10 +101,9 @@ export function DeleteWishDialog({
       <DrawerContent>
         <div className="mx-auto w-full">
           <DrawerHeader>
-            <DrawerTitle>Are you absolutely sure?</DrawerTitle>
+            <DrawerTitle>{t.wishes.deleteDialog.headline}</DrawerTitle>
             <DrawerDescription>
-              This action cannot be undone. This will permanently delete this
-              wish.
+              {t.wishes.deleteDialog.description}
             </DrawerDescription>
           </DrawerHeader>
           <DrawerFooter className="pt-2">
@@ -110,11 +112,13 @@ export function DeleteWishDialog({
               onClick={handleDelete}
               disabled={isLoading}
             >
-              {isLoading ? "Deleting..." : "Delete wish"}
+              {isLoading
+                ? t.wishes.deleteDialog.loading
+                : t.wishes.deleteDialog.delete}
             </Button>
             <DrawerClose asChild>
               <Button variant="outline" disabled={isLoading}>
-                Cancel
+                {t.wishes.deleteDialog.cancel}
               </Button>
             </DrawerClose>
           </DrawerFooter>

@@ -144,7 +144,7 @@ export function DataTable<TData extends Wishlist, TValue>({
                         colSpan={columns.length}
                         className="h-24 text-center"
                       >
-                        No wishlists found.
+                        {t.wishlists.dataTable.noWishlistsFound}
                       </TableCell>
                     </TableRow>
                   )}

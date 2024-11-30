@@ -74,14 +74,14 @@ export function CreateWishlistDialog() {
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button>New wishlist</Button>
+        <Button>{t.wishlists.createDialog.trigger}</Button>
       </DrawerTrigger>
       <DrawerContent>
         <div className="mx-auto w-full">
           <DrawerHeader>
-            <DrawerTitle>New wishlist</DrawerTitle>
+            <DrawerTitle>{t.wishlists.createDialog.headline}</DrawerTitle>
             <DrawerDescription>
-              Name your wishlist and choose a category if you&apos;d like.
+              {t.wishlists.createDialog.description}
             </DrawerDescription>
           </DrawerHeader>
           <div className="p-4">
@@ -97,7 +97,9 @@ export function CreateWishlistDialog() {
               form="create-wishlist-form"
               disabled={isLoading}
             >
-              {isLoading ? "Creating..." : "Create wishlist"}
+              {isLoading
+                ? t.wishlists.createDialog.loading
+                : t.wishlists.createDialog.create}
             </Button>
             <Button
               className="w-full"
@@ -105,7 +107,7 @@ export function CreateWishlistDialog() {
               onClick={() => setOpen(false)}
               disabled={isLoading}
             >
-              Cancel
+              {t.wishlists.createDialog.cancel}
             </Button>
           </DrawerFooter>
         </div>
