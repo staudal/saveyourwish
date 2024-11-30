@@ -7,6 +7,8 @@ import {
   Pencil,
   Star,
   Trash2,
+  Package,
+  DollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -133,23 +135,30 @@ export const columns: ColumnDef<Wishlist>[] = [
         </Button>
       );
     },
-  },
-  {
-    accessorKey: "category",
-    header: ({ column }) => {
+    cell: ({ row }) => {
+      const title = row.getValue("title") as string;
+      const wishCount = row.getValue("wishCount") as number;
+      const averagePriceResult = calculateAveragePrice(row.original.wishes);
+      const averagePrice = averagePriceResult
+        ? formatPrice(averagePriceResult.amount, averagePriceResult.currency)
+        : "-";
+
       return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Category
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+        <div className="flex flex-col gap-1">
+          <span>{title}</span>
+          <div className="flex gap-3 text-sm text-muted-foreground sm:hidden">
+            <span className="flex items-center gap-1">
+              <Package className="h-4 w-4" />
+              {wishCount} {wishCount === 1 ? "wish" : "wishes"}
+            </span>
+            <span className="flex items-center gap-1">
+              <DollarSign className="h-4 w-4" />
+              {averagePrice}
+            </span>
+          </div>
+        </div>
       );
     },
-    cell: ({ row }) => (
-      <div className="text-muted-foreground">{row.getValue("category")}</div>
-    ),
   },
   {
     accessorKey: "wishCount",
@@ -158,8 +167,9 @@ export const columns: ColumnDef<Wishlist>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hidden sm:flex"
         >
-          Wishes
+          # of wishes
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
@@ -167,7 +177,7 @@ export const columns: ColumnDef<Wishlist>[] = [
     cell: ({ row }) => {
       const count = row.getValue("wishCount") as number;
       return (
-        <div className="text-muted-foreground">
+        <div className="hidden sm:block text-muted-foreground">
           {count} {count === 1 ? "wish" : "wishes"}
         </div>
       );
@@ -180,17 +190,19 @@ export const columns: ColumnDef<Wishlist>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hidden sm:flex"
         >
-          Average Price
+          Average price
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
     },
     cell: ({ row }) => {
       const result = calculateAveragePrice(row.original.wishes);
-      if (!result) return <div className="text-muted-foreground">-</div>;
+      if (!result)
+        return <div className="hidden sm:block text-muted-foreground">-</div>;
       return (
-        <div className="text-muted-foreground">
+        <div className="hidden sm:block text-muted-foreground">
           {formatPrice(result.amount, result.currency)}
         </div>
       );

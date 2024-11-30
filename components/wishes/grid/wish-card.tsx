@@ -55,12 +55,6 @@ export function WishCard({
           "drag-handle cursor-grab active:cursor-grabbing border-dashed border-primary/50"
       )}
     >
-      <div className="absolute left-2 top-2 z-10">
-        <div className="min-w-8 h-8 bg-white rounded-lg border shadow-sm flex items-center justify-center px-2">
-          <span className="text-sm font-medium">x{wish.quantity}</span>
-        </div>
-      </div>
-
       {!readonly && !isReordering && onDelete && onAdjustImage && onEdit && (
         <WishActions
           wish={wish}
@@ -100,6 +94,11 @@ export function WishCard({
             </a>
           ) : (
             <span className="text-xs text-muted-foreground">No link</span>
+          )}
+          {wish.quantity && (
+            <span className="text-xs text-muted-foreground">
+              x{wish.quantity}
+            </span>
           )}
           {wish.price && (
             <span className="text-xs text-muted-foreground">

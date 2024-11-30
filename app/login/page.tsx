@@ -83,11 +83,7 @@ export default async function LoginPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
-            <form
-              method="POST"
-              action={handleLoginWithEmail}
-              className="grid gap-4"
-            >
+            <form action={handleLoginWithEmail} className="grid gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -102,11 +98,7 @@ export default async function LoginPage() {
                 Login
               </Button>
             </form>
-            <form
-              method="POST"
-              action={handleLoginWithGoogle}
-              className="grid gap-4"
-            >
+            <form action={handleLoginWithGoogle} className="grid gap-4">
               <Button type="submit" className="w-full" variant={"outline"}>
                 <Image height={20} src={Google} alt="Google logo" /> Login with
                 Google

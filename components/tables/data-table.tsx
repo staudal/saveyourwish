@@ -83,7 +83,7 @@ export function DataTable<TData extends Wishlist, TValue>({
               onChange={(event) =>
                 table.getColumn("title")?.setFilterValue(event.target.value)
               }
-              className="max-w-xs"
+              className="max-w-xs hidden sm:block"
             />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
