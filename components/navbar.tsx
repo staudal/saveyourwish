@@ -10,6 +10,8 @@ import {
   MenuItems,
 } from "@headlessui/react";
 import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import Link from "next/link";
+import { signOut } from "next-auth/react";
 
 const user = {
   name: "Tom Cook",
@@ -18,16 +20,19 @@ const user = {
     "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
 };
 const navigation = [
-  { name: "Dashboard", href: "#", current: true },
-  { name: "Team", href: "#", current: false },
-  { name: "Projects", href: "#", current: false },
-  { name: "Calendar", href: "#", current: false },
-  { name: "Reports", href: "#", current: false },
+  { name: "Wishlists", href: "/dashboard/wishlists", current: true },
 ];
 const userNavigation = [
   { name: "Your Profile", href: "#" },
   { name: "Settings", href: "#" },
-  { name: "Sign out", href: "#" },
+  {
+    name: "Sign out",
+    href: "#",
+    onClick: () =>
+      signOut({
+        callbackUrl: "/", // Redirect to home page after signing out
+      }),
+  },
 ];
 
 function classNames(...classes: (string | undefined | null | false | 0)[]) {
@@ -51,7 +56,7 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
               <div className="hidden md:block">
                 <div className="ml-10 flex items-baseline space-x-4">
                   {navigation.map((item) => (
-                    <a
+                    <Link
                       key={item.name}
                       href={item.href}
                       aria-current={item.current ? "page" : undefined}
@@ -63,7 +68,7 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
                       )}
                     >
                       {item.name}
-                    </a>
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -100,6 +105,10 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
                       <MenuItem key={item.name}>
                         <a
                           href={item.href}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            item.onClick?.();
+                          }}
                           className="block px-4 py-2 text-sm text-gray-700 data-[focus]:bg-gray-100 data-[focus]:outline-none"
                         >
                           {item.name}
@@ -179,6 +188,10 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
                   key={item.name}
                   as="a"
                   href={item.href}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    item.onClick?.();
+                  }}
                   className="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
                 >
                   {item.name}
