@@ -211,6 +211,14 @@ export const translations = {
       support: "Support",
       feedback: "Feedback",
     },
+    settings: {
+      headline: "Settings",
+      description: "Manage your account settings and preferences.",
+      language: {
+        headline: "Language",
+        description: "Select your preferred language.",
+      },
+    },
   },
   da: {
     wishlists: {
@@ -422,6 +430,14 @@ export const translations = {
       settings: "Indstillinger",
       support: "Support",
       feedback: "Feedback",
+    },
+    settings: {
+      headline: "Indstillinger",
+      description: "Administrer dine kontoindstillinger og præferencer.",
+      language: {
+        headline: "Sprog",
+        description: "Vælg dit foretrukne sprog.",
+      },
     },
   },
 } as const;
