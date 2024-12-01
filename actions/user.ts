@@ -1,5 +1,6 @@
 "use server";
 
+import { signOut } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { wishlists, wishes, users } from "@/lib/db";
 import { sql } from "drizzle-orm";
@@ -21,4 +22,8 @@ export async function getStats() {
   ]);
 
   return { wishlistCount, wishCount, userCount };
+}
+
+export async function signOutAction() {
+  await signOut({ redirectTo: "/login" });
 }
