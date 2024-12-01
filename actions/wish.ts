@@ -133,12 +133,6 @@ export async function updateWishImagePosition(
 
     if (!wishlist) throw new Error("Wishlist not found");
 
-    console.log("Updating wish position:", {
-      id,
-      wishlistId,
-      position,
-    });
-
     await db
       .update(wishes)
       .set({

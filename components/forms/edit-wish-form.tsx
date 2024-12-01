@@ -95,7 +95,7 @@ export function EditWishForm({
     await toast.promise(
       updateWish(wish.id, wish.wishlistId, formSchema.parse(values)),
       {
-        loading: "Updating wish...",
+        loading: t.wishes.editDialog.loading,
         success: (result) => {
           if (result.success) {
             router.refresh();
