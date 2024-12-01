@@ -62,7 +62,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
               <Link href="/dashboard/wishlists">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <Image
-                    src="/logo.png"
+                    src="/logo_white.svg"
                     alt="SaveYourWish"
                     width={20}
                     height={20}
