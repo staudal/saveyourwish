@@ -36,7 +36,8 @@ export default function Features() {
               </p>
               <p className="mt-6 text-lg/8 text-gray-600">
                 Create and share wishlists for any occasion. Whether it&apos;s
-                for birthdays, Christmas, or weddings, we've got you covered.
+                for birthdays, Christmas, or weddings, we&apos;ve got you
+                covered.
               </p>
               <dl className="mt-10 max-w-xl space-y-8 text-base/7 text-gray-600 lg:max-w-none">
                 {features.map((feature) => (
