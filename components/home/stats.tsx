@@ -15,7 +15,7 @@ export default function Stats({
         <dl className="grid grid-cols-1 gap-x-8 gap-y-16 text-center lg:grid-cols-3">
           <div className="mx-auto flex max-w-xs flex-col gap-y-4">
             <dt className="text-base leading-7 text-gray-600">
-              Active Wishlists
+              Active wishlists
             </dt>
             <dd className="order-first text-3xl font-semibold tracking-tight text-gray-900 sm:text-5xl">
               {wishlistCount.toLocaleString()}
@@ -23,14 +23,14 @@ export default function Stats({
           </div>
           <div className="mx-auto flex max-w-xs flex-col gap-y-4">
             <dt className="text-base leading-7 text-gray-600">
-              Wishes Created
+              Wishes created
             </dt>
             <dd className="order-first text-3xl font-semibold tracking-tight text-gray-900 sm:text-5xl">
               {wishCount.toLocaleString()}
             </dd>
           </div>
           <div className="mx-auto flex max-w-xs flex-col gap-y-4">
-            <dt className="text-base leading-7 text-gray-600">Happy Users</dt>
+            <dt className="text-base leading-7 text-gray-600">Happy users</dt>
             <dd className="order-first text-3xl font-semibold tracking-tight text-gray-900 sm:text-5xl">
               {userCount.toLocaleString()}
             </dd>
