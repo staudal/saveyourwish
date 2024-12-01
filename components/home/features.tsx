@@ -10,7 +10,7 @@ const features = [
   {
     name: "Spread the joy.",
     description:
-      "Let friends and family know what you'd love to receive. They can reserve items to avoid duplicates.",
+      "Let friends and family know what you&apos;d love to receive. They can reserve items to avoid duplicates.",
     icon: ShareIcon,
   },
   {
@@ -35,8 +35,8 @@ export default function Features() {
                 Making it easy
               </p>
               <p className="mt-6 text-lg/8 text-gray-600">
-                Create and share wishlists for any occasion. Whether it's for
-                birthdays, Christmas, or weddings, we've got you covered.
+                Create and share wishlists for any occasion. Whether it&apos;s
+                for birthdays, Christmas, or weddings, we've got you covered.
               </p>
               <dl className="mt-10 max-w-xl space-y-8 text-base/7 text-gray-600 lg:max-w-none">
                 {features.map((feature) => (
