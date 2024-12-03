@@ -1,14 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import {
-  ArrowUpDown,
-  Package,
-  DollarSign,
-  MoreHorizontal,
-  Pencil,
-  Trash2,
-} from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/components/ui/currency-select";
 import { calculateAveragePrice, convertToUSD } from "@/constants";
@@ -80,31 +73,68 @@ function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
 }
 
 function WishAvatarGroup({ wishes }: { wishes: Wishlist["wishes"] }) {
+  const visibleAvatars = {
+    mobile: 2,
+    desktop: 3,
+  };
+
   return (
-    <div className="flex -space-x-4 min-w-[120px]">
+    <div className="flex items-center">
       {wishes.length > 0 ? (
         <>
-          {wishes.slice(0, 3).map((wish, index) => (
-            <Avatar
-              key={index}
-              className="border-2 border-background ring-0 h-10 w-10"
-              style={{
-                zIndex: 3 - index,
-              }}
-            >
-              <AvatarImage
-                src={wish.imageUrl || undefined}
-                alt="Wish image"
-                className="object-cover"
-              />
-              <AvatarFallback className="bg-muted">{index + 1}</AvatarFallback>
-            </Avatar>
-          ))}
-          {wishes.length > 3 && (
-            <div className="flex items-center justify-center w-10 h-10 text-xs font-medium text-foreground bg-muted border-2 border-background rounded-full">
-              +{wishes.length - 3}
-            </div>
-          )}
+          {/* Mobile: Show 2 avatars */}
+          <div className="sm:hidden flex -space-x-4">
+            {wishes.slice(0, visibleAvatars.mobile).map((wish, index) => (
+              <Avatar
+                key={index}
+                className="border-2 border-background ring-0 h-10 w-10"
+                style={{
+                  zIndex: visibleAvatars.mobile - index,
+                }}
+              >
+                <AvatarImage
+                  src={wish.imageUrl || undefined}
+                  alt="Wish image"
+                  className="object-cover"
+                />
+                <AvatarFallback className="bg-muted">
+                  {index + 1}
+                </AvatarFallback>
+              </Avatar>
+            ))}
+            {wishes.length > visibleAvatars.mobile && (
+              <div className="flex items-center justify-center w-10 h-10 text-xs font-medium text-foreground bg-muted border-2 border-background rounded-full">
+                +{wishes.length - visibleAvatars.mobile}
+              </div>
+            )}
+          </div>
+
+          {/* Desktop: Show 3 avatars */}
+          <div className="hidden sm:flex -space-x-4">
+            {wishes.slice(0, visibleAvatars.desktop).map((wish, index) => (
+              <Avatar
+                key={index}
+                className="border-2 border-background ring-0 h-10 w-10"
+                style={{
+                  zIndex: visibleAvatars.desktop - index,
+                }}
+              >
+                <AvatarImage
+                  src={wish.imageUrl || undefined}
+                  alt="Wish image"
+                  className="object-cover"
+                />
+                <AvatarFallback className="bg-muted">
+                  {index + 1}
+                </AvatarFallback>
+              </Avatar>
+            ))}
+            {wishes.length > visibleAvatars.desktop && (
+              <div className="flex items-center justify-center w-10 h-10 text-xs font-medium text-foreground bg-muted border-2 border-background rounded-full">
+                +{wishes.length - visibleAvatars.desktop}
+              </div>
+            )}
+          </div>
         </>
       ) : (
         <div className="flex items-center justify-center w-10 h-10 text-xs font-medium text-muted-foreground bg-muted/50 border-2 border-background rounded-full">
@@ -140,29 +170,23 @@ export function useWishlistColumns() {
       },
       cell: ({ row }) => {
         const title = row.getValue("title") as string;
-        const wishCount = row.getValue("wishCount") as number;
-        const averagePriceResult = calculateAveragePrice(
+        const result = calculateAveragePrice(
           row.original.wishes as {
             price: number | null;
             currency: "USD" | "EUR" | "DKK" | "SEK";
           }[]
         );
-        const averagePrice = averagePriceResult
-          ? formatPrice(averagePriceResult.amount, averagePriceResult.currency)
-          : "-";
 
         return (
           <div className="flex flex-col gap-1">
             <span className="font-semibold">{title}</span>
-            <div className="flex gap-3 text-sm text-muted-foreground sm:hidden">
-              <span className="flex items-center gap-1">
-                <Package className="h-4 w-4" />
-                {wishCount} {wishCount === 1 ? "wish" : "wishes"}
-              </span>
-              <span className="flex items-center gap-1">
-                <DollarSign className="h-4 w-4" />
-                {averagePrice}
-              </span>
+            <div className="sm:hidden text-sm text-muted-foreground flex items-center gap-1">
+              <span>{t.wishlists.dataTable.averagePriceShort}</span>
+              {result ? (
+                formatPrice(result.amount, result.currency)
+              ) : (
+                <span>-</span>
+              )}
             </div>
           </div>
         );
@@ -172,7 +196,7 @@ export function useWishlistColumns() {
       accessorKey: "wishCount",
       header: ({ column }) => {
         return (
-          <div className="flex items-center hidden sm:flex">
+          <div className="flex items-center">
             {t.wishlists.dataTable.wishCount}
             <Button
               variant="ghost"
@@ -189,7 +213,7 @@ export function useWishlistColumns() {
       },
       cell: ({ row }) => {
         return (
-          <div className="hidden sm:flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
             <WishAvatarGroup wishes={row.original.wishes} />
           </div>
         );
@@ -209,7 +233,7 @@ export function useWishlistColumns() {
       },
       header: ({ column }) => {
         return (
-          <div className="flex items-center hidden sm:flex">
+          <div className="hidden sm:flex items-center">
             {t.wishlists.dataTable.averagePrice}
             <Button
               variant="ghost"

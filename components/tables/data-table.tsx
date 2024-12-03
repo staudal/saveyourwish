@@ -32,11 +32,13 @@ import { Wishlist } from "../wishes/grid/types";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  initialColumnVisibility?: VisibilityState;
 }
 
 export function DataTable<TData extends Wishlist, TValue>({
   columns,
   data,
+  initialColumnVisibility,
 }: DataTableProps<TData, TValue>) {
   const router = useRouter();
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -44,7 +46,7 @@ export function DataTable<TData extends Wishlist, TValue>({
     []
   );
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
+    React.useState<VisibilityState>(initialColumnVisibility || {});
 
   const table = useReactTable({
     data,
