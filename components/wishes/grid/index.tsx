@@ -20,8 +20,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { updateBulkWishPositions } from "@/actions/wish";
 import toast from "react-hot-toast";
-import { type wishes } from "@/lib/db";
-import { type InferSelectModel } from "drizzle-orm";
 import { EditWishDialog } from "@/components/dialogs/edit-wish-dialog";
 import { DeleteWishDialog } from "@/components/dialogs/delete-wish-dialog";
 import { ImagePositionDialog } from "@/components/dialogs/image-position-dialog";
@@ -37,8 +35,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-type Wish = InferSelectModel<typeof wishes>;
+import { ReserveWishDialog } from "@/components/dialogs/reserve-wish-dialog";
+import { RemoveReservationDialog } from "@/components/dialogs/remove-reservation-dialog";
+import { Wish } from "./types";
 
 interface ImageDimension {
   imageRatio: number;
@@ -73,6 +72,9 @@ export function WishesGrid({
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [imagePositionOpen, setImagePositionOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [reserveDialogOpen, setReserveDialogOpen] = useState(false);
+  const [removeReservationDialogOpen, setRemoveReservationDialogOpen] =
+    useState(false);
   const t = useTranslations();
 
   const sensors = useSensors(
@@ -95,6 +97,15 @@ export function WishesGrid({
   const handleEdit = (wish: Wish) => {
     setSelectedWish(wish);
     setEditDialogOpen(true);
+  };
+
+  const handleReserve = (wish: Wish) => {
+    setSelectedWish(wish);
+    if (wish.reservation) {
+      setRemoveReservationDialogOpen(true);
+    } else {
+      setReserveDialogOpen(true);
+    }
   };
 
   // Reset items when wishes prop changes
@@ -160,16 +171,35 @@ export function WishesGrid({
 
   if (readonly) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {wishes.map((wish) => (
-          <WishCard
-            key={wish.id}
-            wish={wish}
-            readonly
-            imageDimensions={imageDimensions}
-            setImageDimensions={setImageDimensions}
-          />
-        ))}
+      <div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {wishes.map((wish) => (
+            <WishCard
+              key={wish.id}
+              wish={wish}
+              readonly
+              isSharedView={isShared}
+              imageDimensions={imageDimensions}
+              setImageDimensions={setImageDimensions}
+              onReserve={handleReserve}
+            />
+          ))}
+        </div>
+
+        {selectedWish && (
+          <>
+            <ReserveWishDialog
+              wish={selectedWish}
+              open={reserveDialogOpen}
+              onOpenChange={setReserveDialogOpen}
+            />
+            <RemoveReservationDialog
+              wish={selectedWish}
+              open={removeReservationDialogOpen}
+              onOpenChange={setRemoveReservationDialogOpen}
+            />
+          </>
+        )}
       </div>
     );
   }
@@ -325,11 +355,14 @@ export function WishesGrid({
                 key={wish.id}
                 wish={wish}
                 isReordering={isReordering}
+                readonly={readonly}
+                isSharedView={isShared}
                 imageDimensions={imageDimensions}
                 setImageDimensions={setImageDimensions}
                 onDelete={handleDelete}
                 onAdjustImage={handleAdjustImage}
                 onEdit={handleEdit}
+                onReserve={handleReserve}
               />
             ))}
           </div>
@@ -341,8 +374,8 @@ export function WishesGrid({
           <EditWishDialog
             wish={selectedWish}
             open={editDialogOpen}
-            setOpen={setEditDialogOpen}
             onOpenChange={setEditDialogOpen}
+            setOpen={setEditDialogOpen}
           />
           <DeleteWishDialog
             id={selectedWish.id}
@@ -357,6 +390,16 @@ export function WishesGrid({
               onOpenChange={setImagePositionOpen}
             />
           )}
+          <ReserveWishDialog
+            wish={selectedWish}
+            open={reserveDialogOpen}
+            onOpenChange={setReserveDialogOpen}
+          />
+          <RemoveReservationDialog
+            wish={selectedWish}
+            open={removeReservationDialogOpen}
+            onOpenChange={setRemoveReservationDialogOpen}
+          />
         </>
       )}
     </div>

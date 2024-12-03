@@ -122,3 +122,13 @@ export const wishes = pgTable("wish", {
   imageZoom: real("imageZoom").default(1),
   position: integer("position").notNull(),
 });
+
+export const wishReservations = pgTable("wish_reservations", {
+  id: text("id").primaryKey().notNull(),
+  wishId: text("wish_id")
+    .notNull()
+    .references(() => wishes.id, { onDelete: "cascade" }),
+  reservedBy: text("reserved_by").notNull(), // Email or name of person reserving
+  reservedAt: timestamp("reserved_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});

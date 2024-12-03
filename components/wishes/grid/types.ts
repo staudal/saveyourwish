@@ -6,7 +6,13 @@ export interface ImageDimension {
   isImageTallerThanContainer: boolean;
 }
 
-export type Wish = InferSelectModel<typeof wishes> & { id: string };
+export type Wish = InferSelectModel<typeof wishes> & {
+  id: string;
+  reservation?: {
+    reservedBy: string;
+    reservedAt: Date;
+  } | null;
+};
 
 // Create a subset of Wishlist properties that we actually need
 export interface WishlistDisplay {

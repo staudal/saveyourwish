@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { wishes, wishlists } from "@/lib/db";
+import { wishes, wishlists, wishReservations } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { eq, and, sql } from "drizzle-orm";
@@ -74,8 +74,27 @@ export async function getWishes(wishlistId: string, isSharedAccess?: boolean) {
   }
 
   return await db
-    .select()
+    .select({
+      id: wishes.id,
+      title: wishes.title,
+      price: wishes.price,
+      currency: wishes.currency,
+      imageUrl: wishes.imageUrl,
+      destinationUrl: wishes.destinationUrl,
+      description: wishes.description,
+      quantity: wishes.quantity,
+      wishlistId: wishes.wishlistId,
+      verticalPosition: wishes.verticalPosition,
+      horizontalPosition: wishes.horizontalPosition,
+      imageZoom: wishes.imageZoom,
+      position: wishes.position,
+      reservation: {
+        reservedBy: wishReservations.reservedBy,
+        reservedAt: wishReservations.reservedAt,
+      },
+    })
     .from(wishes)
+    .leftJoin(wishReservations, eq(wishes.id, wishReservations.wishId))
     .where(eq(wishes.wishlistId, wishlistId))
     .orderBy(wishes.position);
 }
@@ -301,5 +320,109 @@ export async function updateBulkWishPositions(
     return { success: true };
   } catch (error) {
     return { success: false, error: "Failed to update positions" };
+  }
+}
+
+export async function reserveWish(wishId: string, reservedBy: string) {
+  try {
+    // Get the wish and its associated wishlist
+    const wish = await db
+      .select({
+        id: wishes.id,
+        wishlistId: wishes.wishlistId,
+        wishlist: {
+          id: wishlists.id,
+          shared: wishlists.shared,
+          shareId: wishlists.shareId,
+          userId: wishlists.userId,
+        },
+      })
+      .from(wishes)
+      .innerJoin(wishlists, eq(wishes.wishlistId, wishlists.id))
+      .where(eq(wishes.id, wishId))
+      .then((rows) => rows[0]);
+
+    if (!wish) {
+      throw new Error("Wish not found");
+    }
+
+    if (!wish.wishlist.shared) {
+      throw new Error("Wishlist is not shared");
+    }
+
+    // Check if wish is already reserved
+    const existingReservation = await db
+      .select()
+      .from(wishReservations)
+      .where(eq(wishReservations.wishId, wishId))
+      .then((rows) => rows[0]);
+
+    if (existingReservation) {
+      throw new Error("Wish is already reserved");
+    }
+
+    // Create the reservation with a generated ID
+    await db.insert(wishReservations).values({
+      id: crypto.randomUUID(),
+      wishId: wish.id,
+      reservedBy,
+    });
+
+    // Revalidate both the shared and owner views
+    revalidatePath(`/shared/${wish.wishlist.shareId}`);
+    revalidatePath(`/dashboard/wishlists/${wish.wishlistId}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to reserve wish:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to reserve wish",
+    };
+  }
+}
+
+export async function removeReservation(wishId: string) {
+  try {
+    // Get the wish and its associated wishlist
+    const wish = await db
+      .select({
+        id: wishes.id,
+        wishlistId: wishes.wishlistId,
+        wishlist: {
+          id: wishlists.id,
+          shared: wishlists.shared,
+          shareId: wishlists.shareId,
+        },
+      })
+      .from(wishes)
+      .innerJoin(wishlists, eq(wishes.wishlistId, wishlists.id))
+      .where(eq(wishes.id, wishId))
+      .then((rows) => rows[0]);
+
+    if (!wish) {
+      throw new Error("Wish not found");
+    }
+
+    if (!wish.wishlist.shared) {
+      throw new Error("Wishlist is not shared");
+    }
+
+    await db
+      .delete(wishReservations)
+      .where(eq(wishReservations.wishId, wishId));
+
+    // Revalidate both the shared and owner views
+    revalidatePath(`/shared/${wish.wishlist.shareId}`);
+    revalidatePath(`/dashboard/wishlists/${wish.wishlistId}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to remove reservation:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to remove reservation",
+    };
   }
 }

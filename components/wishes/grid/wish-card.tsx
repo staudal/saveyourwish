@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { ExternalLink, GripVertical } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { Button } from "@/components/ui/button";
 
 type Wish = InferSelectModel<typeof wishes>;
 
@@ -18,9 +19,15 @@ interface ImageDimension {
 }
 
 interface WishCardProps {
-  wish: Wish;
+  wish: Wish & {
+    reservation?: {
+      reservedBy: string;
+      reservedAt: Date;
+    } | null;
+  };
   isReordering?: boolean;
   readonly?: boolean;
+  isSharedView?: boolean;
   imageDimensions: Record<string, ImageDimension>;
   setImageDimensions: React.Dispatch<
     React.SetStateAction<Record<string, ImageDimension>>
@@ -28,6 +35,7 @@ interface WishCardProps {
   onDelete?: (wish: Wish) => void;
   onAdjustImage?: (wish: Wish) => void;
   onEdit?: (wish: Wish) => void;
+  onReserve?: (wish: Wish) => void;
 }
 
 export function WishCard({
@@ -39,6 +47,8 @@ export function WishCard({
   onDelete,
   onAdjustImage,
   onEdit,
+  isSharedView,
+  onReserve,
 }: WishCardProps) {
   const {
     attributes,
@@ -139,6 +149,32 @@ export function WishCard({
               )}
             </div>
           </>
+        )}
+
+        {readonly && isSharedView && (
+          <div className="p-4 border-t">
+            {wish.reservation ? (
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">
+                  Reserved by {wish.reservation.reservedBy}
+                </div>
+                <Button
+                  variant={"destructive"}
+                  onClick={() => onReserve?.(wish)}
+                >
+                  Remove
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => onReserve?.(wish)}
+              >
+                Reserve this wish
+              </Button>
+            )}
+          </div>
         )}
       </div>
     </div>
