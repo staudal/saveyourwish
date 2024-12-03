@@ -29,7 +29,7 @@ export default async function DashboardLayout({
             <SidebarTrigger className="-ml-1" />
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0 md:p-8">
+        <div className="container mx-auto px-4 md:px-8 py-4 md:py-8">
           {children}
         </div>
       </SidebarInset>

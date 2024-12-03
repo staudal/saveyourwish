@@ -52,6 +52,7 @@ function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>{t.wishlists.dataTable.actions}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={(e) => {
               e.stopPropagation();
@@ -61,7 +62,6 @@ function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
             <Pencil className="mr-2 h-4 w-4" />
             {t.wishlists.editDialog.trigger}
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={(e) => {
               e.stopPropagation();

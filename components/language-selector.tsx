@@ -12,6 +12,8 @@ import {
 const languages = [
   { value: "en", label: "English" },
   { value: "da", label: "Dansk" },
+  { value: "sv", label: "Svenska" },
+  { value: "es", label: "Español" },
 ] as const;
 
 export function LanguageSelector() {
