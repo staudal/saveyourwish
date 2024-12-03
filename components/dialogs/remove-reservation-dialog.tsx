@@ -10,8 +10,17 @@ import {
   DialogTitle,
   DialogDescription,
 } from "../ui/dialog";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerFooter,
+} from "../ui/drawer";
 import { Button } from "../ui/button";
 import { Wish } from "../wishes/grid/types";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 export function RemoveReservationDialog({
   wish,
@@ -23,6 +32,7 @@ export function RemoveReservationDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const [isLoading, setIsLoading] = useState(false);
+  const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const handleRemove = async () => {
     setIsLoading(true);
@@ -42,25 +52,50 @@ export function RemoveReservationDialog({
     setIsLoading(false);
   };
 
+  if (isDesktop) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove reservation</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove this reservation? This will allow
+              others to reserve this wish.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleRemove}
+              disabled={isLoading}
+              variant="destructive"
+            >
+              {isLoading ? "Removing..." : "Remove reservation"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Remove reservation</DialogTitle>
-          <DialogDescription>
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent>
+        <DrawerHeader>
+          <DrawerTitle>Remove reservation</DrawerTitle>
+          <DrawerDescription>
             Are you sure you want to remove this reservation? This will allow
             others to reserve this wish.
-          </DialogDescription>
-        </DialogHeader>
-
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-          >
-            Cancel
-          </Button>
+          </DrawerDescription>
+        </DrawerHeader>
+        <DrawerFooter>
           <Button
             onClick={handleRemove}
             disabled={isLoading}
@@ -68,8 +103,15 @@ export function RemoveReservationDialog({
           >
             {isLoading ? "Removing..." : "Remove reservation"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
+            Cancel
+          </Button>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
 }

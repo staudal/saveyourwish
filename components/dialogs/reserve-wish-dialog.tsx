@@ -13,10 +13,20 @@ import {
   DialogTitle,
   DialogDescription,
 } from "../ui/dialog";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerClose,
+} from "../ui/drawer";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Wish } from "../wishes/grid/types";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 const formSchema = z.object({
   name: z
@@ -37,6 +47,7 @@ export function ReserveWishDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const [isLoading, setIsLoading] = useState(false);
+  const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -64,32 +75,39 @@ export function ReserveWishDialog({
     setIsLoading(false);
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Reserve this wish</DialogTitle>
-          <DialogDescription>
-            Enter your name so the wishlist owner knows who reserved it
-          </DialogDescription>
-        </DialogHeader>
+  const formContent = (
+    <form onSubmit={form.handleSubmit(handleReserve)} className="space-y-4">
+      <div className="grid gap-2">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="name">Your name</Label>
+          {form.formState.errors.name && (
+            <span className="text-sm text-red-600 leading-none">
+              {form.formState.errors.name.message}
+            </span>
+          )}
+        </div>
+        <Input
+          {...form.register("name")}
+          id="name"
+          placeholder="Enter your name"
+          autoFocus
+        />
+      </div>
+    </form>
+  );
 
-        <form onSubmit={form.handleSubmit(handleReserve)} className="space-y-4">
-          <div className="grid gap-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="name">Your name</Label>
-              {form.formState.errors.name && (
-                <span className="text-sm text-red-600 leading-none">
-                  {form.formState.errors.name.message}
-                </span>
-              )}
-            </div>
-            <Input
-              {...form.register("name")}
-              id="name"
-              placeholder="Enter your name"
-            />
-          </div>
+  if (isDesktop) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reserve this wish</DialogTitle>
+            <DialogDescription>
+              Enter your name so the wishlist owner knows who reserved it
+            </DialogDescription>
+          </DialogHeader>
+
+          {formContent}
 
           <DialogFooter>
             <Button
@@ -100,14 +118,41 @@ export function ReserveWishDialog({
               Cancel
             </Button>
             <Button
-              type="submit"
+              onClick={form.handleSubmit(handleReserve)}
               disabled={!form.formState.isValid || isLoading}
             >
               {isLoading ? "Reserving..." : "Reserve"}
             </Button>
           </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent>
+        <DrawerHeader>
+          <DrawerTitle>Reserve this wish</DrawerTitle>
+          <DrawerDescription>
+            Enter your name so the wishlist owner knows who reserved it
+          </DrawerDescription>
+        </DrawerHeader>
+        <div className="p-4 pb-0">{formContent}</div>
+        <DrawerFooter>
+          <Button
+            onClick={form.handleSubmit(handleReserve)}
+            disabled={!form.formState.isValid || isLoading}
+          >
+            {isLoading ? "Reserving..." : "Reserve"}
+          </Button>
+          <DrawerClose asChild>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+          </DrawerClose>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
 }
