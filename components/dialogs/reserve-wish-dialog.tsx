@@ -89,7 +89,6 @@ export function ReserveWishDialog({
           {...form.register("name")}
           id="name"
           placeholder={t.wishes.reserveDialog.namePlaceholder}
-          autoFocus
         />
       </div>
     </form>
@@ -132,27 +131,29 @@ export function ReserveWishDialog({
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
-        <DrawerHeader className="sticky top-0 z-20 bg-background">
-          <DrawerTitle>{t.wishes.reserveDialog.headline}</DrawerTitle>
-          <DrawerDescription>
-            {t.wishes.reserveDialog.description}
-          </DrawerDescription>
-        </DrawerHeader>
-        <div className="px-4">{formContent}</div>
-        <DrawerFooter className="sticky bottom-0 mt-auto">
-          <Button
-            onClick={form.handleSubmit(handleReserve)}
-            disabled={!form.formState.isValid || isLoading}
-            isLoading={isLoading}
-          >
-            {t.wishes.reserveDialog.button}
-          </Button>
-          <DrawerClose asChild>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              {t.wishes.reserveDialog.cancelButton}
+        <div className="mx-auto w-full">
+          <DrawerHeader className="sticky top-0 z-20 bg-background">
+            <DrawerTitle>{t.wishes.reserveDialog.headline}</DrawerTitle>
+            <DrawerDescription>
+              {t.wishes.reserveDialog.description}
+            </DrawerDescription>
+          </DrawerHeader>
+          <div className="p-4">{formContent}</div>
+          <DrawerFooter className="sticky bottom-0 mt-auto">
+            <Button
+              onClick={form.handleSubmit(handleReserve)}
+              disabled={!form.formState.isValid || isLoading}
+              isLoading={isLoading}
+            >
+              {t.wishes.reserveDialog.button}
             </Button>
-          </DrawerClose>
-        </DrawerFooter>
+            <DrawerClose asChild>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                {t.wishes.reserveDialog.cancelButton}
+              </Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </div>
       </DrawerContent>
     </Drawer>
   );
