@@ -161,7 +161,7 @@ export function ShareWishlistDialog({
   }
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
+    <Drawer open={open} onOpenChange={setOpen} repositionInputs={false}>
       <DrawerContent>
         <DrawerHeader>
           <DrawerTitle>{t.wishes.shareDialog.headline}</DrawerTitle>

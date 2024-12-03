@@ -71,7 +71,7 @@ export function CreateWishlistDialog() {
   }
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
+    <Drawer open={open} onOpenChange={setOpen} repositionInputs={false}>
       <DrawerTrigger asChild>
         <Button>{t.wishlists.createDialog.trigger}</Button>
       </DrawerTrigger>

@@ -77,7 +77,7 @@ export function CreateWishDialog({
   }
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
+    <Drawer open={open} onOpenChange={setOpen} repositionInputs={false}>
       <DrawerContent>
         <div className="mx-auto w-full">
           <DrawerHeader>

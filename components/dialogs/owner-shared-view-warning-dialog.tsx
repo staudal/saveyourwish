@@ -70,7 +70,7 @@ export function OwnerSharedViewWarningDialog({
   return (
     <>
       {overlay}
-      <Drawer open={open} onOpenChange={onOpenChange}>
+      <Drawer open={open} onOpenChange={onOpenChange} repositionInputs={false}>
         <DrawerContent className="z-[51]">
           <DrawerHeader>
             <DrawerTitle>Warning: Owner Access</DrawerTitle>

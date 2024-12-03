@@ -88,7 +88,7 @@ export function RemoveReservationDialog({
   }
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
+    <Drawer open={open} onOpenChange={onOpenChange} repositionInputs={false}>
       <DrawerContent>
         <DrawerHeader>
           <DrawerTitle>{t.wishes.removeReservationDialog.headline}</DrawerTitle>
