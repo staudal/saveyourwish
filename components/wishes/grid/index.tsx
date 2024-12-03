@@ -26,13 +26,7 @@ import { ImagePositionDialog } from "@/components/dialogs/image-position-dialog"
 import { ShareWishlistDialog } from "@/components/dialogs/share-wishlist-dialog";
 import { CreateWishDialog } from "@/components/dialogs/create-wish-dialog";
 import { useTranslations } from "@/hooks/use-translations";
-import {
-  ArrowUpDown,
-  ChevronDown,
-  CirclePlus,
-  Plus,
-  Share,
-} from "lucide-react";
+import { ArrowUpDown, ChevronDown, CirclePlus, Share } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
