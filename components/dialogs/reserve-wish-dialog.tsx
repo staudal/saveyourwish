@@ -129,33 +129,31 @@ export function ReserveWishDialog({
   return (
     <Drawer open={open} onOpenChange={onOpenChange} repositionInputs={false}>
       <DrawerContent>
-        <div className="mx-auto w-full">
-          <DrawerHeader>
-            <DrawerTitle>{t.wishes.reserveDialog.headline}</DrawerTitle>
-            <DrawerDescription>
-              {t.wishes.reserveDialog.description}
-            </DrawerDescription>
-          </DrawerHeader>
-          <div className="p-4">{formContent}</div>
-          <DrawerFooter className="pt-2">
-            <Button
-              className="w-full"
-              onClick={form.handleSubmit(handleReserve)}
-              disabled={!form.formState.isValid || isLoading}
-              isLoading={isLoading}
-            >
-              {t.wishes.reserveDialog.button}
-            </Button>
-            <Button
-              className="w-full"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
-            >
-              {t.wishes.reserveDialog.cancelButton}
-            </Button>
-          </DrawerFooter>
-        </div>
+        <DrawerHeader>
+          <DrawerTitle>{t.wishes.reserveDialog.headline}</DrawerTitle>
+          <DrawerDescription>
+            {t.wishes.reserveDialog.description}
+          </DrawerDescription>
+        </DrawerHeader>
+        {formContent}
+        <DrawerFooter className="pt-2">
+          <Button
+            className="w-full"
+            onClick={form.handleSubmit(handleReserve)}
+            disabled={!form.formState.isValid || isLoading}
+            isLoading={isLoading}
+          >
+            {t.wishes.reserveDialog.button}
+          </Button>
+          <Button
+            className="w-full"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isLoading}
+          >
+            {t.wishes.reserveDialog.cancelButton}
+          </Button>
+        </DrawerFooter>
       </DrawerContent>
     </Drawer>
   );

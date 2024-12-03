@@ -78,36 +78,32 @@ export function EditWishlistDialog({
   return (
     <Drawer open={open} onOpenChange={setOpen} repositionInputs={false}>
       <DrawerContent>
-        <div className="mx-auto w-full">
-          <DrawerHeader>
-            <DrawerTitle>{t.wishlists.editDialog.headline}</DrawerTitle>
-            <DrawerDescription>
-              {t.wishlists.editDialog.description}
-            </DrawerDescription>
-          </DrawerHeader>
-          <div className="p-4">
-            <EditWishlistForm
-              wishlist={wishlist}
-              onSuccess={() => setOpen(false)}
-              onLoadingChange={setIsLoading}
-            />
-          </div>
-          <DrawerFooter className="pt-2">
-            <Button
-              type="submit"
-              form="edit-wishlist-form"
-              disabled={isLoading}
-              isLoading={isLoading}
-            >
-              {t.wishlists.editDialog.save}
+        <DrawerHeader>
+          <DrawerTitle>{t.wishlists.editDialog.headline}</DrawerTitle>
+          <DrawerDescription>
+            {t.wishlists.editDialog.description}
+          </DrawerDescription>
+        </DrawerHeader>
+        <EditWishlistForm
+          wishlist={wishlist}
+          onSuccess={() => setOpen(false)}
+          onLoadingChange={setIsLoading}
+        />
+        <DrawerFooter className="pt-2">
+          <Button
+            type="submit"
+            form="edit-wishlist-form"
+            disabled={isLoading}
+            isLoading={isLoading}
+          >
+            {t.wishlists.editDialog.save}
+          </Button>
+          <DrawerClose asChild>
+            <Button variant="outline" disabled={isLoading}>
+              {t.wishlists.editDialog.cancel}
             </Button>
-            <DrawerClose asChild>
-              <Button variant="outline" disabled={isLoading}>
-                {t.wishlists.editDialog.cancel}
-              </Button>
-            </DrawerClose>
-          </DrawerFooter>
-        </div>
+          </DrawerClose>
+        </DrawerFooter>
       </DrawerContent>
     </Drawer>
   );

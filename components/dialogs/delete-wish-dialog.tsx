@@ -95,29 +95,27 @@ export function DeleteWishDialog({
   return (
     <Drawer open={open} onOpenChange={onOpenChange} repositionInputs={false}>
       <DrawerContent>
-        <div className="mx-auto w-full">
-          <DrawerHeader>
-            <DrawerTitle>{t.wishes.deleteDialog.headline}</DrawerTitle>
-            <DrawerDescription>
-              {t.wishes.deleteDialog.description}
-            </DrawerDescription>
-          </DrawerHeader>
-          <DrawerFooter className="pt-2">
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={isLoading}
-              isLoading={isLoading}
-            >
-              {t.wishes.deleteDialog.delete}
+        <DrawerHeader>
+          <DrawerTitle>{t.wishes.deleteDialog.headline}</DrawerTitle>
+          <DrawerDescription>
+            {t.wishes.deleteDialog.description}
+          </DrawerDescription>
+        </DrawerHeader>
+        <DrawerFooter className="pt-2">
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={isLoading}
+            isLoading={isLoading}
+          >
+            {t.wishes.deleteDialog.delete}
+          </Button>
+          <DrawerClose asChild>
+            <Button variant="outline" disabled={isLoading}>
+              {t.wishes.deleteDialog.cancel}
             </Button>
-            <DrawerClose asChild>
-              <Button variant="outline" disabled={isLoading}>
-                {t.wishes.deleteDialog.cancel}
-              </Button>
-            </DrawerClose>
-          </DrawerFooter>
-        </div>
+          </DrawerClose>
+        </DrawerFooter>
       </DrawerContent>
     </Drawer>
   );

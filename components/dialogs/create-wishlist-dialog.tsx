@@ -76,39 +76,35 @@ export function CreateWishlistDialog() {
         <Button>{t.wishlists.createDialog.trigger}</Button>
       </DrawerTrigger>
       <DrawerContent>
-        <div className="mx-auto w-full">
-          <DrawerHeader>
-            <DrawerTitle>{t.wishlists.createDialog.headline}</DrawerTitle>
-            <DrawerDescription>
-              {t.wishlists.createDialog.description}
-            </DrawerDescription>
-          </DrawerHeader>
-          <div className="p-4">
-            <CreateWishlistForm
-              onSuccess={() => setOpen(false)}
-              onLoadingChange={setIsLoading}
-            />
-          </div>
-          <DrawerFooter className="pt-2">
-            <Button
-              className="w-full"
-              type="submit"
-              form="create-wishlist-form"
-              disabled={isLoading}
-              isLoading={isLoading}
-            >
-              {t.wishlists.createDialog.create}
-            </Button>
-            <Button
-              className="w-full"
-              variant="outline"
-              onClick={() => setOpen(false)}
-              disabled={isLoading}
-            >
-              {t.wishlists.createDialog.cancel}
-            </Button>
-          </DrawerFooter>
-        </div>
+        <DrawerHeader>
+          <DrawerTitle>{t.wishlists.createDialog.headline}</DrawerTitle>
+          <DrawerDescription>
+            {t.wishlists.createDialog.description}
+          </DrawerDescription>
+        </DrawerHeader>
+        <CreateWishlistForm
+          onSuccess={() => setOpen(false)}
+          onLoadingChange={setIsLoading}
+        />
+        <DrawerFooter className="pt-2">
+          <Button
+            className="w-full"
+            type="submit"
+            form="create-wishlist-form"
+            disabled={isLoading}
+            isLoading={isLoading}
+          >
+            {t.wishlists.createDialog.create}
+          </Button>
+          <Button
+            className="w-full"
+            variant="outline"
+            onClick={() => setOpen(false)}
+            disabled={isLoading}
+          >
+            {t.wishlists.createDialog.cancel}
+          </Button>
+        </DrawerFooter>
       </DrawerContent>
     </Drawer>
   );

@@ -172,24 +172,22 @@ export function ShareWishlistDialog({
           </DrawerDescription>
         </DrawerHeader>
         {sharing && (
-          <div className="p-4">
-            <div className="grid gap-2">
-              <Label htmlFor="mobile-link">
-                {t.wishes.shareDialog.shareLinkLabel}
-              </Label>
-              <div className="flex items-center space-x-2">
-                <Input
-                  id="mobile-link"
-                  value={shareUrl}
-                  readOnly
-                  className="flex-1"
-                />
-                <CopyButton />
-              </div>
+          <div className="grid gap-2">
+            <Label htmlFor="mobile-link">
+              {t.wishes.shareDialog.shareLinkLabel}
+            </Label>
+            <div className="flex items-center space-x-2">
+              <Input
+                id="mobile-link"
+                value={shareUrl}
+                readOnly
+                className="flex-1"
+              />
+              <CopyButton />
             </div>
           </div>
         )}
-        <DrawerFooter className="pt-2">
+        <DrawerFooter>
           <Button
             onClick={handleToggleSharing}
             variant={sharing ? "destructive" : "default"}
