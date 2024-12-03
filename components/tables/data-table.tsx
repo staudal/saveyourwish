@@ -48,6 +48,10 @@ export function DataTable<TData extends Wishlist, TValue>({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>(initialColumnVisibility || {});
 
+  React.useEffect(() => {
+    setColumnVisibility(initialColumnVisibility || {});
+  }, [initialColumnVisibility]);
+
   const table = useReactTable({
     data,
     columns,

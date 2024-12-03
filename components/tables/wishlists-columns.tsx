@@ -83,7 +83,7 @@ function WishAvatarGroup({ wishes }: { wishes: Wishlist["wishes"] }) {
       {wishes.length > 0 ? (
         <>
           {/* Mobile: Show 2 avatars */}
-          <div className="sm:hidden flex -space-x-4">
+          <div className="md:hidden flex -space-x-4">
             {wishes.slice(0, visibleAvatars.mobile).map((wish, index) => (
               <Avatar
                 key={index}
@@ -110,7 +110,7 @@ function WishAvatarGroup({ wishes }: { wishes: Wishlist["wishes"] }) {
           </div>
 
           {/* Desktop: Show 3 avatars */}
-          <div className="hidden sm:flex -space-x-4">
+          <div className="hidden md:flex -space-x-4">
             {wishes.slice(0, visibleAvatars.desktop).map((wish, index) => (
               <Avatar
                 key={index}
@@ -180,7 +180,7 @@ export function useWishlistColumns() {
         return (
           <div className="flex flex-col gap-1">
             <span className="font-semibold">{title}</span>
-            <div className="sm:hidden text-sm text-muted-foreground flex items-center gap-1">
+            <div className="md:hidden text-sm text-muted-foreground flex items-center gap-1">
               <span>{t.wishlists.dataTable.averagePriceShort}</span>
               {result ? (
                 formatPrice(result.amount, result.currency)

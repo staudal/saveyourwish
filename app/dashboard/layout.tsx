@@ -24,13 +24,9 @@ export default async function DashboardLayout({
     <SidebarProvider>
       <AppSidebar user={user} />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 md:hidden">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-          </div>
-        </header>
-        <div className="container mx-auto px-4 md:px-8 py-4 md:py-8">
-          {children}
+        <div className="lg:container w-full mx-auto p-4 lg:p-8">{children}</div>
+        <div className="fixed bottom-4 left-4 lg:hidden">
+          <SidebarTrigger />
         </div>
       </SidebarInset>
     </SidebarProvider>
