@@ -45,18 +45,15 @@ export function DeleteWishDialog({
   async function handleDelete() {
     setIsLoading(true);
 
-    await toast.promise(deleteWish(id, wishlistId), {
-      loading: t.wishes.deleteDialog.loading,
-      success: (result) => {
-        if (result.success) {
-          router.refresh();
-          onOpenChange(false);
-          return t.wishes.deleteDialog.success;
-        }
-        throw new Error(result.error || t.wishes.deleteDialog.error);
-      },
-      error: (err) => err.message || t.wishes.deleteDialog.error,
-    });
+    const result = await deleteWish(id, wishlistId);
+
+    if (result.success) {
+      toast.success(t.wishes.deleteDialog.success);
+      router.refresh();
+      onOpenChange(false);
+    } else {
+      toast.error(result.error || t.error);
+    }
 
     setIsLoading(false);
   }
@@ -85,10 +82,9 @@ export function DeleteWishDialog({
               variant="destructive"
               onClick={handleDelete}
               disabled={isLoading}
+              isLoading={isLoading}
             >
-              {isLoading
-                ? t.wishes.deleteDialog.loading
-                : t.wishes.deleteDialog.delete}
+              {t.wishes.deleteDialog.delete}
             </Button>
           </div>
         </DialogContent>
@@ -111,10 +107,9 @@ export function DeleteWishDialog({
               variant="destructive"
               onClick={handleDelete}
               disabled={isLoading}
+              isLoading={isLoading}
             >
-              {isLoading
-                ? t.wishes.deleteDialog.loading
-                : t.wishes.deleteDialog.delete}
+              {t.wishes.deleteDialog.delete}
             </Button>
             <DrawerClose asChild>
               <Button variant="outline" disabled={isLoading}>

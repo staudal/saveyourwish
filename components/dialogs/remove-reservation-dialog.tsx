@@ -22,6 +22,7 @@ import { Button } from "../ui/button";
 import { Wish } from "../wishes/grid/types";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useTranslations } from "@/hooks/use-translations";
+import { Loader2 } from "lucide-react";
 
 export function RemoveReservationDialog({
   wish,
@@ -39,17 +40,14 @@ export function RemoveReservationDialog({
   const handleRemove = async () => {
     setIsLoading(true);
 
-    await toast.promise(removeReservation(wish.id), {
-      loading: t.wishes.removeReservationDialog.loading,
-      success: (result) => {
-        if (result.success) {
-          onOpenChange(false);
-          return t.wishes.removeReservationDialog.success;
-        }
-        throw new Error(result.error || t.wishes.removeReservationDialog.error);
-      },
-      error: (err) => err.message || t.wishes.removeReservationDialog.error,
-    });
+    const result = await removeReservation(wish.id);
+
+    if (result.success) {
+      toast.success(t.wishes.removeReservationDialog.success);
+      onOpenChange(false);
+    } else {
+      toast.error(t.error);
+    }
 
     setIsLoading(false);
   };
@@ -80,9 +78,8 @@ export function RemoveReservationDialog({
               disabled={isLoading}
               variant="destructive"
             >
-              {isLoading
-                ? t.wishes.removeReservationDialog.loading
-                : t.wishes.removeReservationDialog.button}
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isLoading ? t.loading : t.wishes.removeReservationDialog.button}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -104,10 +101,9 @@ export function RemoveReservationDialog({
             onClick={handleRemove}
             disabled={isLoading}
             variant="destructive"
+            isLoading={isLoading}
           >
-            {isLoading
-              ? t.wishes.removeReservationDialog.loading
-              : t.wishes.removeReservationDialog.button}
+            {t.wishes.removeReservationDialog.button}
           </Button>
           <Button
             type="button"

@@ -92,21 +92,19 @@ export function EditWishForm({
   async function onSubmit(values: FormData) {
     setIsLoading(true);
 
-    await toast.promise(
-      updateWish(wish.id, wish.wishlistId, formSchema.parse(values)),
-      {
-        loading: t.wishes.editDialog.loading,
-        success: (result) => {
-          if (result.success) {
-            router.refresh();
-            onSuccess?.();
-            return t.wishes.editDialog.success;
-          }
-          throw new Error(result.error || t.wishes.editDialog.error);
-        },
-        error: (err) => err.message || t.wishes.editDialog.error,
-      }
+    const result = await updateWish(
+      wish.id,
+      wish.wishlistId,
+      formSchema.parse(values)
     );
+
+    if (result.success) {
+      toast.success(t.wishes.editDialog.success);
+      router.refresh();
+      onSuccess?.();
+    } else {
+      toast.error(result.error || t.error);
+    }
 
     setIsLoading(false);
   }

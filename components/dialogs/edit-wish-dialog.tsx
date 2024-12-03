@@ -70,10 +70,9 @@ export function EditWishDialog({
               type="submit"
               form="edit-wish-form"
               disabled={isLoading}
+              isLoading={isLoading}
             >
-              {isLoading
-                ? t.wishes.editDialog.loading
-                : t.wishes.editDialog.save}
+              {t.wishes.editDialog.save}
             </Button>
           </div>
         </DialogContent>
@@ -99,10 +98,13 @@ export function EditWishDialog({
             />
           </div>
           <DrawerFooter className="pt-2">
-            <Button type="submit" form="edit-wish-form" disabled={isLoading}>
-              {isLoading
-                ? t.wishes.editDialog.loading
-                : t.wishes.editDialog.save}
+            <Button
+              type="submit"
+              form="edit-wish-form"
+              disabled={isLoading}
+              isLoading={isLoading}
+            >
+              {t.wishes.editDialog.save}
             </Button>
             <DrawerClose asChild>
               <Button variant="outline" disabled={isLoading}>

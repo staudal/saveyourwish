@@ -1,4 +1,5 @@
 import { GiftIcon, ShareIcon, HeartIcon } from "@heroicons/react/20/solid";
+import Image from "next/image";
 
 const features = [
   {
@@ -55,7 +56,7 @@ export default function Features() {
               </dl>
             </div>
           </div>
-          <img
+          <Image
             alt="Wishlist app screenshot"
             src="/screenshots/features.png"
             width={2432}

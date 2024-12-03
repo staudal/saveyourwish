@@ -60,10 +60,9 @@ export function CreateWishlistDialog() {
               type="submit"
               form="create-wishlist-form"
               disabled={isLoading}
+              isLoading={isLoading}
             >
-              {isLoading
-                ? t.wishlists.createDialog.loading
-                : t.wishlists.createDialog.create}
+              {t.wishlists.createDialog.create}
             </Button>
           </div>
         </DialogContent>
@@ -96,10 +95,9 @@ export function CreateWishlistDialog() {
               type="submit"
               form="create-wishlist-form"
               disabled={isLoading}
+              isLoading={isLoading}
             >
-              {isLoading
-                ? t.wishlists.createDialog.loading
-                : t.wishlists.createDialog.create}
+              {t.wishlists.createDialog.create}
             </Button>
             <Button
               className="w-full"

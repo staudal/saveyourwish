@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Dialog, DialogPanel } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -17,7 +18,7 @@ export default function Navigation() {
         <div className="flex lg:flex-1">
           <a href="#" className="-m-1.5 p-1.5">
             <span className="sr-only">SaveYourWish</span>
-            <img alt="" src="/logo.png" className="h-8 w-auto" />
+            <Image alt="" src="/logo.png" className="h-8 w-auto" />
           </a>
         </div>
         <div className="flex lg:hidden">
@@ -49,7 +50,7 @@ export default function Navigation() {
           <div className="flex items-center justify-between">
             <a href="#" className="-m-1.5 p-1.5">
               <span className="sr-only">SaveYourWish</span>
-              <img alt="" src="/logo.svg" className="h-8 w-auto" />
+              <Image alt="" src="/logo.svg" className="h-8 w-auto" />
             </a>
             <button
               type="button"

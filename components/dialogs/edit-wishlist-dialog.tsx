@@ -65,10 +65,9 @@ export function EditWishlistDialog({
               type="submit"
               form="edit-wishlist-form"
               disabled={isLoading}
+              isLoading={isLoading}
             >
-              {isLoading
-                ? t.wishlists.editDialog.loading
-                : t.wishlists.editDialog.save}
+              {t.wishlists.editDialog.save}
             </Button>
           </div>
         </DialogContent>
@@ -98,10 +97,9 @@ export function EditWishlistDialog({
               type="submit"
               form="edit-wishlist-form"
               disabled={isLoading}
+              isLoading={isLoading}
             >
-              {isLoading
-                ? t.wishlists.editDialog.loading
-                : t.wishlists.editDialog.save}
+              {t.wishlists.editDialog.save}
             </Button>
             <DrawerClose asChild>
               <Button variant="outline" disabled={isLoading}>

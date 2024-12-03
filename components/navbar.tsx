@@ -12,6 +12,7 @@ import {
 import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
+import Image from "next/image";
 
 const user = {
   name: "Tom Cook",
@@ -47,7 +48,7 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center">
               <div className="shrink-0">
-                <img alt="Your Company" src="/logo.png" className="size-8" />
+                <Image alt="Your Company" src="/logo.png" className="size-8" />
               </div>
               <div className="hidden md:block">
                 <div className="ml-10 flex items-baseline space-x-4">
@@ -86,7 +87,7 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
                     <MenuButton className="relative flex max-w-xs items-center rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
                       <span className="absolute -inset-1.5" />
                       <span className="sr-only">Open user menu</span>
-                      <img
+                      <Image
                         alt=""
                         src={user.imageUrl}
                         className="size-8 rounded-full"
@@ -155,7 +156,7 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
           <div className="border-t border-gray-700 pb-3 pt-4">
             <div className="flex items-center px-5">
               <div className="shrink-0">
-                <img
+                <Image
                   alt=""
                   src={user.imageUrl}
                   className="size-10 rounded-full"

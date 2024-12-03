@@ -61,18 +61,15 @@ export function ReserveWishDialog({
   const handleReserve = async (values: FormData) => {
     setIsLoading(true);
 
-    await toast.promise(reserveWish(wish.id, values.name), {
-      loading: t.wishes.reserveDialog.loading,
-      success: (result) => {
-        if (result.success) {
-          form.reset();
-          onOpenChange(false);
-          return t.wishes.reserveDialog.success;
-        }
-        throw new Error(result.error || t.wishes.reserveDialog.error);
-      },
-      error: (err) => err.message || t.wishes.reserveDialog.error,
-    });
+    const result = await reserveWish(wish.id, values.name);
+
+    if (result.success) {
+      form.reset();
+      onOpenChange(false);
+      toast.success(t.wishes.reserveDialog.success);
+    } else {
+      toast.error(t.error);
+    }
 
     setIsLoading(false);
   };
@@ -122,10 +119,9 @@ export function ReserveWishDialog({
             <Button
               onClick={form.handleSubmit(handleReserve)}
               disabled={!form.formState.isValid || isLoading}
+              isLoading={isLoading}
             >
-              {isLoading
-                ? t.wishes.reserveDialog.loading
-                : t.wishes.reserveDialog.button}
+              {t.wishes.reserveDialog.button}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -147,10 +143,9 @@ export function ReserveWishDialog({
           <Button
             onClick={form.handleSubmit(handleReserve)}
             disabled={!form.formState.isValid || isLoading}
+            isLoading={isLoading}
           >
-            {isLoading
-              ? t.wishes.reserveDialog.loading
-              : t.wishes.reserveDialog.button}
+            {t.wishes.reserveDialog.button}
           </Button>
           <DrawerClose asChild>
             <Button variant="outline" onClick={() => onOpenChange(false)}>

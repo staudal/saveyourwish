@@ -40,19 +40,16 @@ export function CreateWishlistForm({
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
 
-    await toast.promise(createWishlist(values.title), {
-      loading: t.wishlists.createDialog.loading,
-      success: (result) => {
-        if (result.success) {
-          form.reset();
-          router.refresh();
-          onSuccess?.();
-          return t.wishlists.createDialog.success;
-        }
-        throw new Error(result.error || t.wishlists.createDialog.error);
-      },
-      error: (err) => err.message || t.wishlists.createDialog.error,
-    });
+    const result = await createWishlist(values.title);
+
+    if (result.success) {
+      toast.success(t.wishlists.createDialog.success);
+      form.reset();
+      router.refresh();
+      onSuccess?.();
+    } else {
+      toast.error(result.error || t.error);
+    }
 
     setIsLoading(false);
   }

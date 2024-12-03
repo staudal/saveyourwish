@@ -66,25 +66,29 @@ export function ShareWishlistDialog({
 
   const handleToggleSharing = async () => {
     setIsLoading(true);
-    await toast.promise(toggleWishlistSharing(wishlistId), {
-      loading: t.wishes.shareDialog.loading,
-      success: (result) => {
-        if (result.success && typeof result.isShared === "boolean") {
-          setSharing(result.isShared);
-          if (result.isShared && result.shareId) {
-            setShareUrl(`${window.location.origin}/shared/${result.shareId}`);
-          } else {
-            setShareUrl("");
-          }
-          return result.isShared
-            ? t.wishes.shareDialog.enableSuccess
-            : t.wishes.shareDialog.disableSuccess;
+    try {
+      const result = await toggleWishlistSharing(wishlistId);
+
+      if (result.success && typeof result.isShared === "boolean") {
+        setSharing(result.isShared);
+        if (result.isShared && result.shareId) {
+          setShareUrl(`${window.location.origin}/shared/${result.shareId}`);
+        } else {
+          setShareUrl("");
         }
-        throw new Error(result.error || t.wishes.shareDialog.error);
-      },
-      error: (err) => err.message || t.wishes.shareDialog.error,
-    });
-    setIsLoading(false);
+        toast.success(
+          result.isShared
+            ? t.wishes.shareDialog.enableSuccess
+            : t.wishes.shareDialog.disableSuccess
+        );
+      } else {
+        toast.error(result.error || t.error);
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t.error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const CopyButton = () => (
@@ -108,35 +112,7 @@ export function ShareWishlistDialog({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           {trigger || (
-            <Button variant="outline" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  {t.wishes.shareDialog.loading}
-                </>
-              ) : (
-                t.wishes.shareDialog.button
-              )}
-            </Button>
+            <Button variant="outline">{t.wishes.shareDialog.button}</Button>
           )}
         </DialogTrigger>
         <DialogContent className="sm:max-w-md">
@@ -180,14 +156,9 @@ export function ShareWishlistDialog({
               onClick={handleToggleSharing}
               variant={sharing ? "destructive" : "default"}
               disabled={isLoading}
+              isLoading={isLoading}
             >
-              {isLoading ? (
-                <>{t.wishes.shareDialog.loading}</>
-              ) : sharing ? (
-                t.wishes.shareDialog.disableButton
-              ) : (
-                t.wishes.shareDialog.enableButton
-              )}
+              {t.wishes.shareDialog.disableButton}
             </Button>
           </div>
         </DialogContent>
@@ -237,6 +208,7 @@ export function ShareWishlistDialog({
             <Button
               onClick={handleToggleSharing}
               variant={sharing ? "destructive" : "default"}
+              isLoading={isLoading}
             >
               {sharing
                 ? t.wishes.shareDialog.disableButton

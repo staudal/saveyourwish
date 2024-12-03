@@ -71,25 +71,18 @@ export function ImagePositionDialog({
 
   const handleSave = async () => {
     setIsLoading(true);
+    const result = await updateWishImagePosition(wish.id, wish.wishlistId, {
+      vertical: verticalPosition,
+      horizontal: horizontalPosition,
+      zoom,
+    });
 
-    await toast.promise(
-      updateWishImagePosition(wish.id, wish.wishlistId, {
-        vertical: verticalPosition,
-        horizontal: horizontalPosition,
-        zoom,
-      }),
-      {
-        loading: t.wishes.imagePositionDialog.loading,
-        success: (result) => {
-          if (result.success) {
-            onOpenChange(false);
-            return t.wishes.imagePositionDialog.success;
-          }
-          throw new Error(result.error || t.wishes.imagePositionDialog.error);
-        },
-        error: (err) => err.message || t.wishes.imagePositionDialog.error,
-      }
-    );
+    if (result.success) {
+      toast.success(t.wishes.imagePositionDialog.success);
+      onOpenChange(false);
+    } else {
+      toast.error(t.error);
+    }
 
     setIsLoading(false);
   };
@@ -208,10 +201,12 @@ export function ImagePositionDialog({
             >
               {t.wishes.imagePositionDialog.cancel}
             </Button>
-            <Button onClick={handleSave} disabled={isLoading}>
-              {isLoading
-                ? t.wishes.imagePositionDialog.loading
-                : t.wishes.imagePositionDialog.save}
+            <Button
+              onClick={handleSave}
+              disabled={isLoading}
+              isLoading={isLoading}
+            >
+              {t.wishes.imagePositionDialog.save}
             </Button>
           </div>
         </div>

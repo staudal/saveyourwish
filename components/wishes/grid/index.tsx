@@ -124,18 +124,14 @@ export function WishesGrid({
       position: index + 1,
     }));
 
-    const result = await toast.promise(
-      updateBulkWishPositions(wishlistId, positions),
-      {
-        loading: t.wishes.reorderMode.saving,
-        success: t.wishes.reorderMode.success,
-        error: t.wishes.reorderMode.error,
-      }
-    );
+    const result = await updateBulkWishPositions(wishlistId, positions);
 
     if (result.success) {
+      toast.success(t.wishes.reorderMode.success);
       setIsReordering(false);
       setHasChanges(false);
+    } else {
+      toast.error(t.error);
     }
 
     setIsSaving(false);
@@ -249,42 +245,15 @@ export function WishesGrid({
               <Button
                 onClick={handleSave}
                 disabled={!hasChanges || isSaving}
+                isLoading={isSaving}
                 className="relative"
               >
-                {isSaving ? (
-                  <>
-                    <svg
-                      className="animate-spin h-4 w-4"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                    <span className="ml-2">{t.wishes.reorderMode.saving}</span>
-                  </>
-                ) : (
-                  <>
-                    {hasChanges && (
-                      <span className="absolute -right-1 -top-1 flex h-3 w-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
-                      </span>
-                    )}
-                    {t.wishes.reorderMode.saveButton}
-                  </>
+                {t.wishes.reorderMode.saveButton}
+                {hasChanges && (
+                  <span className="absolute -right-1 -top-1 flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
+                  </span>
                 )}
               </Button>
             </>

@@ -70,10 +70,9 @@ export function CreateWishDialog({
               type="submit"
               form="create-wish-form"
               disabled={isLoading}
+              isLoading={isLoading}
             >
-              {isLoading
-                ? t.wishes.createDialog.loading
-                : t.wishes.createDialog.create}
+              {t.wishes.createDialog.create}
             </Button>
           </div>
         </DialogContent>
@@ -102,10 +101,13 @@ export function CreateWishDialog({
             />
           </div>
           <DrawerFooter className="pt-2">
-            <Button type="submit" form="create-wish-form" disabled={isLoading}>
-              {isLoading
-                ? t.wishes.createDialog.loading
-                : t.wishes.createDialog.create}
+            <Button
+              type="submit"
+              form="create-wish-form"
+              disabled={isLoading}
+              isLoading={isLoading}
+            >
+              {t.wishes.createDialog.create}
             </Button>
             <DrawerClose asChild>
               <Button variant="outline" disabled={isLoading}>

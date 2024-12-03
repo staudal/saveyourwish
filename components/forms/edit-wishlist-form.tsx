@@ -43,18 +43,15 @@ export function EditWishlistForm({
   async function onSubmit(values: FormData) {
     setIsLoading(true);
 
-    await toast.promise(updateWishlist(wishlist.id, values), {
-      loading: t.wishlists.editDialog.loading,
-      success: (result) => {
-        if (result.success) {
-          router.refresh();
-          onSuccess?.();
-          return t.wishlists.editDialog.success;
-        }
-        throw new Error(result.error || t.wishlists.editDialog.error);
-      },
-      error: (err) => err.message || t.wishlists.editDialog.error,
-    });
+    const result = await updateWishlist(wishlist.id, values);
+
+    if (result.success) {
+      toast.success(t.wishlists.editDialog.success);
+      router.refresh();
+      onSuccess?.();
+    } else {
+      toast.error(t.error);
+    }
 
     setIsLoading(false);
   }

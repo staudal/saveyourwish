@@ -87,19 +87,16 @@ export function CreateWishForm({
   async function onSubmit(values: FormData) {
     setIsLoading(true);
 
-    await toast.promise(createWish(wishlistId, formSchema.parse(values)), {
-      loading: t.wishes.createDialog.loading,
-      success: (result) => {
-        if (result.success) {
-          form.reset();
-          router.refresh();
-          onSuccess?.();
-          return t.wishes.createDialog.success;
-        }
-        throw new Error(result.error || t.wishes.createDialog.error);
-      },
-      error: (err) => err.message || t.wishes.createDialog.error,
-    });
+    const result = await createWish(wishlistId, formSchema.parse(values));
+
+    if (result.success) {
+      toast.success(t.wishes.createDialog.success);
+      form.reset();
+      router.refresh();
+      onSuccess?.();
+    } else {
+      toast.error(result.error || t.error);
+    }
 
     setIsLoading(false);
   }
