@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { reserveWish } from "@/actions/wish";
 import { DialogHeader, DialogFooter } from "../ui/dialog";
@@ -57,6 +57,20 @@ export function ReserveWishDialog({
       name: "",
     },
   });
+
+  useEffect(() => {
+    if (!open) return;
+
+    const meta = document.createElement("meta");
+    meta.name = "viewport";
+    meta.content =
+      "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0";
+    document.head.appendChild(meta);
+
+    return () => {
+      document.head.removeChild(meta);
+    };
+  }, [open]);
 
   const handleReserve = async (values: FormData) => {
     setIsLoading(true);
