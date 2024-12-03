@@ -177,7 +177,7 @@ export function WishesGrid({
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">{title}</h1>
+        <h1 className="text-xl md:text-2xl font-bold">{title}</h1>
         <div className="flex items-center gap-2">
           {isReordering ? (
             <>
