@@ -91,7 +91,7 @@ export function WishCard({
             <div
               {...attributes}
               {...listeners}
-              className="absolute right-2 top-2 z-10 cursor-grab active:cursor-grabbing p-2 hover:bg-accent rounded-md"
+              className="absolute right-2 top-2 z-10 cursor-grab active:cursor-grabbing p-2 hover:bg-accent rounded-md touch-none"
             >
               <GripVertical className="h-4 w-4 text-muted-foreground" />
             </div>
