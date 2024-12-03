@@ -143,6 +143,7 @@ export async function getSharedWishlist(shareId: string) {
       title: wishlists.title,
       shared: wishlists.shared,
       shareId: wishlists.shareId,
+      userId: wishlists.userId,
     })
     .from(wishlists)
     .where(and(eq(wishlists.shareId, shareId), eq(wishlists.shared, true)))
