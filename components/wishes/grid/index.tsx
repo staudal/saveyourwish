@@ -178,11 +178,6 @@ export function WishesGrid({
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">{title}</h1>
-        {isReordering && (
-          <p className="text-muted-foreground">
-            {t.wishes.reorderMode.dragging}
-          </p>
-        )}
         <div className="flex items-center gap-2">
           {isReordering ? (
             <>
@@ -307,6 +302,13 @@ export function WishesGrid({
           )}
         </div>
       </div>
+
+      {isReordering && (
+        <p className="text-muted-foreground text-sm text-center">
+          {t.wishes.reorderMode.dragging}
+        </p>
+      )}
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
