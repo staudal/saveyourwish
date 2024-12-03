@@ -20,8 +20,8 @@ import {
 } from "@/components/ui/drawer";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { EditWishlistForm } from "../forms/edit-wishlist-form";
-import { Wishlist } from "../tables/wishlists-columns";
 import { useTranslations } from "@/hooks/use-translations";
+import { Wishlist } from "../wishes/grid/types";
 
 export function EditWishlistDialog({
   open,
