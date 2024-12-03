@@ -44,7 +44,7 @@ export function EditWishDialog({
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>{t.wishes.editDialog.headline}</DialogTitle>
             <DialogDescription>

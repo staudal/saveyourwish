@@ -59,7 +59,7 @@ export function DeleteWishlistDialog({
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>{t.wishlists.deleteDialog.headline}</DialogTitle>
             <DialogDescription>

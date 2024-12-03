@@ -26,6 +26,7 @@ export async function getWishlists() {
             'currency', ${wishes.currency}::text,
             'imageUrl', ${wishes.imageUrl}
           )
+          ORDER BY ${wishes.position}
         ) filter (where ${wishes.id} is not null)
       `,
     })
@@ -38,7 +39,7 @@ export async function getWishlists() {
     ...wishlist,
     wishes: (wishlist.wishes || []).map((wish) => ({
       ...wish,
-      currency: wish.currency as Currency, // Type assertion since we know the DB only contains valid currencies
+      currency: wish.currency as Currency,
     })),
   }));
 }

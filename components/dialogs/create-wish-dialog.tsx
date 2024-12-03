@@ -40,7 +40,7 @@ export function CreateWishDialog({
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>{t.wishes.createDialog.headline}</DialogTitle>
             <DialogDescription>

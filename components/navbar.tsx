@@ -48,7 +48,13 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center">
               <div className="shrink-0">
-                <Image alt="Your Company" src="/logo.png" className="size-8" />
+                <Image
+                  alt="Your Company"
+                  width={100}
+                  height={100}
+                  src="/logo.png"
+                  className="size-8"
+                />
               </div>
               <div className="hidden md:block">
                 <div className="ml-10 flex items-baseline space-x-4">
