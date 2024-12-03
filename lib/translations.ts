@@ -148,6 +148,7 @@ export const translations = {
         },
       },
       shareDialog: {
+        loading: "Loading...",
         button: "Share",
         headline: "Share wishlist",
         descriptionEnabled: "Anyone with the link can now view this wishlist",
@@ -160,8 +161,6 @@ export const translations = {
         enableSuccess: "Anyone with the link can now view this wishlist",
         disableSuccess: "This wishlist is now private",
         error: "Failed to update sharing status",
-        enableLoading: "Enabling sharing...",
-        disableLoading: "Disabling sharing...",
       },
       reserveDialog: {
         nameRequired: "Name is required",
@@ -403,6 +402,7 @@ export const translations = {
         },
       },
       shareDialog: {
+        loading: "Tænker...",
         button: "Del",
         headline: "Del ønskeliste",
         descriptionEnabled: "Nogen med linket kan nu se denne ønskeliste",
@@ -415,8 +415,6 @@ export const translations = {
         enableSuccess: "Nogen med linket kan nu se denne ønskeliste",
         disableSuccess: "Denne ønskeliste er nu privat",
         error: "Fejl ved opdatering af deling",
-        enableLoading: "Aktivering af deling...",
-        disableLoading: "Deaktivering af deling...",
       },
       imagePositionDialog: {
         headline: "Juster billede position",
@@ -659,6 +657,7 @@ export const translations = {
         },
       },
       shareDialog: {
+        loading: "Tänker...",
         button: "Dela",
         headline: "Dela önskelista",
         descriptionEnabled: "Alla med länken kan nu se den här önskelistan",
@@ -671,8 +670,6 @@ export const translations = {
         enableSuccess: "Alla med länken kan nu se den här önskelistan",
         disableSuccess: "Den här önskelistan är nu privat",
         error: "Kunde inte uppdatera delningsstatus",
-        enableLoading: "Aktiverar delning...",
-        disableLoading: "Inaktiverar delning...",
       },
       imagePositionDialog: {
         headline: "Justera bildposition",
@@ -924,14 +921,13 @@ export const translations = {
         copiedToClipboard: "¡Enlace copiado al portapapeles!",
         shareLinkLabel: "Enlace para compartir",
         cancelButton: "Cancelar",
+        loading: "Cargando...",
         disableButton: "Desactivar uso compartido",
         enableButton: "Activar uso compartido",
         enableSuccess:
           "Cualquiera con el enlace puede ver esta lista de deseos",
         disableSuccess: "Esta lista de deseos ahora es privada",
         error: "No se pudo actualizar el estado de uso compartido",
-        enableLoading: "Activando uso compartido...",
-        disableLoading: "Desactivando uso compartido...",
       },
       imagePositionDialog: {
         headline: "Ajustar posición de la imagen",
