@@ -169,6 +169,34 @@ export function WishesGrid({
     });
   };
 
+  if (wishes.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-xl md:text-2xl font-semibold">{title}</h1>
+          {!readonly && <CreateWishDialog wishlistId={wishlistId} />}
+        </div>
+
+        <div className="border rounded-lg p-8 text-center">
+          <h3 className="text-lg font-medium">{t.wishes.emptyState.title}</h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            {t.wishes.emptyState.description}
+          </p>
+          {!readonly && (
+            <CreateWishDialog
+              wishlistId={wishlistId}
+              trigger={
+                <Button className="mt-4">
+                  {t.wishes.createDialog.trigger}
+                </Button>
+              }
+            />
+          )}
+        </div>
+      </div>
+    );
+  }
+
   if (readonly) {
     return (
       <div>

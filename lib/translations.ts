@@ -51,6 +51,10 @@ export const translations = {
       },
     },
     wishes: {
+      emptyState: {
+        title: "No wishes yet",
+        description: "Add your first wish to get started",
+      },
       createDialog: {
         trigger: "Add wish",
         headline: "Add new wish",
@@ -303,6 +307,10 @@ export const translations = {
       },
     },
     wishes: {
+      emptyState: {
+        title: "Ingen ønsker endnu",
+        description: "Tilføj dit første ønske for at komme i gang",
+      },
       createDialog: {
         trigger: "Tilføj ønske",
         headline: "Tilføj ønske",
@@ -554,6 +562,10 @@ export const translations = {
       },
     },
     wishes: {
+      emptyState: {
+        title: "Inga önskningar ännu",
+        description: "Lägg till din första önskning för att komma igång",
+      },
       createDialog: {
         trigger: "Lägg till önskning",
         headline: "Lägg till ny önskning",
@@ -806,6 +818,10 @@ export const translations = {
       },
     },
     wishes: {
+      emptyState: {
+        title: "No hay deseos todavía",
+        description: "Agrega tu primer deseo para empezar",
+      },
       createDialog: {
         trigger: "Agregar deseo",
         headline: "Agregar nuevo deseo",
