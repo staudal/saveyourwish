@@ -297,9 +297,14 @@ export function WishesGrid({
                   isShared={isShared}
                   shareId={shareId}
                 />
-                <Button variant="outline" onClick={() => setIsReordering(true)}>
-                  {t.wishes.reorderMode.button}
-                </Button>
+                {wishes.length > 0 && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsReordering(true)}
+                  >
+                    {t.wishes.reorderMode.button}
+                  </Button>
+                )}
                 <CreateWishDialog wishlistId={wishlistId} />
               </div>
 
@@ -332,10 +337,12 @@ export function WishesGrid({
                         }
                       />
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setIsReordering(true)}>
-                      <MoveVertical className="h-4 w-4 mr-2" />
-                      <span>{t.wishes.reorderMode.button}</span>
-                    </DropdownMenuItem>
+                    {wishes.length > 0 && (
+                      <DropdownMenuItem onClick={() => setIsReordering(true)}>
+                        <MoveVertical className="h-4 w-4 mr-2" />
+                        <span>{t.wishes.reorderMode.button}</span>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem>
                       <ShareWishlistDialog
                         wishlistId={wishlistId}
