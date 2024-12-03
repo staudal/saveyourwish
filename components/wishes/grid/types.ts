@@ -1,4 +1,4 @@
-import { type wishes } from "@/lib/db";
+import { wishlists, type wishes } from "@/lib/db";
 import { type InferSelectModel } from "drizzle-orm";
 
 export interface ImageDimension {
@@ -12,6 +12,10 @@ export type Wish = InferSelectModel<typeof wishes> & {
     reservedBy: string;
     reservedAt: Date;
   } | null;
+};
+
+export type Wishlist = InferSelectModel<typeof wishlists> & {
+  wishes: Wish[];
 };
 
 // Create a subset of Wishlist properties that we actually need

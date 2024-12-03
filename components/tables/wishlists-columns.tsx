@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/components/ui/currency-select";
-import { calculateAveragePrice, convertToUSD, Currency } from "@/constants";
+import { calculateAveragePrice, convertToUSD } from "@/constants";
 import { useTranslations } from "@/hooks/use-translations";
 import { useState } from "react";
 import {
@@ -24,17 +24,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { DeleteWishlistDialog } from "../dialogs/delete-wishlist-dialog";
 import { EditWishlistDialog } from "../dialogs/edit-wishlist-dialog";
-
-export type Wishlist = {
-  id: string;
-  title: string;
-  favorite: boolean;
-  wishCount: number;
-  wishes: {
-    price: number | null;
-    currency: Currency;
-  }[];
-};
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Wishlist } from "../wishes/grid/types";
 
 function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -88,6 +79,42 @@ function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
   );
 }
 
+function WishAvatarGroup({ wishes }: { wishes: Wishlist["wishes"] }) {
+  return (
+    <div className="flex -space-x-4 min-w-[120px]">
+      {wishes.length > 0 ? (
+        <>
+          {wishes.slice(0, 3).map((wish, index) => (
+            <Avatar
+              key={index}
+              className="border-2 border-background ring-0 h-10 w-10"
+              style={{
+                zIndex: 3 - index,
+              }}
+            >
+              <AvatarImage
+                src={wish.imageUrl || undefined}
+                alt="Wish image"
+                className="object-cover"
+              />
+              <AvatarFallback className="bg-muted">{index + 1}</AvatarFallback>
+            </Avatar>
+          ))}
+          {wishes.length > 3 && (
+            <div className="flex items-center justify-center w-10 h-10 text-xs font-medium text-white bg-muted border-2 border-background rounded-full">
+              +{wishes.length - 3}
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="flex items-center justify-center w-10 h-10 text-xs font-medium text-muted-foreground bg-muted/50 border-2 border-background rounded-full">
+          0
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function useWishlistColumns() {
   const t = useTranslations();
 
@@ -114,7 +141,12 @@ export function useWishlistColumns() {
       cell: ({ row }) => {
         const title = row.getValue("title") as string;
         const wishCount = row.getValue("wishCount") as number;
-        const averagePriceResult = calculateAveragePrice(row.original.wishes);
+        const averagePriceResult = calculateAveragePrice(
+          row.original.wishes as {
+            price: number | null;
+            currency: "USD" | "EUR" | "DKK" | "SEK";
+          }[]
+        );
         const averagePrice = averagePriceResult
           ? formatPrice(averagePriceResult.amount, averagePriceResult.currency)
           : "-";
@@ -156,10 +188,9 @@ export function useWishlistColumns() {
         );
       },
       cell: ({ row }) => {
-        const count = row.getValue("wishCount") as number;
         return (
-          <div className="hidden sm:block text-muted-foreground">
-            {count} {count === 1 ? "wish" : "wishes"}
+          <div className="hidden sm:flex flex-col gap-2">
+            <WishAvatarGroup wishes={row.original.wishes} />
           </div>
         );
       },
@@ -167,9 +198,13 @@ export function useWishlistColumns() {
     {
       id: "averagePrice",
       accessorFn: (row) => {
-        const result = calculateAveragePrice(row.wishes);
+        const result = calculateAveragePrice(
+          row.wishes as {
+            price: number | null;
+            currency: "USD" | "EUR" | "DKK" | "SEK";
+          }[]
+        );
         if (!result) return null;
-        // Convert to USD for consistent sorting
         return convertToUSD(result.amount, result.currency);
       },
       header: ({ column }) => {
@@ -190,7 +225,12 @@ export function useWishlistColumns() {
         );
       },
       cell: ({ row }) => {
-        const result = calculateAveragePrice(row.original.wishes);
+        const result = calculateAveragePrice(
+          row.original.wishes as {
+            price: number | null;
+            currency: "USD" | "EUR" | "DKK" | "SEK";
+          }[]
+        );
         if (!result)
           return <div className="hidden sm:block text-muted-foreground">-</div>;
         return (

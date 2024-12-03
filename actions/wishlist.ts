@@ -17,11 +17,14 @@ export async function getWishlists() {
       title: wishlists.title,
       favorite: wishlists.favorite,
       wishCount: sql<number>`count(${wishes.id})::integer`,
-      wishes: sql<{ price: number | null; currency: Currency }[]>`
+      wishes: sql<
+        { price: number | null; currency: Currency; imageUrl: string | null }[]
+      >`
         json_agg(
           json_build_object(
             'price', ${wishes.price},
-            'currency', ${wishes.currency}::text
+            'currency', ${wishes.currency}::text,
+            'imageUrl', ${wishes.imageUrl}
           )
         ) filter (where ${wishes.id} is not null)
       `,

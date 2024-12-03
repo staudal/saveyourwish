@@ -14,7 +14,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
-import { type Wishlist } from "./wishlists-columns";
 
 import {
   Table,
@@ -28,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CreateWishlistDialog } from "../dialogs/create-wishlist-dialog";
 import { useTranslations } from "@/hooks/use-translations";
+import { Wishlist } from "../wishes/grid/types";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
