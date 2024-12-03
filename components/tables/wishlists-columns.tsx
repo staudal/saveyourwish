@@ -96,13 +96,19 @@ export function useWishlistColumns() {
       accessorKey: "title",
       header: ({ column }) => {
         return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
+          <div className="flex items-center">
             {t.wishlists.dataTable.title}
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className="ml-2 h-8 w-8 p-0"
+            >
+              <ArrowUpDown className="h-4 w-4" />
+            </Button>
+          </div>
         );
       },
       cell: ({ row }) => {
@@ -115,7 +121,7 @@ export function useWishlistColumns() {
 
         return (
           <div className="flex flex-col gap-1">
-            <span>{title}</span>
+            <span className="font-semibold">{title}</span>
             <div className="flex gap-3 text-sm text-muted-foreground sm:hidden">
               <span className="flex items-center gap-1">
                 <Package className="h-4 w-4" />
@@ -134,14 +140,19 @@ export function useWishlistColumns() {
       accessorKey: "wishCount",
       header: ({ column }) => {
         return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="hidden sm:flex"
-          >
+          <div className="flex items-center hidden sm:flex">
             {t.wishlists.dataTable.wishCount}
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className="ml-2 h-8 w-8 p-0"
+            >
+              <ArrowUpDown className="h-4 w-4" />
+            </Button>
+          </div>
         );
       },
       cell: ({ row }) => {
@@ -163,14 +174,19 @@ export function useWishlistColumns() {
       },
       header: ({ column }) => {
         return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="hidden sm:flex"
-          >
+          <div className="flex items-center hidden sm:flex">
             {t.wishlists.dataTable.averagePrice}
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className="ml-2 h-8 w-8 p-0"
+            >
+              <ArrowUpDown className="h-4 w-4" />
+            </Button>
+          </div>
         );
       },
       cell: ({ row }) => {

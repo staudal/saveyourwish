@@ -94,7 +94,7 @@ export function DataTable<TData extends Wishlist, TValue>({
                       {headerGroup.headers.map((header) => (
                         <TableHead
                           key={header.id}
-                          className="whitespace-nowrap"
+                          className="whitespace-nowrap px-4"
                         >
                           {header.isPlaceholder
                             ? null
@@ -128,7 +128,7 @@ export function DataTable<TData extends Wishlist, TValue>({
                         {row.getVisibleCells().map((cell) => (
                           <TableCell
                             key={cell.id}
-                            className="whitespace-nowrap"
+                            className="whitespace-nowrap px-4"
                           >
                             {flexRender(
                               cell.column.columnDef.cell,
