@@ -101,7 +101,7 @@ function WishAvatarGroup({ wishes }: { wishes: Wishlist["wishes"] }) {
             </Avatar>
           ))}
           {wishes.length > 3 && (
-            <div className="flex items-center justify-center w-10 h-10 text-xs font-medium text-white bg-muted border-2 border-background rounded-full">
+            <div className="flex items-center justify-center w-10 h-10 text-xs font-medium text-foreground bg-muted border-2 border-background rounded-full">
               +{wishes.length - 3}
             </div>
           )}
