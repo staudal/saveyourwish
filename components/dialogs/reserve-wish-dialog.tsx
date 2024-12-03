@@ -27,15 +27,7 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Wish } from "../wishes/grid/types";
 import { useMediaQuery } from "@/hooks/use-media-query";
-
-const formSchema = z.object({
-  name: z
-    .string({ required_error: "Name is required" })
-    .min(2, { message: "Name must be at least 2 characters" })
-    .max(50, { message: "Name must be less than 50 characters" }),
-});
-
-type FormData = z.infer<typeof formSchema>;
+import { useTranslations } from "@/hooks/use-translations";
 
 export function ReserveWishDialog({
   wish,
@@ -48,6 +40,16 @@ export function ReserveWishDialog({
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
+  const t = useTranslations();
+
+  const formSchema = z.object({
+    name: z
+      .string({ required_error: t.wishes.reserveDialog.nameRequired })
+      .min(2, { message: t.wishes.reserveDialog.nameMinLength })
+      .max(50, { message: t.wishes.reserveDialog.nameMaxLength }),
+  });
+
+  type FormData = z.infer<typeof formSchema>;
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -60,16 +62,16 @@ export function ReserveWishDialog({
     setIsLoading(true);
 
     await toast.promise(reserveWish(wish.id, values.name), {
-      loading: "Reserving wish...",
+      loading: t.wishes.reserveDialog.loading,
       success: (result) => {
         if (result.success) {
           form.reset();
           onOpenChange(false);
-          return "Wish reserved successfully";
+          return t.wishes.reserveDialog.success;
         }
-        throw new Error(result.error || "Failed to reserve wish");
+        throw new Error(result.error || t.wishes.reserveDialog.error);
       },
-      error: (err) => err.message || "Failed to reserve wish",
+      error: (err) => err.message || t.wishes.reserveDialog.error,
     });
 
     setIsLoading(false);
@@ -79,7 +81,7 @@ export function ReserveWishDialog({
     <form onSubmit={form.handleSubmit(handleReserve)} className="space-y-4">
       <div className="grid gap-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="name">Your name</Label>
+          <Label htmlFor="name">{t.wishes.reserveDialog.nameLabel}</Label>
           {form.formState.errors.name && (
             <span className="text-sm text-red-600 leading-none">
               {form.formState.errors.name.message}
@@ -89,7 +91,7 @@ export function ReserveWishDialog({
         <Input
           {...form.register("name")}
           id="name"
-          placeholder="Enter your name"
+          placeholder={t.wishes.reserveDialog.namePlaceholder}
           autoFocus
         />
       </div>
@@ -101,9 +103,9 @@ export function ReserveWishDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reserve this wish</DialogTitle>
+            <DialogTitle>{t.wishes.reserveDialog.headline}</DialogTitle>
             <DialogDescription>
-              Enter your name so the wishlist owner knows who reserved it
+              {t.wishes.reserveDialog.description}
             </DialogDescription>
           </DialogHeader>
 
@@ -115,13 +117,15 @@ export function ReserveWishDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {t.wishes.reserveDialog.cancelButton}
             </Button>
             <Button
               onClick={form.handleSubmit(handleReserve)}
               disabled={!form.formState.isValid || isLoading}
             >
-              {isLoading ? "Reserving..." : "Reserve"}
+              {isLoading
+                ? t.wishes.reserveDialog.loading
+                : t.wishes.reserveDialog.button}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -133,9 +137,9 @@ export function ReserveWishDialog({
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>Reserve this wish</DrawerTitle>
+          <DrawerTitle>{t.wishes.reserveDialog.headline}</DrawerTitle>
           <DrawerDescription>
-            Enter your name so the wishlist owner knows who reserved it
+            {t.wishes.reserveDialog.description}
           </DrawerDescription>
         </DrawerHeader>
         <div className="p-4 pb-0">{formContent}</div>
@@ -144,11 +148,13 @@ export function ReserveWishDialog({
             onClick={form.handleSubmit(handleReserve)}
             disabled={!form.formState.isValid || isLoading}
           >
-            {isLoading ? "Reserving..." : "Reserve"}
+            {isLoading
+              ? t.wishes.reserveDialog.loading
+              : t.wishes.reserveDialog.button}
           </Button>
           <DrawerClose asChild>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t.wishes.reserveDialog.cancelButton}
             </Button>
           </DrawerClose>
         </DrawerFooter>

@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { auth } from "@/lib/auth";
 import { OwnerSharedViewWarningWrapper } from "@/components/dialogs/owner-shared-view-warning-wrapper";
+import { LanguageSelector } from "@/components/language-selector";
 
 export default async function SharedWishlistPage({
   params,
@@ -33,7 +34,10 @@ export default async function SharedWishlistPage({
             {wishes.length} {wishes.length === 1 ? "wish" : "wishes"}
           </p>
         </div>
-        <ThemeToggle />
+        <div className="flex items-center gap-4">
+          <LanguageSelector />
+          <ThemeToggle />
+        </div>
       </div>
       <WishesGrid
         wishes={wishes}
