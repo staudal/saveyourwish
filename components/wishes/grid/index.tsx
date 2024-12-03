@@ -247,7 +247,7 @@ export function WishesGrid({
           ) : (
             <>
               {/* Show buttons on desktop */}
-              <div className="hidden md:flex items-center gap-2">
+              <div className="hidden lg:flex items-center gap-2">
                 <ShareWishlistDialog
                   wishlistId={wishlistId}
                   isShared={isShared}
@@ -260,7 +260,7 @@ export function WishesGrid({
               </div>
 
               {/* Show dropdown on mobile */}
-              <div className="md:hidden">
+              <div className="lg:hidden">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline">
