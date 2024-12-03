@@ -7,6 +7,8 @@ import { WishActions } from "./wish-actions";
 import { type Currency } from "@/constants";
 import { Separator } from "@/components/ui/separator";
 import { ExternalLink } from "lucide-react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 type Wish = InferSelectModel<typeof wishes>;
 
@@ -38,6 +40,23 @@ export function WishCard({
   onAdjustImage,
   onEdit,
 }: WishCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: wish.id,
+    disabled: !isReordering,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
   const formatUrl = (url: string) => {
     try {
       const hostname = new URL(url).hostname;
@@ -49,10 +68,15 @@ export function WishCard({
 
   return (
     <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
       className={cn(
         "relative group border rounded-lg overflow-hidden flex flex-col h-full",
         isReordering &&
-          "drag-handle cursor-grab active:cursor-grabbing border-dashed border-primary/50"
+          "cursor-grab active:cursor-grabbing border-dashed border-primary/50",
+        isDragging && "opacity-75 border-primary shadow-lg"
       )}
     >
       {!readonly && !isReordering && onDelete && onAdjustImage && onEdit && (

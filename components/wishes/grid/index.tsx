@@ -1,6 +1,20 @@
 "use client";
 
-import { ReactSortable } from "react-sortablejs";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
 import { WishCard } from "./wish-card";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -51,6 +65,13 @@ export function WishesGrid({
   const [imagePositionOpen, setImagePositionOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const t = useTranslations();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const handleDelete = (wish: Wish) => {
     setSelectedWish(wish);
@@ -106,13 +127,21 @@ export function WishesGrid({
     setHasChanges(false);
   };
 
-  const handleSetList = (newList: Wish[]) => {
-    setItems(newList);
-    // Check if the order has changed
-    const hasOrderChanged = newList.some(
-      (item, index) => wishes[index]?.id !== item.id
-    );
-    setHasChanges(hasOrderChanged);
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    setItems((items) => {
+      const oldIndex = items.findIndex((item) => item.id === active.id);
+      const newIndex = items.findIndex((item) => item.id === over.id);
+
+      const newItems = arrayMove(items, oldIndex, newIndex);
+      setHasChanges(true);
+      return newItems;
+    });
   };
 
   if (readonly) {
@@ -195,29 +224,32 @@ export function WishesGrid({
           )}
         </div>
       </div>
-      <ReactSortable
-        list={items}
-        setList={handleSetList}
-        disabled={!isReordering}
-        handle=".drag-handle"
-        animation={200}
-        delay={1000}
-        delayOnTouchOnly={true}
-        className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
       >
-        {items.map((wish) => (
-          <WishCard
-            key={wish.id}
-            wish={wish}
-            isReordering={isReordering}
-            imageDimensions={imageDimensions}
-            setImageDimensions={setImageDimensions}
-            onDelete={handleDelete}
-            onAdjustImage={handleAdjustImage}
-            onEdit={handleEdit}
-          />
-        ))}
-      </ReactSortable>
+        <SortableContext
+          items={items.map((item) => item.id)}
+          strategy={rectSortingStrategy}
+          disabled={!isReordering}
+        >
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {items.map((wish) => (
+              <WishCard
+                key={wish.id}
+                wish={wish}
+                isReordering={isReordering}
+                imageDimensions={imageDimensions}
+                setImageDimensions={setImageDimensions}
+                onDelete={handleDelete}
+                onAdjustImage={handleAdjustImage}
+                onEdit={handleEdit}
+              />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       {selectedWish && (
         <>
