@@ -28,13 +28,7 @@ import { ImagePositionDialog } from "@/components/dialogs/image-position-dialog"
 import { ShareWishlistDialog } from "@/components/dialogs/share-wishlist-dialog";
 import { CreateWishDialog } from "@/components/dialogs/create-wish-dialog";
 import { useTranslations } from "@/hooks/use-translations";
-import {
-  MoreHorizontal,
-  Share,
-  MoveVertical,
-  PlusCircle,
-  ChevronDown,
-} from "lucide-react";
+import { Share, MoveVertical, PlusCircle, ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +37,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 type Wish = InferSelectModel<typeof wishes>;
 
@@ -80,13 +75,16 @@ export function WishesGrid({
   const [imagePositionOpen, setImagePositionOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const t = useTranslations();
+  const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: {
-        delay: 1000,
-        tolerance: 5,
-      },
+      activationConstraint: isDesktop
+        ? undefined
+        : {
+            delay: 1000,
+            tolerance: 5,
+          },
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
