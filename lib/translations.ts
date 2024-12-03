@@ -188,6 +188,7 @@ export const translations = {
         saving: "Saving...",
         success: "Order updated",
         error: "Failed to update order",
+        dragging: "Drag to reorder",
       },
       actions: {
         manage: "Manage",
@@ -408,6 +409,7 @@ export const translations = {
         saving: "Opdaterer...",
         success: "Rækkefølge opdateret",
         error: "Fejl ved opdatering af rækkefølge",
+        dragging: "Træk for at ombytte",
       },
       actions: {
         manage: "Handlinger",

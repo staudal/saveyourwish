@@ -135,6 +135,11 @@ export function WishesGrid({
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">{title}</h1>
+        {isReordering && (
+          <p className="text-muted-foreground">
+            {t.wishes.reorderMode.dragging}
+          </p>
+        )}
         <div className="flex items-center gap-2">
           {isReordering ? (
             <>
@@ -190,13 +195,14 @@ export function WishesGrid({
           )}
         </div>
       </div>
-
       <ReactSortable
         list={items}
         setList={handleSetList}
         disabled={!isReordering}
         handle=".drag-handle"
         animation={200}
+        delay={1000}
+        delayOnTouchOnly={true}
         className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
       >
         {items.map((wish) => (

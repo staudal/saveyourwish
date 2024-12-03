@@ -64,14 +64,6 @@ export function WishCard({
         />
       )}
 
-      {wish.imageUrl && (
-        <ImageContainer
-          wish={wish}
-          imageDimensions={imageDimensions}
-          setImageDimensions={setImageDimensions}
-        />
-      )}
-
       <div className="flex flex-col flex-grow">
         <div className="p-4 flex-grow">
           <h3 className="font-semibold">{wish.title}</h3>
@@ -80,32 +72,44 @@ export function WishCard({
           </p>
         </div>
 
-        <Separator orientation="horizontal" />
-        <div className="p-4 flex justify-between items-center">
-          {wish.destinationUrl ? (
-            <a
-              href={wish.destinationUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-            >
-              <ExternalLink className="h-3 w-3" />
-              <span>{formatUrl(wish.destinationUrl)}</span>
-            </a>
-          ) : (
-            <span className="text-xs text-muted-foreground">No link</span>
-          )}
-          {wish.quantity && (
-            <span className="text-xs text-muted-foreground">
-              x{wish.quantity}
-            </span>
-          )}
-          {wish.price && (
-            <span className="text-xs text-muted-foreground">
-              {formatPrice(wish.price, wish.currency as Currency)}
-            </span>
-          )}
-        </div>
+        {!isReordering && (
+          <>
+            {wish.imageUrl && (
+              <ImageContainer
+                wish={wish}
+                imageDimensions={imageDimensions}
+                setImageDimensions={setImageDimensions}
+              />
+            )}
+
+            <Separator orientation="horizontal" />
+            <div className="p-4 flex justify-between items-center">
+              {wish.destinationUrl ? (
+                <a
+                  href={wish.destinationUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  <span>{formatUrl(wish.destinationUrl)}</span>
+                </a>
+              ) : (
+                <span className="text-xs text-muted-foreground">No link</span>
+              )}
+              {wish.quantity && (
+                <span className="text-xs text-muted-foreground">
+                  x{wish.quantity}
+                </span>
+              )}
+              {wish.price && (
+                <span className="text-xs text-muted-foreground">
+                  {formatPrice(wish.price, wish.currency as Currency)}
+                </span>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
