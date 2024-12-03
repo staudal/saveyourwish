@@ -28,6 +28,21 @@ import { ImagePositionDialog } from "@/components/dialogs/image-position-dialog"
 import { ShareWishlistDialog } from "@/components/dialogs/share-wishlist-dialog";
 import { CreateWishDialog } from "@/components/dialogs/create-wish-dialog";
 import { useTranslations } from "@/hooks/use-translations";
+import {
+  MoreHorizontal,
+  Share,
+  MoveVertical,
+  PlusCircle,
+  ChevronDown,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type Wish = InferSelectModel<typeof wishes>;
 
@@ -228,15 +243,72 @@ export function WishesGrid({
             </>
           ) : (
             <>
-              <ShareWishlistDialog
-                wishlistId={wishlistId}
-                isShared={isShared}
-                shareId={shareId}
-              />
-              <Button variant="outline" onClick={() => setIsReordering(true)}>
-                {t.wishes.reorderMode.button}
-              </Button>
-              <CreateWishDialog wishlistId={wishlistId} />
+              {/* Show buttons on desktop */}
+              <div className="hidden md:flex items-center gap-2">
+                <ShareWishlistDialog
+                  wishlistId={wishlistId}
+                  isShared={isShared}
+                  shareId={shareId}
+                />
+                <Button variant="outline" onClick={() => setIsReordering(true)}>
+                  {t.wishes.reorderMode.button}
+                </Button>
+                <CreateWishDialog wishlistId={wishlistId} />
+              </div>
+
+              {/* Show dropdown on mobile */}
+              <div className="md:hidden">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline">
+                      {t.wishes.actions.manage}
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuLabel>
+                      {t.wishes.actions.manage}
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                      <CreateWishDialog
+                        wishlistId={wishlistId}
+                        trigger={
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start p-0 h-auto font-normal"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <PlusCircle className="h-4 w-4 mr-2" />
+                            <span>{t.wishes.createDialog.trigger}</span>
+                          </Button>
+                        }
+                      />
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setIsReordering(true)}>
+                      <MoveVertical className="h-4 w-4 mr-2" />
+                      <span>{t.wishes.reorderMode.button}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <ShareWishlistDialog
+                        wishlistId={wishlistId}
+                        isShared={isShared}
+                        shareId={shareId}
+                        trigger={
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start p-0 h-auto font-normal"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Share className="h-4 w-4 mr-2" />
+                            <span>{t.wishes.shareDialog.button}</span>
+                          </Button>
+                        }
+                      />
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </>
           )}
         </div>

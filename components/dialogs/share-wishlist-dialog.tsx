@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, Share } from "lucide-react";
 import { toggleWishlistSharing } from "@/actions/wishlist";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import toast from "react-hot-toast";
@@ -31,13 +31,15 @@ import { useTranslations } from "@/hooks/use-translations";
 interface ShareWishlistDialogProps {
   wishlistId: string;
   isShared: boolean;
-  shareId?: string | null;
+  shareId: string | null;
+  trigger?: React.ReactNode;
 }
 
 export function ShareWishlistDialog({
   wishlistId,
   isShared,
   shareId,
+  trigger,
 }: ShareWishlistDialogProps) {
   const [open, setOpen] = React.useState(false);
   const [sharing, setSharing] = React.useState(isShared);
@@ -104,7 +106,9 @@ export function ShareWishlistDialog({
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline">{t.wishes.shareDialog.button}</Button>
+          {trigger || (
+            <Button variant="outline">{t.wishes.shareDialog.button}</Button>
+          )}
         </DialogTrigger>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -159,7 +163,12 @@ export function ShareWishlistDialog({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button variant="outline">{t.wishes.shareDialog.button}</Button>
+        {trigger || (
+          <Button variant="outline">
+            <Share className="h-4 w-4 mr-2" />
+            {t.wishes.shareDialog.button}
+          </Button>
+        )}
       </DrawerTrigger>
       <DrawerContent>
         <div className="mx-auto w-full max-w-sm">
