@@ -132,14 +132,14 @@ export function ReserveWishDialog({
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
-        <DrawerHeader>
+        <DrawerHeader className="sticky top-0 z-20 bg-background">
           <DrawerTitle>{t.wishes.reserveDialog.headline}</DrawerTitle>
           <DrawerDescription>
             {t.wishes.reserveDialog.description}
           </DrawerDescription>
         </DrawerHeader>
-        <div className="p-4 pb-0">{formContent}</div>
-        <DrawerFooter>
+        <div className="px-4">{formContent}</div>
+        <DrawerFooter className="sticky bottom-0 mt-auto">
           <Button
             onClick={form.handleSubmit(handleReserve)}
             disabled={!form.formState.isValid || isLoading}
