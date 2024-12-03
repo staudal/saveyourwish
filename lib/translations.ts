@@ -376,7 +376,7 @@ export const translations = {
         },
       },
       shareDialog: {
-        button: "Del",
+        button: "Del ønskeliste",
         headline: "Del ønskeliste",
         descriptionEnabled:
           "Folk du deler linket med, kan nu se denne ønskeliste. Vær opmærksom på, at du selv kan besøge linket, hvis du ikke vil se, hvem der har reserveret ønskerne.",

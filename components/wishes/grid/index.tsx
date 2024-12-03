@@ -26,7 +26,13 @@ import { ImagePositionDialog } from "@/components/dialogs/image-position-dialog"
 import { ShareWishlistDialog } from "@/components/dialogs/share-wishlist-dialog";
 import { CreateWishDialog } from "@/components/dialogs/create-wish-dialog";
 import { useTranslations } from "@/hooks/use-translations";
-import { ChevronDown } from "lucide-react";
+import {
+  ArrowUpDown,
+  ChevronDown,
+  CirclePlus,
+  Plus,
+  Share,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -282,6 +288,7 @@ export function WishesGrid({
                         setDialogState((prev) => ({ ...prev, create: true }))
                       }
                     >
+                      <CirclePlus className="h-4 w-4" />
                       <span>{t.wishes.createDialog.trigger}</span>
                     </DropdownMenuItem>
                     {wishes.length > 0 && (
@@ -293,6 +300,7 @@ export function WishesGrid({
                           }))
                         }
                       >
+                        <ArrowUpDown className="h-4 w-4" />
                         <span>{t.wishes.reorderMode.button}</span>
                       </DropdownMenuItem>
                     )}
@@ -301,6 +309,7 @@ export function WishesGrid({
                         setDialogState((prev) => ({ ...prev, share: true }))
                       }
                     >
+                      <Share className="h-4 w-4" />
                       <span>{t.wishes.shareDialog.button}</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
