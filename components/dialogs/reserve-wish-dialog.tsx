@@ -86,6 +86,7 @@ export function ReserveWishDialog({
           {...form.register("name")}
           id="name"
           placeholder={t.wishes.reserveDialog.namePlaceholder}
+          autoFocus
         />
       </div>
     </form>
