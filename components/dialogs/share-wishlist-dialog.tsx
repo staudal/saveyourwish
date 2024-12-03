@@ -8,7 +8,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Drawer,
@@ -18,11 +17,10 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
-  DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Copy, Check, Share } from "lucide-react";
+import { Copy, Check } from "lucide-react";
 import { toggleWishlistSharing } from "@/actions/wishlist";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import toast from "react-hot-toast";
@@ -32,16 +30,17 @@ interface ShareWishlistDialogProps {
   wishlistId: string;
   isShared: boolean;
   shareId: string | null;
-  trigger?: React.ReactNode;
+  open: boolean;
+  setOpen: (open: boolean) => void;
 }
 
 export function ShareWishlistDialog({
   wishlistId,
   isShared,
   shareId,
-  trigger,
+  open,
+  setOpen,
 }: ShareWishlistDialogProps) {
-  const [open, setOpen] = React.useState(false);
   const [sharing, setSharing] = React.useState(isShared);
   const [shareUrl, setShareUrl] = React.useState("");
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -110,12 +109,7 @@ export function ShareWishlistDialog({
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          {trigger || (
-            <Button variant="outline">{t.wishes.shareDialog.button}</Button>
-          )}
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>{t.wishes.shareDialog.headline}</DialogTitle>
             <DialogDescription>
@@ -168,59 +162,49 @@ export function ShareWishlistDialog({
 
   return (
     <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerTrigger asChild>
-        {trigger || (
-          <Button variant="outline">
-            <Share className="h-4 w-4 mr-2" />
-            {t.wishes.shareDialog.button}
-          </Button>
-        )}
-      </DrawerTrigger>
       <DrawerContent>
-        <div className="mx-auto w-full max-w-sm">
-          <DrawerHeader>
-            <DrawerTitle>{t.wishes.shareDialog.headline}</DrawerTitle>
-            <DrawerDescription>
-              {sharing
-                ? t.wishes.shareDialog.descriptionEnabled
-                : t.wishes.shareDialog.descriptionDisabled}
-            </DrawerDescription>
-          </DrawerHeader>
-          {sharing && (
-            <div className="p-4">
-              <div className="grid gap-2">
-                <Label htmlFor="mobile-link">
-                  {t.wishes.shareDialog.shareLinkLabel}
-                </Label>
-                <div className="flex items-center space-x-2">
-                  <Input
-                    id="mobile-link"
-                    value={shareUrl}
-                    readOnly
-                    className="flex-1"
-                  />
-                  <CopyButton />
-                </div>
+        <DrawerHeader>
+          <DrawerTitle>{t.wishes.shareDialog.headline}</DrawerTitle>
+          <DrawerDescription>
+            {sharing
+              ? t.wishes.shareDialog.descriptionEnabled
+              : t.wishes.shareDialog.descriptionDisabled}
+          </DrawerDescription>
+        </DrawerHeader>
+        {sharing && (
+          <div className="p-4">
+            <div className="grid gap-2">
+              <Label htmlFor="mobile-link">
+                {t.wishes.shareDialog.shareLinkLabel}
+              </Label>
+              <div className="flex items-center space-x-2">
+                <Input
+                  id="mobile-link"
+                  value={shareUrl}
+                  readOnly
+                  className="flex-1"
+                />
+                <CopyButton />
               </div>
             </div>
-          )}
-          <DrawerFooter className="pt-2">
-            <Button
-              onClick={handleToggleSharing}
-              variant={sharing ? "destructive" : "default"}
-              isLoading={isLoading}
-            >
-              {sharing
-                ? t.wishes.shareDialog.disableButton
-                : t.wishes.shareDialog.enableButton}
+          </div>
+        )}
+        <DrawerFooter className="pt-2">
+          <Button
+            onClick={handleToggleSharing}
+            variant={sharing ? "destructive" : "default"}
+            isLoading={isLoading}
+          >
+            {sharing
+              ? t.wishes.shareDialog.disableButton
+              : t.wishes.shareDialog.enableButton}
+          </Button>
+          <DrawerClose asChild>
+            <Button variant="outline">
+              {t.wishes.shareDialog.cancelButton}
             </Button>
-            <DrawerClose asChild>
-              <Button variant="outline">
-                {t.wishes.shareDialog.cancelButton}
-              </Button>
-            </DrawerClose>
-          </DrawerFooter>
-        </div>
+          </DrawerClose>
+        </DrawerFooter>
       </DrawerContent>
     </Drawer>
   );

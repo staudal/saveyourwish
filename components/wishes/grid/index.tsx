@@ -26,7 +26,7 @@ import { ImagePositionDialog } from "@/components/dialogs/image-position-dialog"
 import { ShareWishlistDialog } from "@/components/dialogs/share-wishlist-dialog";
 import { CreateWishDialog } from "@/components/dialogs/create-wish-dialog";
 import { useTranslations } from "@/hooks/use-translations";
-import { Share, MoveVertical, PlusCircle, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -62,19 +62,25 @@ export function WishesGrid({
   title,
 }: WishesGridProps) {
   const [items, setItems] = useState(wishes);
-  const [isReordering, setIsReordering] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [reorderState, setReorderState] = useState({
+    isReordering: false,
+    hasChanges: false,
+    isSaving: false,
+  });
+  const [dialogState, setDialogState] = useState({
+    edit: false,
+    delete: false,
+    imagePosition: false,
+    create: false,
+    reserve: false,
+    removeReservation: false,
+    share: false,
+  });
+  const [selectedWish, setSelectedWish] = useState<Wish | null>(null);
   const [imageDimensions, setImageDimensions] = useState<
     Record<string, ImageDimension>
   >({});
-  const [selectedWish, setSelectedWish] = useState<Wish | null>(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [imagePositionOpen, setImagePositionOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [reserveDialogOpen, setReserveDialogOpen] = useState(false);
-  const [removeReservationDialogOpen, setRemoveReservationDialogOpen] =
-    useState(false);
+
   const t = useTranslations();
 
   const sensors = useSensors(
@@ -84,40 +90,25 @@ export function WishesGrid({
     })
   );
 
-  const handleDelete = (wish: Wish) => {
-    setSelectedWish(wish);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleAdjustImage = (wish: Wish) => {
-    setSelectedWish(wish);
-    setImagePositionOpen(true);
-  };
-
-  const handleEdit = (wish: Wish) => {
-    setSelectedWish(wish);
-    setEditDialogOpen(true);
+  const openDialog = (dialogType: keyof typeof dialogState, wish?: Wish) => {
+    if (wish) setSelectedWish(wish);
+    setDialogState((prev) => ({ ...prev, [dialogType]: true }));
   };
 
   const handleReserve = (wish: Wish) => {
     setSelectedWish(wish);
-    if (wish.reservation) {
-      setRemoveReservationDialogOpen(true);
-    } else {
-      setReserveDialogOpen(true);
-    }
+    openDialog(wish.reservation ? "removeReservation" : "reserve");
   };
 
-  // Reset items when wishes prop changes
   useEffect(() => {
-    if (!isReordering) {
+    if (!reorderState.isReordering) {
       setItems(wishes);
-      setHasChanges(false);
+      setReorderState((prev) => ({ ...prev, hasChanges: false }));
     }
-  }, [wishes, isReordering]);
+  }, [wishes, reorderState.isReordering]);
 
   const handleSave = async () => {
-    setIsSaving(true);
+    setReorderState((prev) => ({ ...prev, isSaving: true }));
 
     const positions = items.map((item, index) => ({
       id: item.id,
@@ -128,19 +119,24 @@ export function WishesGrid({
 
     if (result.success) {
       toast.success(t.wishes.reorderMode.success);
-      setIsReordering(false);
-      setHasChanges(false);
+      setReorderState({
+        isReordering: false,
+        hasChanges: false,
+        isSaving: false,
+      });
     } else {
       toast.error(t.error);
+      setReorderState((prev) => ({ ...prev, isSaving: false }));
     }
-
-    setIsSaving(false);
   };
 
   const handleCancel = () => {
     setItems(wishes);
-    setIsReordering(false);
-    setHasChanges(false);
+    setReorderState({
+      isReordering: false,
+      hasChanges: false,
+      isSaving: false,
+    });
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -160,38 +156,10 @@ export function WishesGrid({
         return wishes[index]?.id !== item.id;
       });
 
-      setHasChanges(hasPositionChanges);
+      setReorderState((prev) => ({ ...prev, hasChanges: hasPositionChanges }));
       return newItems;
     });
   };
-
-  if (wishes.length === 0) {
-    return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-xl md:text-2xl font-semibold">{title}</h1>
-          {!readonly && <CreateWishDialog wishlistId={wishlistId} />}
-        </div>
-
-        <div className="border rounded-lg p-8 text-center">
-          <h3 className="text-lg font-medium">{t.wishes.emptyState.title}</h3>
-          <p className="text-sm text-muted-foreground mt-1">
-            {t.wishes.emptyState.description}
-          </p>
-          {!readonly && (
-            <CreateWishDialog
-              wishlistId={wishlistId}
-              trigger={
-                <Button className="mt-4">
-                  {t.wishes.createDialog.trigger}
-                </Button>
-              }
-            />
-          )}
-        </div>
-      </div>
-    );
-  }
 
   if (readonly) {
     return (
@@ -214,13 +182,17 @@ export function WishesGrid({
           <>
             <ReserveWishDialog
               wish={selectedWish}
-              open={reserveDialogOpen}
-              onOpenChange={setReserveDialogOpen}
+              open={dialogState.reserve}
+              onOpenChange={(open) =>
+                setDialogState((prev) => ({ ...prev, reserve: open }))
+              }
             />
             <RemoveReservationDialog
               wish={selectedWish}
-              open={removeReservationDialogOpen}
-              onOpenChange={setRemoveReservationDialogOpen}
+              open={dialogState.removeReservation}
+              onOpenChange={(open) =>
+                setDialogState((prev) => ({ ...prev, removeReservation: open }))
+              }
             />
           </>
         )}
@@ -233,23 +205,23 @@ export function WishesGrid({
       <div className="flex justify-between items-center">
         <h1 className="text-xl md:text-2xl font-semibold">{title}</h1>
         <div className="flex items-center gap-2">
-          {isReordering ? (
+          {reorderState.isReordering ? (
             <>
               <Button
                 variant="outline"
                 onClick={handleCancel}
-                disabled={isSaving}
+                disabled={reorderState.isSaving}
               >
                 {t.wishes.reorderMode.cancelButton}
               </Button>
               <Button
                 onClick={handleSave}
-                disabled={!hasChanges || isSaving}
-                isLoading={isSaving}
+                disabled={!reorderState.hasChanges || reorderState.isSaving}
+                isLoading={reorderState.isSaving}
                 className="relative"
               >
                 {t.wishes.reorderMode.saveButton}
-                {hasChanges && (
+                {reorderState.hasChanges && (
                   <span className="absolute -right-1 -top-1 flex h-3 w-3">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
@@ -261,20 +233,34 @@ export function WishesGrid({
             <>
               {/* Show buttons on desktop */}
               <div className="hidden lg:flex items-center gap-2">
-                <ShareWishlistDialog
-                  wishlistId={wishlistId}
-                  isShared={isShared}
-                  shareId={shareId}
-                />
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    setDialogState((prev) => ({ ...prev, share: true }))
+                  }
+                >
+                  {t.wishes.shareDialog.button}
+                </Button>
                 {wishes.length > 0 && (
                   <Button
                     variant="outline"
-                    onClick={() => setIsReordering(true)}
+                    onClick={() =>
+                      setReorderState((prev) => ({
+                        ...prev,
+                        isReordering: true,
+                      }))
+                    }
                   >
                     {t.wishes.reorderMode.button}
                   </Button>
                 )}
-                <CreateWishDialog wishlistId={wishlistId} />
+                <Button
+                  onClick={() =>
+                    setDialogState((prev) => ({ ...prev, create: true }))
+                  }
+                >
+                  {t.wishes.createDialog.trigger}
+                </Button>
               </div>
 
               {/* Show dropdown on mobile */}
@@ -291,43 +277,31 @@ export function WishesGrid({
                       {t.wishes.actions.manage}
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>
-                      <CreateWishDialog
-                        wishlistId={wishlistId}
-                        trigger={
-                          <Button
-                            variant="ghost"
-                            className="w-full justify-start p-0 h-auto font-normal"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <PlusCircle className="h-4 w-4 mr-2" />
-                            <span>{t.wishes.createDialog.trigger}</span>
-                          </Button>
-                        }
-                      />
+                    <DropdownMenuItem
+                      onClick={() =>
+                        setDialogState((prev) => ({ ...prev, create: true }))
+                      }
+                    >
+                      <span>{t.wishes.createDialog.trigger}</span>
                     </DropdownMenuItem>
                     {wishes.length > 0 && (
-                      <DropdownMenuItem onClick={() => setIsReordering(true)}>
-                        <MoveVertical className="h-4 w-4 mr-2" />
+                      <DropdownMenuItem
+                        onClick={() =>
+                          setReorderState((prev) => ({
+                            ...prev,
+                            isReordering: true,
+                          }))
+                        }
+                      >
                         <span>{t.wishes.reorderMode.button}</span>
                       </DropdownMenuItem>
                     )}
-                    <DropdownMenuItem>
-                      <ShareWishlistDialog
-                        wishlistId={wishlistId}
-                        isShared={isShared}
-                        shareId={shareId}
-                        trigger={
-                          <Button
-                            variant="ghost"
-                            className="w-full justify-start p-0 h-auto font-normal"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Share className="h-4 w-4 mr-2" />
-                            <span>{t.wishes.shareDialog.button}</span>
-                          </Button>
-                        }
-                      />
+                    <DropdownMenuItem
+                      onClick={() =>
+                        setDialogState((prev) => ({ ...prev, share: true }))
+                      }
+                    >
+                      <span>{t.wishes.shareDialog.button}</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -337,10 +311,29 @@ export function WishesGrid({
         </div>
       </div>
 
-      {isReordering && (
+      {reorderState.isReordering && (
         <p className="text-muted-foreground text-sm text-center">
           {t.wishes.reorderMode.dragging}
         </p>
+      )}
+
+      {wishes.length === 0 && (
+        <div className="border rounded-lg p-8 text-center">
+          <h3 className="text-lg font-medium">{t.wishes.emptyState.title}</h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            {t.wishes.emptyState.description}
+          </p>
+          {!readonly && (
+            <Button
+              className="mt-4"
+              onClick={() =>
+                setDialogState((prev) => ({ ...prev, create: true }))
+              }
+            >
+              {t.wishes.createDialog.trigger}
+            </Button>
+          )}
+        </div>
       )}
 
       <DndContext
@@ -351,21 +344,21 @@ export function WishesGrid({
         <SortableContext
           items={items.map((item) => item.id)}
           strategy={rectSortingStrategy}
-          disabled={!isReordering}
+          disabled={!reorderState.isReordering}
         >
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {items.map((wish) => (
               <WishCard
                 key={wish.id}
                 wish={wish}
-                isReordering={isReordering}
+                isReordering={reorderState.isReordering}
                 readonly={readonly}
                 isSharedView={isShared}
                 imageDimensions={imageDimensions}
                 setImageDimensions={setImageDimensions}
-                onDelete={handleDelete}
-                onAdjustImage={handleAdjustImage}
-                onEdit={handleEdit}
+                onDelete={() => openDialog("delete", wish)}
+                onAdjustImage={() => openDialog("imagePosition", wish)}
+                onEdit={() => openDialog("edit", wish)}
                 onReserve={handleReserve}
               />
             ))}
@@ -373,36 +366,64 @@ export function WishesGrid({
         </SortableContext>
       </DndContext>
 
+      <CreateWishDialog
+        wishlistId={wishlistId}
+        open={dialogState.create}
+        setOpen={(open) =>
+          setDialogState((prev) => ({ ...prev, create: open }))
+        }
+      />
+
+      <ShareWishlistDialog
+        wishlistId={wishlistId}
+        isShared={isShared}
+        shareId={shareId}
+        open={dialogState.share}
+        setOpen={(open) => setDialogState((prev) => ({ ...prev, share: open }))}
+      />
+
       {selectedWish && (
         <>
           <EditWishDialog
             wish={selectedWish}
-            open={editDialogOpen}
-            onOpenChange={setEditDialogOpen}
-            setOpen={setEditDialogOpen}
+            open={dialogState.edit}
+            onOpenChange={(open) =>
+              setDialogState((prev) => ({ ...prev, edit: open }))
+            }
+            setOpen={(open) =>
+              setDialogState((prev) => ({ ...prev, edit: open }))
+            }
           />
           <DeleteWishDialog
             id={selectedWish.id}
             wishlistId={selectedWish.wishlistId}
-            open={deleteDialogOpen}
-            onOpenChange={setDeleteDialogOpen}
+            open={dialogState.delete}
+            onOpenChange={(open) =>
+              setDialogState((prev) => ({ ...prev, delete: open }))
+            }
           />
           {selectedWish.imageUrl && (
             <ImagePositionDialog
               wish={selectedWish}
-              open={imagePositionOpen}
-              onOpenChange={setImagePositionOpen}
+              open={dialogState.imagePosition}
+              onOpenChange={(open) =>
+                setDialogState((prev) => ({ ...prev, imagePosition: open }))
+              }
             />
           )}
           <ReserveWishDialog
             wish={selectedWish}
-            open={reserveDialogOpen}
-            onOpenChange={setReserveDialogOpen}
+            open={dialogState.reserve}
+            onOpenChange={(open) =>
+              setDialogState((prev) => ({ ...prev, reserve: open }))
+            }
           />
           <RemoveReservationDialog
             wish={selectedWish}
-            open={removeReservationDialogOpen}
-            onOpenChange={setRemoveReservationDialogOpen}
+            open={dialogState.removeReservation}
+            onOpenChange={(open) =>
+              setDialogState((prev) => ({ ...prev, removeReservation: open }))
+            }
           />
         </>
       )}

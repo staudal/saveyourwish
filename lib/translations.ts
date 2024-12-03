@@ -435,11 +435,11 @@ export const translations = {
         removeReservation: "Fjern",
       },
       reorderMode: {
-        button: "Ombyt",
+        button: "Skift rækkefølge",
         cancelButton: "Annuller",
         saveButton: "Gem",
         success: "Rækkefølge opdateret",
-        dragging: "Træk for at ombytte",
+        dragging: "Træk for at skifte rækkefølge",
       },
       actions: {
         manage: "Handlinger",

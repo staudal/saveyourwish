@@ -8,7 +8,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Drawer,
@@ -18,7 +17,6 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
-  DrawerTrigger,
 } from "@/components/ui/drawer";
 import { CreateWishForm } from "../forms/create-wish-form";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -26,14 +24,15 @@ import { useTranslations } from "@/hooks/use-translations";
 
 interface CreateWishDialogProps {
   wishlistId: string;
-  trigger?: React.ReactNode;
+  open: boolean;
+  setOpen: (open: boolean) => void;
 }
 
 export function CreateWishDialog({
   wishlistId,
-  trigger,
+  open,
+  setOpen,
 }: CreateWishDialogProps) {
-  const [open, setOpen] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const t = useTranslations();
@@ -41,9 +40,6 @@ export function CreateWishDialog({
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          {trigger || <Button>{t.wishes.createDialog.trigger}</Button>}
-        </DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>{t.wishes.createDialog.headline}</DialogTitle>
@@ -82,9 +78,6 @@ export function CreateWishDialog({
 
   return (
     <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerTrigger asChild>
-        {trigger || <Button>{t.wishes.createDialog.trigger}</Button>}
-      </DrawerTrigger>
       <DrawerContent>
         <div className="mx-auto w-full">
           <DrawerHeader>
