@@ -3,24 +3,23 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import toast from "react-hot-toast";
 import { reserveWish } from "@/actions/wish";
-import { DialogHeader, DialogFooter } from "../ui/dialog";
 import {
   Dialog,
   DialogContent,
-  DialogTitle,
   DialogDescription,
+  DialogHeader,
+  DialogTitle,
 } from "../ui/dialog";
 import {
   Drawer,
   DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
   DrawerDescription,
   DrawerFooter,
-  DrawerClose,
+  DrawerHeader,
+  DrawerTitle,
 } from "../ui/drawer";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
@@ -58,23 +57,8 @@ export function ReserveWishDialog({
     },
   });
 
-  useEffect(() => {
-    if (!open) return;
-
-    const meta = document.createElement("meta");
-    meta.name = "viewport";
-    meta.content =
-      "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0";
-    document.head.appendChild(meta);
-
-    return () => {
-      document.head.removeChild(meta);
-    };
-  }, [open]);
-
   const handleReserve = async (values: FormData) => {
     setIsLoading(true);
-
     const result = await reserveWish(wish.id, values.name);
 
     if (result.success) {
@@ -84,7 +68,6 @@ export function ReserveWishDialog({
     } else {
       toast.error(t.error);
     }
-
     setIsLoading(false);
   };
 
@@ -111,32 +94,32 @@ export function ReserveWishDialog({
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>{t.wishes.reserveDialog.headline}</DialogTitle>
             <DialogDescription>
               {t.wishes.reserveDialog.description}
             </DialogDescription>
           </DialogHeader>
-
           {formContent}
-
-          <DialogFooter>
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-4">
             <Button
-              type="button"
+              className="w-full"
               variant="outline"
               onClick={() => onOpenChange(false)}
+              disabled={isLoading}
             >
               {t.wishes.reserveDialog.cancelButton}
             </Button>
             <Button
+              className="w-full"
               onClick={form.handleSubmit(handleReserve)}
               disabled={!form.formState.isValid || isLoading}
               isLoading={isLoading}
             >
               {t.wishes.reserveDialog.button}
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     );
@@ -146,26 +129,30 @@ export function ReserveWishDialog({
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
         <div className="mx-auto w-full">
-          <DrawerHeader className="sticky top-0 z-20 bg-background">
+          <DrawerHeader>
             <DrawerTitle>{t.wishes.reserveDialog.headline}</DrawerTitle>
             <DrawerDescription>
               {t.wishes.reserveDialog.description}
             </DrawerDescription>
           </DrawerHeader>
           <div className="p-4">{formContent}</div>
-          <DrawerFooter className="sticky bottom-0 mt-auto">
+          <DrawerFooter className="pt-2">
             <Button
+              className="w-full"
               onClick={form.handleSubmit(handleReserve)}
               disabled={!form.formState.isValid || isLoading}
               isLoading={isLoading}
             >
               {t.wishes.reserveDialog.button}
             </Button>
-            <DrawerClose asChild>
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
-                {t.wishes.reserveDialog.cancelButton}
-              </Button>
-            </DrawerClose>
+            <Button
+              className="w-full"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isLoading}
+            >
+              {t.wishes.reserveDialog.cancelButton}
+            </Button>
           </DrawerFooter>
         </div>
       </DrawerContent>
