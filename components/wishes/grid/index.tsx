@@ -37,7 +37,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useMediaQuery } from "@/hooks/use-media-query";
 
 type Wish = InferSelectModel<typeof wishes>;
 
@@ -75,17 +74,9 @@ export function WishesGrid({
   const [imagePositionOpen, setImagePositionOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const t = useTranslations();
-  const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: isDesktop
-        ? undefined
-        : {
-            delay: 1000,
-            tolerance: 5,
-          },
-    }),
+    useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })

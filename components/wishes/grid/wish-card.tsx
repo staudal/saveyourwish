@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { WishActions } from "./wish-actions";
 import { type Currency } from "@/constants";
 import { Separator } from "@/components/ui/separator";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, GripVertical } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
@@ -70,12 +70,9 @@ export function WishCard({
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
       className={cn(
         "relative group border rounded-lg overflow-hidden flex flex-col h-full",
-        isReordering &&
-          "cursor-grab active:cursor-grabbing border-dashed border-primary/50",
+        isReordering && "border-dashed border-primary/50",
         isDragging && "opacity-75 border-primary shadow-lg"
       )}
     >
@@ -90,6 +87,15 @@ export function WishCard({
 
       <div className="flex flex-col flex-grow">
         <div className="p-4 flex-grow">
+          {isReordering && (
+            <div
+              {...attributes}
+              {...listeners}
+              className="absolute right-2 top-2 z-10 cursor-grab active:cursor-grabbing p-2 hover:bg-accent rounded-md"
+            >
+              <GripVertical className="h-4 w-4 text-muted-foreground" />
+            </div>
+          )}
           <h3 className="font-semibold">{wish.title}</h3>
           <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
             {wish.description || "No description"}
