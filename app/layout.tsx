@@ -36,7 +36,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <div data-vaul-drawer-wrapper="" className="min-h-screen">
+            {children}
+          </div>
         </ThemeProvider>
         <Toaster
           position="top-right"
