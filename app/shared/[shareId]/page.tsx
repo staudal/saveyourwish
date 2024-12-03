@@ -26,7 +26,7 @@ export default async function SharedWishlistPage({
       {isOwner && <OwnerSharedViewWarningWrapper wishlistId={wishlist.id} />}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">
             {wishlist.title}
           </h1>
           <p className="text-sm text-muted-foreground">
