@@ -21,7 +21,9 @@ export default function SettingsPage() {
           <h4 className="text-sm font-medium mb-2">
             {t.settings.language.headline}
           </h4>
-          <LanguageSelector />
+          <div className="max-w-[180px]">
+            <LanguageSelector />
+          </div>
           <p className="text-sm text-muted-foreground mt-2">
             {t.settings.language.description}
           </p>
