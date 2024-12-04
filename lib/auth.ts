@@ -12,6 +12,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       name: "SaveYourWish",
       from: "SaveYourWish <jakob@saveyourwish.com>",
     }),
-    Google,
+    Google({
+      allowDangerousEmailAccountLinking: true,
+    }),
   ],
 });
