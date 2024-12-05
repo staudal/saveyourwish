@@ -16,6 +16,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
 import { useTranslations } from "@/hooks/use-translations";
@@ -25,6 +26,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 }
 
 export function AppSidebar({ user, ...props }: AppSidebarProps) {
+  const { setOpenMobile } = useSidebar();
   const t = useTranslations();
   const data = {
     navMain: [
@@ -59,13 +61,17 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/dashboard/wishlists">
+              <Link
+                href="/dashboard/wishlists"
+                onClick={() => setOpenMobile(false)}
+              >
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <Image
                     src="/logo_white.svg"
                     alt="SaveYourWish"
                     width={20}
                     height={20}
+                    className="size-5"
                   />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
