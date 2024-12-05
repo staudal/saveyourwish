@@ -122,7 +122,6 @@ export function CreateWishForm({
           {...form.register("title")}
           id="title"
           placeholder={t.wishes.createDialog.titleField.placeholder}
-          autoFocus
         />
       </div>
 

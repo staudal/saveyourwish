@@ -75,7 +75,6 @@ export function EditWishlistForm({
           {...form.register("title")}
           id="title"
           placeholder={t.wishlists.editDialog.titlePlaceholder}
-          autoFocus
         />
       </div>
     </form>
