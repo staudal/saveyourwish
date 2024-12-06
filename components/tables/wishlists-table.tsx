@@ -22,10 +22,12 @@ export default function WishlistsTable({
   }, [isDesktop]);
 
   return (
-    <DataTable
-      columns={columns}
-      data={wishlists}
-      initialColumnVisibility={columnVisibility}
-    />
+    <div className="overflow-x-auto">
+      <DataTable
+        columns={columns}
+        data={wishlists}
+        initialColumnVisibility={columnVisibility}
+      />
+    </div>
   );
 }

@@ -21,7 +21,6 @@ import {
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { EditWishlistForm } from "../forms/edit-wishlist-form";
 import { useTranslations } from "@/hooks/use-translations";
-import { Wishlist } from "../wishes/grid/types";
 
 export function EditWishlistDialog({
   open,
@@ -30,7 +29,11 @@ export function EditWishlistDialog({
 }: {
   open: boolean;
   setOpen: (open: boolean) => void;
-  wishlist: Wishlist;
+  wishlist: {
+    id: string;
+    title: string;
+    coverImage?: string | null;
+  };
 }) {
   const [isLoading, setIsLoading] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -51,9 +54,9 @@ export function EditWishlistDialog({
             onSuccess={() => setOpen(false)}
             onLoadingChange={setIsLoading}
           />
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-4">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
             <Button
-              className="w-full"
+              type="button"
               variant="outline"
               onClick={() => setOpen(false)}
               disabled={isLoading}
@@ -61,7 +64,6 @@ export function EditWishlistDialog({
               {t.wishlists.editDialog.cancel}
             </Button>
             <Button
-              className="w-full"
               type="submit"
               form="edit-wishlist-form"
               disabled={isLoading}
@@ -76,7 +78,7 @@ export function EditWishlistDialog({
   }
 
   return (
-    <Drawer open={open} onOpenChange={setOpen} repositionInputs={false}>
+    <Drawer open={open} onOpenChange={setOpen}>
       <DrawerContent>
         <DrawerHeader>
           <DrawerTitle>{t.wishlists.editDialog.headline}</DrawerTitle>
@@ -84,11 +86,13 @@ export function EditWishlistDialog({
             {t.wishlists.editDialog.description}
           </DrawerDescription>
         </DrawerHeader>
-        <EditWishlistForm
-          wishlist={wishlist}
-          onSuccess={() => setOpen(false)}
-          onLoadingChange={setIsLoading}
-        />
+        <div className="px-4">
+          <EditWishlistForm
+            wishlist={wishlist}
+            onSuccess={() => setOpen(false)}
+            onLoadingChange={setIsLoading}
+          />
+        </div>
         <DrawerFooter className="pt-2">
           <Button
             type="submit"

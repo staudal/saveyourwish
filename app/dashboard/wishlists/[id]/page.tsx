@@ -22,6 +22,7 @@ export default async function WishlistPage({
       isShared={wishlist.shared}
       shareId={wishlist.shareId}
       title={wishlist.title}
+      coverImage={wishlist.coverImage}
     />
   );
 }

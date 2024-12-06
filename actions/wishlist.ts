@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { eq, and, sql } from "drizzle-orm";
 import { type Currency } from "@/constants";
+import { deleteImageFromBlob } from "@/lib/blob";
 
 export async function getWishlists() {
   const session = await auth();
@@ -18,6 +19,7 @@ export async function getWishlists() {
       favorite: wishlists.favorite,
       shared: wishlists.shared,
       shareId: wishlists.shareId,
+      coverImage: wishlists.coverImage,
       wishCount: sql<number>`count(${wishes.id})::integer`,
       wishes: sql<
         { price: number | null; currency: Currency; imageUrl: string | null }[]
@@ -57,13 +59,18 @@ export async function createWishlist(title: string) {
     const session = await auth();
     if (!session?.user?.id) throw new Error("Unauthorized");
 
-    await db.insert(wishlists).values({
-      title,
-      userId: session.user.id,
-    });
+    const result = await db
+      .insert(wishlists)
+      .values({
+        title,
+        userId: session.user.id,
+      })
+      .returning({ id: wishlists.id });
+
+    const wishlistId = result[0].id;
 
     revalidatePath("/wishlists");
-    return { success: true };
+    return { success: true, wishlistId };
   } catch (error) {
     return { success: false, error: "Failed to create wishlist" };
   }
@@ -74,13 +81,29 @@ export async function deleteWishlist(id: string) {
     const session = await auth();
     if (!session?.user?.id) throw new Error("Unauthorized");
 
+    // Get the wishlist first to check for cover image
+    const wishlist = await db
+      .select({
+        coverImage: wishlists.coverImage,
+      })
+      .from(wishlists)
+      .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)))
+      .then((rows) => rows[0]);
+
+    // Delete the wishlist
     await db
       .delete(wishlists)
       .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)));
 
+    // If there was a cover image, delete it from blob storage
+    if (wishlist?.coverImage) {
+      await deleteImageFromBlob(wishlist.coverImage);
+    }
+
     revalidatePath("/wishlists");
     return { success: true };
   } catch (error) {
+    console.error("Failed to delete wishlist:", error);
     return { success: false, error: "Failed to delete wishlist" };
   }
 }
@@ -96,6 +119,7 @@ export async function getWishlist(id: string) {
       favorite: wishlists.favorite,
       shared: wishlists.shared,
       shareId: wishlists.shareId,
+      coverImage: wishlists.coverImage,
     })
     .from(wishlists)
     .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)))
@@ -144,6 +168,7 @@ export async function getSharedWishlist(shareId: string) {
       shared: wishlists.shared,
       shareId: wishlists.shareId,
       userId: wishlists.userId,
+      coverImage: wishlists.coverImage,
     })
     .from(wishlists)
     .where(and(eq(wishlists.shareId, shareId), eq(wishlists.shared, true)))
@@ -180,5 +205,38 @@ export async function updateWishlist(id: string, data: { title: string }) {
     return { success: true };
   } catch (error) {
     return { success: false, error: "Failed to update wishlist" };
+  }
+}
+
+export async function updateWishlistCoverImage(id: string, coverImage: string) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error("Unauthorized");
+
+    // Get the current wishlist to check for existing cover image
+    const currentWishlist = await db
+      .select({
+        coverImage: wishlists.coverImage,
+      })
+      .from(wishlists)
+      .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)))
+      .then((rows) => rows[0]);
+
+    // If there's an existing cover image, delete it
+    if (currentWishlist?.coverImage) {
+      await deleteImageFromBlob(currentWishlist.coverImage);
+    }
+
+    // Update with new cover image
+    await db
+      .update(wishlists)
+      .set({ coverImage })
+      .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)));
+
+    revalidatePath("/wishlists");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update wishlist cover image:", error);
+    return { success: false, error: "Failed to update wishlist cover image" };
   }
 }

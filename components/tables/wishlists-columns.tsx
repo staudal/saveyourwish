@@ -79,69 +79,34 @@ function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
 }
 
 function WishAvatarGroup({ wishes }: { wishes: Wishlist["wishes"] }) {
-  const visibleAvatars = {
-    mobile: 2,
-    desktop: 3,
-  };
+  const maxVisibleAvatars = 3;
 
   return (
     <div className="flex items-center">
       {wishes.length > 0 ? (
-        <>
-          {/* Mobile: Show 2 avatars */}
-          <div className="md:hidden flex -space-x-4">
-            {wishes.slice(0, visibleAvatars.mobile).map((wish, index) => (
-              <Avatar
-                key={index}
-                className="border-2 border-background ring-0 h-10 w-10"
-                style={{
-                  zIndex: visibleAvatars.mobile - index,
-                }}
-              >
-                <AvatarImage
-                  src={wish.imageUrl || undefined}
-                  alt="Wish image"
-                  className="object-cover"
-                />
-                <AvatarFallback className="bg-muted">
-                  {index + 1}
-                </AvatarFallback>
-              </Avatar>
-            ))}
-            {wishes.length > visibleAvatars.mobile && (
-              <div className="flex items-center justify-center w-10 h-10 text-xs font-medium text-foreground bg-muted border-2 border-background rounded-full">
-                +{wishes.length - visibleAvatars.mobile}
-              </div>
-            )}
-          </div>
-
-          {/* Desktop: Show 3 avatars */}
-          <div className="hidden md:flex -space-x-4">
-            {wishes.slice(0, visibleAvatars.desktop).map((wish, index) => (
-              <Avatar
-                key={index}
-                className="border-2 border-background ring-0 h-10 w-10"
-                style={{
-                  zIndex: visibleAvatars.desktop - index,
-                }}
-              >
-                <AvatarImage
-                  src={wish.imageUrl || undefined}
-                  alt="Wish image"
-                  className="object-cover"
-                />
-                <AvatarFallback className="bg-muted">
-                  {index + 1}
-                </AvatarFallback>
-              </Avatar>
-            ))}
-            {wishes.length > visibleAvatars.desktop && (
-              <div className="flex items-center justify-center w-10 h-10 text-xs font-medium text-foreground bg-muted border-2 border-background rounded-full">
-                +{wishes.length - visibleAvatars.desktop}
-              </div>
-            )}
-          </div>
-        </>
+        <div className="flex -space-x-4">
+          {wishes.slice(0, maxVisibleAvatars).map((wish, index) => (
+            <Avatar
+              key={index}
+              className="border-2 border-background ring-0 h-10 w-10"
+              style={{
+                zIndex: maxVisibleAvatars - index,
+              }}
+            >
+              <AvatarImage
+                src={wish.imageUrl || undefined}
+                alt="Wish image"
+                className="object-cover"
+              />
+              <AvatarFallback className="bg-muted">{index + 1}</AvatarFallback>
+            </Avatar>
+          ))}
+          {wishes.length > maxVisibleAvatars && (
+            <div className="flex items-center justify-center w-10 h-10 text-xs font-medium text-foreground bg-muted border-2 border-background rounded-full">
+              +{wishes.length - maxVisibleAvatars}
+            </div>
+          )}
+        </div>
       ) : (
         <div className="flex items-center justify-center w-10 h-10 text-xs font-medium text-muted-foreground bg-muted/50 border-2 border-background rounded-full">
           0
@@ -176,26 +141,7 @@ export function useWishlistColumns() {
       },
       cell: ({ row }) => {
         const title = row.getValue("title") as string;
-        const result = calculateAveragePrice(
-          row.original.wishes as {
-            price: number | null;
-            currency: "USD" | "EUR" | "DKK" | "SEK";
-          }[]
-        );
-
-        return (
-          <div className="flex flex-col gap-1">
-            <span className="font-semibold">{title}</span>
-            <div className="md:hidden text-sm text-muted-foreground flex items-center gap-1">
-              <span>{t.wishlists.dataTable.averagePriceShort}</span>
-              {result ? (
-                formatPrice(result.amount, result.currency)
-              ) : (
-                <span>-</span>
-              )}
-            </div>
-          </div>
-        );
+        return <span className="font-semibold">{title}</span>;
       },
     },
     {
@@ -218,11 +164,7 @@ export function useWishlistColumns() {
         );
       },
       cell: ({ row }) => {
-        return (
-          <div className="flex flex-col gap-2">
-            <WishAvatarGroup wishes={row.original.wishes} />
-          </div>
-        );
+        return <WishAvatarGroup wishes={row.original.wishes} />;
       },
     },
     {
@@ -239,7 +181,7 @@ export function useWishlistColumns() {
       },
       header: ({ column }) => {
         return (
-          <div className="hidden sm:flex items-center">
+          <div className="flex items-center">
             {t.wishlists.dataTable.averagePrice}
             <Button
               variant="ghost"
@@ -261,12 +203,11 @@ export function useWishlistColumns() {
             currency: "USD" | "EUR" | "DKK" | "SEK";
           }[]
         );
-        if (!result)
-          return <div className="hidden sm:block text-muted-foreground">-</div>;
+        if (!result) return <span className="text-muted-foreground">-</span>;
         return (
-          <div className="hidden sm:block text-muted-foreground">
+          <span className="text-muted-foreground">
             {formatPrice(result.amount, result.currency)}
-          </div>
+          </span>
         );
       },
       sortingFn: "basic",
