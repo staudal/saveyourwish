@@ -66,7 +66,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-        {isLoading ? t.loading : children}
+        {isLoading && size !== "icon" ? t.loading : children}
       </Comp>
     );
   }
