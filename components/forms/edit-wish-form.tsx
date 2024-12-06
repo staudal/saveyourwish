@@ -191,6 +191,8 @@ export function EditWishForm({
           {...form.register("destinationUrl")}
           id="destinationUrl"
           placeholder={t.wishes.editDialog.destinationUrlField.placeholder}
+          readOnly={Boolean(wish.destinationUrl)}
+          className={wish.destinationUrl ? "bg-muted" : ""}
         />
       </div>
 
