@@ -1,63 +1,69 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { ArrowUpDown, Pencil, Trash2, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/components/ui/currency-select";
 import { calculateAveragePrice, convertToUSD } from "@/constants";
 import { useTranslations } from "@/hooks/use-translations";
 import { useState } from "react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { DeleteWishlistDialog } from "../dialogs/delete-wishlist-dialog";
 import { EditWishlistDialog } from "../dialogs/edit-wishlist-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Wishlist } from "../wishes/grid/types";
+import { ShareWishlistDialog } from "../dialogs/share-wishlist-dialog";
 
 function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
   const t = useTranslations();
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0">
-            <span className="sr-only">Open menu</span>
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>{t.wishlists.dataTable.actions}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowEditDialog(true);
-            }}
-          >
-            <Pencil className="mr-2 h-4 w-4" />
-            {t.wishlists.editDialog.trigger}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowDeleteDialog(true);
-            }}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            {t.wishlists.deleteDialog.trigger}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowShareDialog(true);
+          }}
+        >
+          <span className="sr-only">{t.wishes.shareDialog.button}</span>
+          <Share2 className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowEditDialog(true);
+          }}
+        >
+          <span className="sr-only">{t.wishlists.editDialog.trigger}</span>
+          <Pencil className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowDeleteDialog(true);
+          }}
+        >
+          <span className="sr-only">{t.wishlists.deleteDialog.trigger}</span>
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
 
+      <ShareWishlistDialog
+        wishlistId={wishlist.id}
+        isShared={wishlist.shared}
+        shareId={wishlist.shareId}
+        open={showShareDialog}
+        setOpen={setShowShareDialog}
+      />
       <DeleteWishlistDialog
         id={wishlist.id}
         open={showDeleteDialog}

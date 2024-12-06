@@ -16,6 +16,8 @@ export async function getWishlists() {
       id: wishlists.id,
       title: wishlists.title,
       favorite: wishlists.favorite,
+      shared: wishlists.shared,
+      shareId: wishlists.shareId,
       wishCount: sql<number>`count(${wishes.id})::integer`,
       wishes: sql<
         { price: number | null; currency: Currency; imageUrl: string | null }[]
@@ -33,7 +35,13 @@ export async function getWishlists() {
     .from(wishlists)
     .leftJoin(wishes, eq(wishes.wishlistId, wishlists.id))
     .where(eq(wishlists.userId, session.user.id))
-    .groupBy(wishlists.id, wishlists.title, wishlists.favorite);
+    .groupBy(
+      wishlists.id,
+      wishlists.title,
+      wishlists.favorite,
+      wishlists.shared,
+      wishlists.shareId
+    );
 
   return wishlistsWithWishes.map((wishlist) => ({
     ...wishlist,
@@ -108,7 +116,6 @@ export async function toggleWishlistSharing(id: string) {
     if (!wishlist) throw new Error("Wishlist not found");
 
     const wasShared = wishlist.shared;
-    const oldShareId = wishlist.shareId;
 
     await db
       .update(wishlists)
@@ -118,18 +125,7 @@ export async function toggleWishlistSharing(id: string) {
       })
       .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)));
 
-    // Always revalidate the dashboard path
-    revalidatePath(`/dashboard/wishlists/${id}`);
-
-    // If we're disabling sharing, revalidate the old share URL
-    if (wasShared && oldShareId) {
-      revalidatePath(`/shared/${oldShareId}`);
-    }
-    // If we're enabling sharing, revalidate the new share URL
-    if (!wasShared) {
-      revalidatePath(`/shared/${id}`);
-    }
-
+    // Don't revalidate immediately, let the client handle the UI update
     return {
       success: true,
       isShared: !wasShared,

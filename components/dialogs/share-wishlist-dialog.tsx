@@ -42,16 +42,20 @@ export function ShareWishlistDialog({
   setOpen,
 }: ShareWishlistDialogProps) {
   const [sharing, setSharing] = React.useState(isShared);
+  const [currentShareId, setCurrentShareId] = React.useState(shareId);
   const [shareUrl, setShareUrl] = React.useState("");
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const [showCheck, setShowCheck] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const t = useTranslations();
+
   React.useEffect(() => {
-    if (shareId) {
-      setShareUrl(`${window.location.origin}/shared/${shareId}`);
+    if (currentShareId) {
+      setShareUrl(`${window.location.origin}/shared/${currentShareId}`);
+    } else {
+      setShareUrl("");
     }
-  }, [shareId]);
+  }, [currentShareId]);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(shareUrl);
@@ -70,11 +74,7 @@ export function ShareWishlistDialog({
 
       if (result.success && typeof result.isShared === "boolean") {
         setSharing(result.isShared);
-        if (result.isShared && result.shareId) {
-          setShareUrl(`${window.location.origin}/shared/${result.shareId}`);
-        } else {
-          setShareUrl("");
-        }
+        setCurrentShareId(result.shareId);
         toast.success(
           result.isShared
             ? t.wishes.shareDialog.enableSuccess
@@ -152,7 +152,9 @@ export function ShareWishlistDialog({
               disabled={isLoading}
               isLoading={isLoading}
             >
-              {t.wishes.shareDialog.disableButton}
+              {sharing
+                ? t.wishes.shareDialog.disableButton
+                : t.wishes.shareDialog.enableButton}
             </Button>
           </div>
         </DialogContent>
