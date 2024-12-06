@@ -235,6 +235,15 @@ export const translations = {
         headline: "Language",
         description: "Select your preferred language.",
       },
+      deleteAccount: {
+        headline: "Delete Account",
+        description:
+          "Once you delete your account, there is no going back. Please be certain.",
+        button: "Delete Account",
+        delete: "Delete Account",
+        cancel: "Cancel",
+        success: "Your account has been deleted",
+      },
     },
   },
   da: {
@@ -471,6 +480,15 @@ export const translations = {
       language: {
         headline: "Sprog",
         description: "Vælg dit foretrukne sprog.",
+      },
+      deleteAccount: {
+        headline: "Slet Konto",
+        description:
+          "Når du sletter din konto, er der ingen tilbage. Vær sikker på det.",
+        button: "Slet Konto",
+        delete: "Slet Konto",
+        cancel: "Annuller",
+        success: "Din konto er blevet slettet",
       },
     },
   },
@@ -709,6 +727,15 @@ export const translations = {
       language: {
         headline: "Språk",
         description: "Välj ditt föredragna språk.",
+      },
+      deleteAccount: {
+        headline: "Slet Konto",
+        description:
+          "Når du sletter din konto, er der ingen tilbage. Vær sikker på det.",
+        button: "Slet Konto",
+        delete: "Slet Konto",
+        cancel: "Annuller",
+        success: "Din konto er blevet slettet",
       },
     },
   },
@@ -950,6 +977,15 @@ export const translations = {
       language: {
         headline: "Idioma",
         description: "Selecciona tu idioma preferido.",
+      },
+      deleteAccount: {
+        headline: "Slet Konto",
+        description:
+          "Når du sletter din konto, er der ingen tilbage. Vær sikker på det.",
+        button: "Slet Konto",
+        delete: "Slet Konto",
+        cancel: "Annuller",
+        success: "Din konto er blevet slettet",
       },
     },
   },
