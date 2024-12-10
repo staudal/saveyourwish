@@ -59,7 +59,7 @@ export function CreateWishDialog({
 
   return (
     <DialogComponent open={open} onOpenChange={setOpen}>
-      <DialogContentComponent className="sm:max-w-[800px]">
+      <DialogContentComponent className="sm:max-w-4xl">
         <div className="p-6">
           <CreateWishForm
             ref={formRef}
