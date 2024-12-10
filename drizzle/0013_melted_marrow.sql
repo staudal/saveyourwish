@@ -1,0 +1,1 @@
+ALTER TABLE "wish" ADD COLUMN "autoUpdatePrice" boolean DEFAULT false NOT NULL;

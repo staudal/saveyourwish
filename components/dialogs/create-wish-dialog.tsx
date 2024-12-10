@@ -2,25 +2,11 @@
 
 import * as React from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
+import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { CreateWishForm } from "../forms/create-wish-form";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { useTranslations } from "@/hooks/use-translations";
+import { CURRENCY_VALUES } from "@/constants";
 
 interface CreateWishDialogProps {
   wishlistId: string;
@@ -28,84 +14,90 @@ interface CreateWishDialogProps {
   setOpen: (open: boolean) => void;
 }
 
+export const initialFormValues = {
+  title: "",
+  price: 0,
+  currency: CURRENCY_VALUES[0],
+  imageUrl: "",
+  destinationUrl: "",
+  description: "",
+  quantity: 1,
+  autoUpdatePrice: false,
+  isUrlLocked: false,
+};
+
+export type FormValues = {
+  title: string;
+  price: number;
+  currency: (typeof CURRENCY_VALUES)[number];
+  imageUrl: string;
+  destinationUrl: string;
+  description: string;
+  quantity: number;
+  autoUpdatePrice: boolean;
+  isUrlLocked: boolean;
+};
+
 export function CreateWishDialog({
   wishlistId,
   open,
   setOpen,
 }: CreateWishDialogProps) {
   const [isLoading, setIsLoading] = React.useState(false);
+  const [formValues, setFormValues] =
+    React.useState<FormValues>(initialFormValues);
+  const formRef = React.useRef<any>(null);
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const t = useTranslations();
 
-  if (isDesktop) {
-    return (
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t.wishes.createDialog.headline}</DialogTitle>
-            <DialogDescription>
-              {t.wishes.createDialog.description}
-            </DialogDescription>
-          </DialogHeader>
+  const handleReset = () => {
+    formRef.current?.reset(initialFormValues);
+    setFormValues(initialFormValues);
+  };
+
+  const DialogComponent = isDesktop ? Dialog : Drawer;
+  const DialogContentComponent = isDesktop ? DialogContent : DrawerContent;
+
+  return (
+    <DialogComponent open={open} onOpenChange={setOpen}>
+      <DialogContentComponent className="sm:max-w-[800px]">
+        <div className="p-6">
           <CreateWishForm
+            ref={formRef}
             wishlistId={wishlistId}
             onSuccess={() => setOpen(false)}
             onLoadingChange={setIsLoading}
+            values={formValues}
+            onChange={setFormValues}
           />
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-4 w-full">
+        </div>
+        <DialogFooter>
+          <div className="flex w-full items-center">
             <Button
-              className="w-full"
-              variant="outline"
-              onClick={() => setOpen(false)}
-              disabled={isLoading}
+              type="button"
+              variant="ghost"
+              onClick={handleReset}
+              disabled={Object.entries(formValues).every(
+                ([key, value]) =>
+                  value === initialFormValues[key as keyof FormValues]
+              )}
             >
-              {t.wishes.createDialog.cancel}
+              Reset
             </Button>
-            <Button
-              className="w-full"
-              type="submit"
-              form="create-wish-form"
-              disabled={isLoading}
-              isLoading={isLoading}
-            >
-              {t.wishes.createDialog.create}
-            </Button>
+            <div className="ml-auto space-x-2">
+              <Button variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                form="create-wish-form"
+                disabled={isLoading}
+              >
+                Save
+              </Button>
+            </div>
           </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  return (
-    <Drawer open={open} onOpenChange={setOpen} repositionInputs={false}>
-      <DrawerContent>
-        <DrawerHeader>
-          <DrawerTitle>{t.wishes.createDialog.headline}</DrawerTitle>
-          <DrawerDescription>
-            {t.wishes.createDialog.description}
-          </DrawerDescription>
-        </DrawerHeader>
-        <CreateWishForm
-          wishlistId={wishlistId}
-          onSuccess={() => setOpen(false)}
-          onLoadingChange={setIsLoading}
-        />
-        <DrawerFooter className="pt-2">
-          <Button
-            type="submit"
-            form="create-wish-form"
-            disabled={isLoading}
-            isLoading={isLoading}
-          >
-            {t.wishes.createDialog.create}
-          </Button>
-          <DrawerClose asChild>
-            <Button variant="outline" disabled={isLoading}>
-              {t.wishes.createDialog.cancel}
-            </Button>
-          </DrawerClose>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+        </DialogFooter>
+      </DialogContentComponent>
+    </DialogComponent>
   );
 }

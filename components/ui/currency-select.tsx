@@ -5,26 +5,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { type Currency, CURRENCIES } from "@/constants";
+import { type Currency, CURRENCY_VALUES } from "@/constants";
 
 interface CurrencySelectProps {
-  value: Currency;
-  onValueChange: (value: Currency) => void;
+  value: (typeof CURRENCY_VALUES)[number];
+  onValueChange: (value: (typeof CURRENCY_VALUES)[number]) => void;
+  className?: string;
+  disabled?: boolean;
 }
 
-export function CurrencySelect({ value, onValueChange }: CurrencySelectProps) {
+export function CurrencySelect({
+  value,
+  onValueChange,
+  className,
+  disabled,
+}: CurrencySelectProps) {
   return (
-    <Select
-      value={value}
-      onValueChange={onValueChange as (value: string) => void}
-    >
-      <SelectTrigger>
-        <SelectValue />
+    <Select value={value} onValueChange={onValueChange} disabled={disabled}>
+      <SelectTrigger className={className}>
+        <SelectValue placeholder="Select currency" />
       </SelectTrigger>
       <SelectContent>
-        {CURRENCIES.map((currency) => (
-          <SelectItem key={currency.value} value={currency.value}>
-            {currency.label} ({currency.symbol})
+        {CURRENCY_VALUES.map((currency) => (
+          <SelectItem key={currency} value={currency}>
+            {currency}
           </SelectItem>
         ))}
       </SelectContent>

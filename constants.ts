@@ -5,16 +5,27 @@ export const WISHLIST_CATEGORIES = [
   "Wedding",
 ] as const;
 
+export type DialogState = "url" | "configure";
+
 export const CURRENCIES = [
   { value: "USD", label: "US Dollar", symbol: "$" },
   { value: "EUR", label: "Euro", symbol: "€" },
   { value: "DKK", label: "Danish Krone", symbol: "kr" },
   { value: "SEK", label: "Swedish Krona", symbol: "kr" },
+  { value: "NOK", label: "Norwegian Krone", symbol: "kr" },
+  { value: "GBP", label: "British Pound", symbol: "£" },
 ] as const;
 
 export type Currency = (typeof CURRENCIES)[number]["value"];
 
-export const CURRENCY_VALUES = ["USD", "EUR", "DKK", "SEK"] as const;
+export const CURRENCY_VALUES = [
+  "USD",
+  "EUR",
+  "DKK",
+  "SEK",
+  "NOK",
+  "GBP",
+] as const;
 
 // Example conversion rates (you should use a real exchange rate API in production)
 const EXCHANGE_RATES: Record<Currency, number> = {
@@ -22,6 +33,8 @@ const EXCHANGE_RATES: Record<Currency, number> = {
   EUR: 0.92,
   DKK: 6.95,
   SEK: 9.5,
+  NOK: 9.5,
+  GBP: 0.82,
 };
 
 export function convertToUSD(amount: number, fromCurrency: Currency): number {

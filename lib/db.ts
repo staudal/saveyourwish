@@ -122,6 +122,7 @@ export const wishes = pgTable("wish", {
   horizontalPosition: integer("horizontalPosition").default(50),
   imageZoom: real("imageZoom").default(1),
   position: integer("position").notNull(),
+  autoUpdatePrice: boolean("autoUpdatePrice").notNull().default(false),
 });
 
 export const wishReservations = pgTable("wish_reservations", {

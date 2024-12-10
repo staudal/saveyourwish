@@ -5,6 +5,25 @@ import { wishes, wishlists, wishReservations } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { eq, and, sql } from "drizzle-orm";
+import { z } from "zod";
+import { JSDOM, VirtualConsole } from "jsdom";
+import {
+  titleExtractor,
+  priceExtractor,
+  currencyExtractor,
+  imageExtractor,
+} from "@/lib/metadata-extractor";
+
+const metadataSchema = z.object({
+  title: z.string().optional(),
+  price: z.number().optional(),
+  currency: z.string().optional(),
+  imageUrl: z.string().optional(),
+  images: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  destinationUrl: z.string(),
+  autoUpdatePrice: z.boolean(),
+});
 
 export async function createWish(
   wishlistId: string,
@@ -14,7 +33,9 @@ export async function createWish(
     imageUrl?: string;
     destinationUrl?: string;
     description?: string;
-    quantity: number;
+    quantity?: number;
+    autoUpdatePrice?: boolean;
+    currency?: string;
   }
 ) {
   try {
@@ -423,6 +444,88 @@ export async function removeReservation(wishId: string) {
       success: false,
       error:
         error instanceof Error ? error.message : "Failed to remove reservation",
+    };
+  }
+}
+
+export async function getUrlMetadata(url: string) {
+  try {
+    const validUrl = new URL(url);
+
+    const response = await fetch(validUrl, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch URL");
+    }
+
+    const html = await response.text();
+    console.log("Raw HTML snippet:", html.slice(0, 500)); // Log the first 500 characters
+
+    const dom = new JSDOM(html, {
+      runScripts: "outside-only",
+      resources: "usable",
+      pretendToBeVisual: true,
+      virtualConsole: new VirtualConsole().sendTo(console, {
+        omitJSDOMErrors: true,
+      }),
+    });
+
+    // Log some basic DOM info
+    console.log(
+      "Document head meta tags:",
+      dom.window.document.head.querySelectorAll("meta").length
+    );
+    console.log(
+      "Document body elements:",
+      dom.window.document.body.children.length
+    );
+
+    const document = dom.window.document;
+
+    const rawTitle = titleExtractor.extract(document, url);
+    const rawPrice = priceExtractor.extract(document);
+    const currency = currencyExtractor.extract(document);
+    const images = imageExtractor.extract(document);
+
+    const metadata: Record<string, any> = {
+      destinationUrl: url,
+      autoUpdatePrice: false,
+      images,
+      imageUrl: images[0],
+    };
+
+    if (rawTitle) {
+      metadata.title = titleExtractor.clean?.(rawTitle, url) ?? rawTitle;
+    }
+
+    if (rawPrice) {
+      const cleanPrice = priceExtractor.clean(rawPrice);
+      const numericPrice = parseFloat(cleanPrice);
+      if (!isNaN(numericPrice)) {
+        metadata.price = numericPrice;
+        console.log("Extracted price:", numericPrice);
+      }
+    }
+
+    if (currency) {
+      metadata.currency = currency;
+    }
+
+    return {
+      success: true,
+      data: metadataSchema.parse(metadata),
+    };
+  } catch (error) {
+    console.error("Error fetching URL metadata:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to fetch URL metadata",
     };
   }
 }

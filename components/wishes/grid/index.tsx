@@ -135,6 +135,8 @@ export function WishesGrid({
           src={coverImage}
           alt={title}
           className="w-full h-full object-cover"
+          width={1000}
+          height={1000}
         />
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
