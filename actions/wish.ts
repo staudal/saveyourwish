@@ -14,6 +14,7 @@ import {
   imageExtractor,
 } from "@/lib/metadata-extractor";
 import { deleteImageFromBlob, uploadImageToBlob } from "@/lib/blob";
+import { headers } from "next/headers";
 
 const metadataSchema = z.object({
   title: z.string().optional(),
@@ -442,8 +443,22 @@ export async function removeReservation(wishId: string) {
 
 export async function getUrlMetadata(url: string) {
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        // Simulate a browser request
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        // Forward the origin and referer from the client request
+        Origin: headers().get("origin") || "https://saveyourwish.com",
+        Referer: headers().get("referer") || "https://saveyourwish.com",
+      },
+    });
+
     if (!response.ok) {
+      console.error(`Failed to fetch URL (${response.status}): ${url}`);
       return {
         success: false,
         error: `Failed to fetch URL: ${response.statusText}`,
@@ -514,6 +529,7 @@ export async function getUrlMetadata(url: string) {
       data: metadataSchema.parse(metadata),
     };
   } catch (error) {
+    console.error("Error fetching URL:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to fetch URL",
