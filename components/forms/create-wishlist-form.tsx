@@ -7,8 +7,8 @@ import { createWishlist, updateWishlistCoverImage } from "@/actions/wishlist";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { useTranslations } from "@/hooks/use-translations";
 import { uploadImageToBlob } from "@/lib/blob";
+import imageCompression from "browser-image-compression";
 
 const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB
 const ACCEPTED_IMAGE_TYPES = [
@@ -27,11 +27,10 @@ export function CreateWishlistForm({
 }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const t = useTranslations();
 
   const formSchema = z.object({
     title: z.string().min(2, {
-      message: t.wishlists.createDialog.titleError,
+      message: "Title must be at least 2 characters",
     }),
     coverImage: z
       .custom<FileList>()
@@ -76,18 +75,26 @@ export function CreateWishlistForm({
         throw new Error(result.error || "Failed to create wishlist");
       }
 
-      // If there's a cover image and wishlistId, upload it
+      // If there's a cover image and wishlistId, compress and upload it
       if (values.coverImage?.[0] && result.wishlistId) {
-        // Convert File to serializable format
         const file = values.coverImage[0];
-        const arrayBuffer = await file.arrayBuffer();
+
+        // Compress image before upload
+        const options = {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1920,
+          useWebWorker: true,
+        };
+
+        const compressedFile = await imageCompression(file, options);
+        const arrayBuffer = await compressedFile.arrayBuffer();
         const uint8Array = new Uint8Array(arrayBuffer);
 
         const uploadResult = await uploadImageToBlob(
           {
-            name: file.name,
-            type: file.type,
-            data: Array.from(uint8Array), // Convert to regular array for serialization
+            name: compressedFile.name,
+            type: compressedFile.type,
+            data: Array.from(uint8Array),
           },
           result.wishlistId
         );
@@ -107,13 +114,13 @@ export function CreateWishlistForm({
         }
       }
 
-      toast.success(t.wishlists.createDialog.success);
+      toast.success("Wishlist created successfully!");
       form.reset();
       router.refresh();
       onSuccess?.();
     } catch (error) {
       console.error(error);
-      toast.error((error as Error).message || t.error);
+      toast.error((error as Error).message || "Something went wrong");
     } finally {
       setIsLoading(false);
     }
@@ -127,7 +134,7 @@ export function CreateWishlistForm({
     >
       <div className="grid gap-2">
         <div className="flex justify-between items-center">
-          <Label htmlFor="title">{t.wishlists.createDialog.titleLabel}</Label>
+          <Label htmlFor="title">Title</Label>
           {form.formState.errors.title && (
             <p className="text-sm text-red-600 leading-none">
               {form.formState.errors.title?.message}
@@ -137,7 +144,7 @@ export function CreateWishlistForm({
         <Input
           {...form.register("title")}
           id="title"
-          placeholder={t.wishlists.createDialog.titlePlaceholder}
+          placeholder="My wishlist"
         />
       </div>
 

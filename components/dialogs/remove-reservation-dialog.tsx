@@ -21,7 +21,6 @@ import {
 import { Button } from "../ui/button";
 import { Wish } from "../wishes/grid/types";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { useTranslations } from "@/hooks/use-translations";
 import { Loader2 } from "lucide-react";
 
 export function RemoveReservationDialog({
@@ -35,7 +34,6 @@ export function RemoveReservationDialog({
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const t = useTranslations();
 
   const handleRemove = async () => {
     setIsLoading(true);
@@ -43,10 +41,10 @@ export function RemoveReservationDialog({
     const result = await removeReservation(wish.id);
 
     if (result.success) {
-      toast.success(t.wishes.removeReservationDialog.success);
+      toast.success("Wish reserved successfully");
       onOpenChange(false);
     } else {
-      toast.error(t.error);
+      toast.error("Failed to remove reservation");
     }
 
     setIsLoading(false);
@@ -57,11 +55,9 @@ export function RemoveReservationDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {t.wishes.removeReservationDialog.headline}
-            </DialogTitle>
+            <DialogTitle>Remove reservation</DialogTitle>
             <DialogDescription>
-              {t.wishes.removeReservationDialog.description}
+              Are you sure you want to remove the reservation for this wish?
             </DialogDescription>
           </DialogHeader>
 
@@ -71,7 +67,7 @@ export function RemoveReservationDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              {t.wishes.removeReservationDialog.cancelButton}
+              Cancel
             </Button>
             <Button
               onClick={handleRemove}
@@ -79,7 +75,7 @@ export function RemoveReservationDialog({
               variant="destructive"
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isLoading ? t.loading : t.wishes.removeReservationDialog.button}
+              Remove
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -91,9 +87,9 @@ export function RemoveReservationDialog({
     <Drawer open={open} onOpenChange={onOpenChange} repositionInputs={false}>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>{t.wishes.removeReservationDialog.headline}</DrawerTitle>
+          <DrawerTitle>Remove reservation</DrawerTitle>
           <DrawerDescription>
-            {t.wishes.removeReservationDialog.description}
+            Are you sure you want to remove the reservation for this wish?
           </DrawerDescription>
         </DrawerHeader>
         <DrawerFooter>
@@ -103,14 +99,14 @@ export function RemoveReservationDialog({
             variant="destructive"
             isLoading={isLoading}
           >
-            {t.wishes.removeReservationDialog.button}
+            Remove
           </Button>
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
           >
-            {t.wishes.removeReservationDialog.cancelButton}
+            Cancel
           </Button>
         </DrawerFooter>
       </DrawerContent>

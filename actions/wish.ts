@@ -26,19 +26,18 @@ const metadataSchema = z.object({
   autoUpdatePrice: z.boolean(),
 });
 
-export async function createWish(
-  wishlistId: string,
-  data: {
-    title: string;
-    price?: number;
-    imageUrl?: string;
-    destinationUrl?: string;
-    description?: string;
-    quantity?: number;
-    autoUpdatePrice?: boolean;
-    currency?: string;
-  }
-) {
+type WishInput = {
+  title: string;
+  price?: number;
+  currency?: string;
+  imageUrl?: string;
+  destinationUrl?: string;
+  description?: string;
+  quantity?: number;
+  autoUpdatePrice?: boolean;
+};
+
+export async function createWish(wishlistId: string, data: WishInput) {
   try {
     const session = await auth();
     if (!session?.user?.id) throw new Error("Unauthorized");
@@ -54,35 +53,6 @@ export async function createWish(
 
     if (!wishlist) throw new Error("Wishlist not found");
 
-    let finalImageUrl = data.imageUrl;
-
-    // If there's an external image URL, upload it to Blob
-    if (data.imageUrl && data.imageUrl.startsWith("http")) {
-      try {
-        const imageResponse = await fetch(data.imageUrl);
-        const imageBlob = await imageResponse.blob();
-        const file = new File([imageBlob], "product-image.jpg", {
-          type: imageBlob.type,
-        });
-
-        const uploadResult = await uploadImageToBlob(
-          {
-            name: file.name,
-            type: file.type,
-            data: Array.from(new Uint8Array(await file.arrayBuffer())),
-          },
-          wishlistId
-        );
-
-        if (uploadResult.success) {
-          finalImageUrl = uploadResult.url;
-        }
-      } catch (error) {
-        console.error("Image upload error:", error);
-        // Keep the original URL if upload fails
-      }
-    }
-
     // Get the highest position
     const highestPosition = await db
       .select({ position: sql<number>`COALESCE(MAX(position), 0)` })
@@ -90,19 +60,23 @@ export async function createWish(
       .where(eq(wishes.wishlistId, wishlistId))
       .then((rows) => rows[0]?.position ?? 0);
 
-    await db.insert(wishes).values({
-      ...data,
-      imageUrl: finalImageUrl,
-      wishlistId,
-      position: highestPosition + 1,
-    });
+    // Trust the provided imageUrl - image upload is handled in wish-dialog.tsx
+    const wish = await db
+      .insert(wishes)
+      .values({
+        ...data,
+        wishlistId,
+        position: highestPosition + 1,
+      })
+      .returning()
+      .then((rows) => rows[0]);
 
     if (wishlist?.shareId && wishlist.shared) {
       revalidatePath(`/shared/${wishlist.shareId}`);
     }
 
     revalidatePath(`/dashboard/wishlists/${wishlistId}`);
-    return { success: true };
+    return { success: true, data: wish };
   } catch (error) {
     return { success: false, error: "Failed to create wish" };
   }
@@ -140,6 +114,7 @@ export async function getWishes(wishlistId: string, isSharedAccess?: boolean) {
       horizontalPosition: wishes.horizontalPosition,
       imageZoom: wishes.imageZoom,
       position: wishes.position,
+      autoUpdatePrice: wishes.autoUpdatePrice,
       reservation: {
         reservedBy: wishReservations.reservedBy,
         reservedAt: wishReservations.reservedAt,
@@ -299,14 +274,7 @@ export async function updateWishPosition(
 export async function updateWish(
   id: string,
   wishlistId: string,
-  data: {
-    title: string;
-    price?: number;
-    imageUrl?: string;
-    destinationUrl?: string;
-    description?: string;
-    quantity: number;
-  }
+  data: WishInput
 ) {
   try {
     const session = await auth();
@@ -474,22 +442,17 @@ export async function removeReservation(wishId: string) {
 
 export async function getUrlMetadata(url: string) {
   try {
-    const validUrl = new URL(url);
-
-    const response = await fetch(validUrl, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      },
-    });
-
+    const response = await fetch(url);
     if (!response.ok) {
-      throw new Error("Failed to fetch URL");
+      return {
+        success: false,
+        error: `Failed to fetch URL: ${response.statusText}`,
+      };
     }
 
     const html = await response.text();
-    console.log("Raw HTML snippet:", html.slice(0, 500)); // Log the first 500 characters
 
+    // Configure JSDOM to prevent preloading
     const dom = new JSDOM(html, {
       runScripts: "outside-only",
       resources: "usable",
@@ -497,17 +460,24 @@ export async function getUrlMetadata(url: string) {
       virtualConsole: new VirtualConsole().sendTo(console, {
         omitJSDOMErrors: true,
       }),
+      beforeParse(window) {
+        // Prevent preload/prefetch
+        const originalCreateElement = window.document.createElement;
+        window.document.createElement = function (
+          tagName: string,
+          options?: ElementCreationOptions
+        ) {
+          const element = originalCreateElement.call(this, tagName, options);
+          if (tagName.toLowerCase() === "link") {
+            Object.defineProperty(element, "rel", {
+              get: () => null,
+              set: () => {},
+            });
+          }
+          return element;
+        };
+      },
     });
-
-    // Log some basic DOM info
-    console.log(
-      "Document head meta tags:",
-      dom.window.document.head.querySelectorAll("meta").length
-    );
-    console.log(
-      "Document body elements:",
-      dom.window.document.body.children.length
-    );
 
     const document = dom.window.document;
 
@@ -532,7 +502,6 @@ export async function getUrlMetadata(url: string) {
       const numericPrice = parseFloat(cleanPrice);
       if (!isNaN(numericPrice)) {
         metadata.price = numericPrice;
-        console.log("Extracted price:", numericPrice);
       }
     }
 
@@ -545,11 +514,40 @@ export async function getUrlMetadata(url: string) {
       data: metadataSchema.parse(metadata),
     };
   } catch (error) {
-    console.error("Error fetching URL metadata:", error);
     return {
       success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to fetch URL metadata",
+      error: error instanceof Error ? error.message : "Failed to fetch URL",
     };
+  }
+}
+
+export async function fetchAndUploadImage(
+  imageUrl: string,
+  wishlistId: string
+) {
+  try {
+    const response = await fetch(imageUrl);
+    if (!response.ok) {
+      throw new Error("Failed to fetch image");
+    }
+
+    const buffer = await response.arrayBuffer();
+    const file = new File([buffer], "product-image.jpg", {
+      type: response.headers.get("content-type") || "image/jpeg",
+    });
+
+    const uploadResult = await uploadImageToBlob(
+      {
+        name: file.name,
+        type: file.type,
+        data: Array.from(new Uint8Array(buffer)),
+      },
+      wishlistId
+    );
+
+    return uploadResult;
+  } catch (error) {
+    console.error("Error fetching and uploading image:", error);
+    return { success: false as const, error: "Failed to process image" };
   }
 }

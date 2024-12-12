@@ -6,6 +6,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -20,7 +21,6 @@ import {
 } from "@/components/ui/drawer";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { EditWishlistForm } from "../forms/edit-wishlist-form";
-import { useTranslations } from "@/hooks/use-translations";
 
 export function EditWishlistDialog({
   open,
@@ -37,16 +37,15 @@ export function EditWishlistDialog({
 }) {
   const [isLoading, setIsLoading] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const t = useTranslations();
 
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t.wishlists.editDialog.headline}</DialogTitle>
+            <DialogTitle>Edit wishlist</DialogTitle>
             <DialogDescription>
-              {t.wishlists.editDialog.description}
+              Update the details of your wishlist
             </DialogDescription>
           </DialogHeader>
           <EditWishlistForm
@@ -54,14 +53,14 @@ export function EditWishlistDialog({
             onSuccess={() => setOpen(false)}
             onLoadingChange={setIsLoading}
           />
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+          <DialogFooter className="grid grid-cols-2 gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
               disabled={isLoading}
             >
-              {t.wishlists.editDialog.cancel}
+              Cancel
             </Button>
             <Button
               type="submit"
@@ -69,9 +68,9 @@ export function EditWishlistDialog({
               disabled={isLoading}
               isLoading={isLoading}
             >
-              {t.wishlists.editDialog.save}
+              Save
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     );
@@ -81,9 +80,9 @@ export function EditWishlistDialog({
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>{t.wishlists.editDialog.headline}</DrawerTitle>
+          <DrawerTitle>Edit wishlist</DrawerTitle>
           <DrawerDescription>
-            {t.wishlists.editDialog.description}
+            Update the details of your wishlist
           </DrawerDescription>
         </DrawerHeader>
         <div className="px-4">
@@ -93,18 +92,18 @@ export function EditWishlistDialog({
             onLoadingChange={setIsLoading}
           />
         </div>
-        <DrawerFooter className="pt-2">
+        <DrawerFooter>
           <Button
             type="submit"
             form="edit-wishlist-form"
             disabled={isLoading}
             isLoading={isLoading}
           >
-            {t.wishlists.editDialog.save}
+            Save
           </Button>
           <DrawerClose asChild>
             <Button variant="outline" disabled={isLoading}>
-              {t.wishlists.editDialog.cancel}
+              Cancel
             </Button>
           </DrawerClose>
         </DrawerFooter>

@@ -22,7 +22,6 @@ import { useRouter } from "next/navigation";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import React from "react";
 import toast from "react-hot-toast";
-import { useTranslations } from "@/hooks/use-translations";
 
 interface DeleteWishDialogProps {
   id: string;
@@ -40,7 +39,6 @@ export function DeleteWishDialog({
   const router = useRouter();
   const [isLoading, setIsLoading] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const t = useTranslations();
 
   async function handleDelete() {
     setIsLoading(true);
@@ -48,11 +46,11 @@ export function DeleteWishDialog({
     const result = await deleteWish(id, wishlistId);
 
     if (result.success) {
-      toast.success(t.wishes.deleteDialog.success);
+      toast.success("Wish deleted successfully");
       router.refresh();
       onOpenChange(false);
     } else {
-      toast.error(result.error || t.error);
+      toast.error(result.error || "Failed to delete wish");
     }
 
     setIsLoading(false);
@@ -63,9 +61,9 @@ export function DeleteWishDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>{t.wishes.deleteDialog.headline}</DialogTitle>
+            <DialogTitle>Delete wish</DialogTitle>
             <DialogDescription>
-              {t.wishes.deleteDialog.description}
+              Are you sure you want to delete this wish?
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
@@ -75,7 +73,7 @@ export function DeleteWishDialog({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              {t.wishes.deleteDialog.cancel}
+              Cancel
             </Button>
             <Button
               className="w-full"
@@ -84,7 +82,7 @@ export function DeleteWishDialog({
               disabled={isLoading}
               isLoading={isLoading}
             >
-              {t.wishes.deleteDialog.delete}
+              Delete
             </Button>
           </div>
         </DialogContent>
@@ -96,9 +94,9 @@ export function DeleteWishDialog({
     <Drawer open={open} onOpenChange={onOpenChange} repositionInputs={false}>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>{t.wishes.deleteDialog.headline}</DrawerTitle>
+          <DrawerTitle>Delete wish</DrawerTitle>
           <DrawerDescription>
-            {t.wishes.deleteDialog.description}
+            Are you sure you want to delete this wish?
           </DrawerDescription>
         </DrawerHeader>
         <DrawerFooter className="pt-2">
@@ -108,11 +106,11 @@ export function DeleteWishDialog({
             disabled={isLoading}
             isLoading={isLoading}
           >
-            {t.wishes.deleteDialog.delete}
+            Delete
           </Button>
           <DrawerClose asChild>
             <Button variant="outline" disabled={isLoading}>
-              {t.wishes.deleteDialog.cancel}
+              Cancel
             </Button>
           </DrawerClose>
         </DrawerFooter>

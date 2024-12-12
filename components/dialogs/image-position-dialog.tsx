@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import toast from "react-hot-toast";
-import { useTranslations } from "@/hooks/use-translations";
 
 type Wish = InferSelectModel<typeof wishes>;
 
@@ -35,7 +34,6 @@ export function ImagePositionDialog({
     naturalWidth: number;
     naturalHeight: number;
   } | null>(null);
-  const t = useTranslations();
 
   const handleImageLoad = (img: HTMLImageElement) => {
     setImageRatio({
@@ -78,10 +76,10 @@ export function ImagePositionDialog({
     });
 
     if (result.success) {
-      toast.success(t.wishes.imagePositionDialog.success);
+      toast.success("Image position updated successfully");
       onOpenChange(false);
     } else {
-      toast.error(t.error);
+      toast.error("Failed to update image position");
     }
 
     setIsLoading(false);
@@ -144,9 +142,7 @@ export function ImagePositionDialog({
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>
-                {t.wishes.imagePositionDialog.verticalPositionLabel}
-              </Label>
+              <Label>Vertical position</Label>
               <Slider
                 value={[verticalPosition]}
                 onValueChange={([value]) => setVerticalPosition(value)}
@@ -158,13 +154,10 @@ export function ImagePositionDialog({
             </div>
 
             <div className="space-y-2">
-              <Label>
-                {t.wishes.imagePositionDialog.horizontalPositionLabel}
-              </Label>
+              <Label>Horizontal position</Label>
               <Slider
                 value={[horizontalPosition]}
                 onValueChange={([value]) => {
-                  console.log("Horizontal slider changed:", value);
                   setHorizontalPosition(value);
                 }}
                 min={0}
@@ -175,7 +168,7 @@ export function ImagePositionDialog({
             </div>
 
             <div className="space-y-2">
-              <Label>{t.wishes.imagePositionDialog.zoomLabel}</Label>
+              <Label>Zoom</Label>
               <Slider
                 value={[zoom]}
                 onValueChange={([value]) => setZoom(value)}
@@ -192,14 +185,14 @@ export function ImagePositionDialog({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              {t.wishes.imagePositionDialog.cancel}
+              Cancel
             </Button>
             <Button
               onClick={handleSave}
               disabled={isLoading}
               isLoading={isLoading}
             >
-              {t.wishes.imagePositionDialog.save}
+              Save
             </Button>
           </div>
         </div>

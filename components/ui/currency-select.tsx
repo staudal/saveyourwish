@@ -6,6 +6,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { type Currency, CURRENCY_VALUES } from "@/constants";
+import { cn } from "@/lib/utils";
 
 interface CurrencySelectProps {
   value: (typeof CURRENCY_VALUES)[number];
@@ -22,8 +23,8 @@ export function CurrencySelect({
 }: CurrencySelectProps) {
   return (
     <Select value={value} onValueChange={onValueChange} disabled={disabled}>
-      <SelectTrigger className={className}>
-        <SelectValue placeholder="Select currency" />
+      <SelectTrigger className={cn("w-24", className)}>
+        <SelectValue />
       </SelectTrigger>
       <SelectContent>
         {CURRENCY_VALUES.map((currency) => (

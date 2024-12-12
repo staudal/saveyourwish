@@ -20,8 +20,6 @@ interface ImageExtractor {
 
 export const titleExtractor: MetadataExtractorWithClean = {
   extract: (document: Document) => {
-    console.log("Starting title detection...");
-
     const titleSelectors = [
       { selector: 'meta[property="og:title"]', attr: "content" },
       { selector: 'meta[name="title"]', attr: "content" },
@@ -36,7 +34,6 @@ export const titleExtractor: MetadataExtractorWithClean = {
     ];
 
     for (const { selector, attr } of titleSelectors) {
-      console.log(`Trying selector: ${selector}`);
       const element = document.querySelector(selector);
       if (element) {
         const rawTitle =
@@ -45,22 +42,15 @@ export const titleExtractor: MetadataExtractorWithClean = {
             : element.getAttribute(attr);
 
         if (rawTitle) {
-          console.log(
-            `Found raw title using selector "${selector}":`,
-            rawTitle
-          );
           return rawTitle;
         }
       }
     }
 
-    console.log("No title found with any selector");
     return undefined;
   },
 
   clean: (title: string): string => {
-    console.log("Original title:", title);
-
     let cleanedTitle = title;
 
     // Common separators in product titles
@@ -93,25 +83,20 @@ export const titleExtractor: MetadataExtractorWithClean = {
     // Final cleanup
     cleanedTitle = cleanedTitle.trim().replace(/\s+/g, " ");
 
-    console.log("Cleaned title:", cleanedTitle);
     return cleanedTitle || title;
   },
 };
 
 export const priceExtractor: PriceExtractor = {
   extract: (document: Document) => {
-    console.log("Starting price detection...");
-
     // Try to get structured data first
     const scriptElements = document.querySelectorAll(
       'script[type="application/ld+json"]'
     );
-    console.log(`Found ${scriptElements.length} JSON-LD script elements`);
 
     for (const script of scriptElements) {
       try {
         const jsonData = JSON.parse(script.textContent || "");
-        console.log("Full JSON-LD data:", script.textContent);
 
         const price =
           jsonData.offers?.price ||
@@ -122,7 +107,6 @@ export const priceExtractor: PriceExtractor = {
           jsonData.offers?.[0]?.priceSpecification?.price;
 
         if (price) {
-          console.log("Found price in JSON-LD:", price);
           return price.toString();
         }
       } catch (e) {
@@ -149,9 +133,7 @@ export const priceExtractor: PriceExtractor = {
     ];
 
     for (const { selector, attr } of priceSelectors) {
-      console.log(`Trying price selector: ${selector}`);
       const elements = document.querySelectorAll(selector);
-      console.log(`Found ${elements.length} elements for selector ${selector}`);
 
       for (const element of elements) {
         const rawPrice =
@@ -159,39 +141,27 @@ export const priceExtractor: PriceExtractor = {
             ? (element as HTMLElement).textContent?.trim()
             : element.getAttribute(attr);
 
-        console.log(`Raw price value for ${selector}:`, rawPrice);
-
         if (rawPrice) {
           const uniquePrice = rawPrice.match(/[\d.,]+/)?.[0];
           if (uniquePrice) {
-            console.log(
-              `Found valid price using selector "${selector}":`,
-              uniquePrice
-            );
             return uniquePrice;
           }
         }
       }
     }
 
-    console.log("No price found with any selector");
     return undefined;
   },
 
   clean: (price: string): string => {
-    console.log("Cleaning price:", price);
-
     const match = price.match(/([\d.,]+)/);
     if (!match) {
-      console.log("No valid price format found in string");
       return "0";
     }
 
     const rawPrice = match[0];
-    console.log("Extracted raw price:", rawPrice);
 
     const parts = rawPrice.split(/[.,]/);
-    console.log("Price parts:", parts);
 
     if (parts.length === 1) {
       return parts[0];
@@ -216,8 +186,6 @@ export const priceExtractor: PriceExtractor = {
 
 export const currencyExtractor: BaseMetadataExtractor = {
   extract: (document: Document) => {
-    console.log("Starting currency detection...");
-
     const currencySymbols = Object.fromEntries(
       CURRENCIES.map((currency) => [currency.symbol, currency.value])
     );
@@ -239,7 +207,6 @@ export const currencyExtractor: BaseMetadataExtractor = {
           jsonData.offers?.[0]?.priceSpecification?.priceCurrency;
 
         if (currency) {
-          console.log("Found currency in JSON-LD:", currency);
           return currency.toString();
         }
       } catch (e) {
@@ -264,20 +231,17 @@ export const currencyExtractor: BaseMetadataExtractor = {
             : element.getAttribute(attr);
 
         if (currency) {
-          console.log(`Found currency using selector "${selector}":`, currency);
           return currency.toUpperCase();
         }
       }
     }
 
-    console.log("Checking price elements for currency symbols...");
     const priceElements = document.querySelectorAll('[class*="price"]');
 
     for (const element of priceElements) {
       const text = (element as HTMLElement).textContent || "";
       for (const [symbol, code] of Object.entries(currencySymbols)) {
         if (text.includes(symbol)) {
-          console.log(`Found currency symbol ${symbol}, using ${code}`);
           return code;
         }
       }
@@ -287,13 +251,10 @@ export const currencyExtractor: BaseMetadataExtractor = {
     if (url) {
       try {
         const tld = new URL(url).hostname.split(".").pop()?.toLowerCase();
-        console.log("Detected TLD:", tld);
         if (tld === "uk" || tld === "co.uk") {
-          console.log("UK site detected, using GBP");
           return "GBP";
         }
         if (tld === "dk") {
-          console.log("Danish site detected, using DKK");
           return "DKK";
         }
       } catch (e) {
@@ -301,14 +262,12 @@ export const currencyExtractor: BaseMetadataExtractor = {
       }
     }
 
-    console.log("No currency found with any method");
     return undefined;
   },
 };
 
 export const imageExtractor: ImageExtractor = {
   extract: (document: Document) => {
-    console.log("Starting image detection...");
     const images: { url: string; score: number }[] = [];
 
     const normalizeUrl = (url: string, baseUri: string): string | undefined => {
@@ -398,7 +357,6 @@ export const imageExtractor: ImageExtractor = {
 
     // Rest of the code remains the same, but use addUniqueImage instead of direct URL handling
     for (const { selector, attr } of imageSelectors) {
-      console.log(`Trying image selector: ${selector}`);
       const elements = document.querySelectorAll(selector);
       elements.forEach((element) => {
         const imageUrl =
@@ -439,13 +397,10 @@ export const imageExtractor: ImageExtractor = {
       .sort((a, b) => b.score - a.score)
       .map((img) => img.url);
 
-    console.log("Found and scored images:", images);
     return sortedImages;
   },
 
   clean: (imageUrl: string, baseUrl?: string): string => {
-    console.log("Cleaning image URL:", imageUrl);
-
     try {
       // Handle protocol-relative URLs
       if (imageUrl.startsWith("//")) {
@@ -454,7 +409,6 @@ export const imageExtractor: ImageExtractor = {
 
       if (baseUrl) {
         const absoluteUrl = new URL(imageUrl, baseUrl).href;
-        console.log("Converted to absolute URL:", absoluteUrl);
         return absoluteUrl;
       }
 

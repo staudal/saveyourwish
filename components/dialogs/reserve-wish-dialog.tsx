@@ -10,6 +10,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
@@ -26,7 +27,6 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Wish } from "../wishes/grid/types";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { useTranslations } from "@/hooks/use-translations";
 
 export function ReserveWishDialog({
   wish,
@@ -39,13 +39,12 @@ export function ReserveWishDialog({
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const t = useTranslations();
 
   const formSchema = z.object({
     name: z
-      .string({ required_error: t.wishes.reserveDialog.nameRequired })
-      .min(2, { message: t.wishes.reserveDialog.nameMinLength })
-      .max(50, { message: t.wishes.reserveDialog.nameMaxLength }),
+      .string({ required_error: "Name is required" })
+      .min(2, { message: "Name must be at least 2 characters" })
+      .max(50, { message: "Name must be at most 50 characters" }),
   });
 
   type FormData = z.infer<typeof formSchema>;
@@ -64,18 +63,18 @@ export function ReserveWishDialog({
     if (result.success) {
       form.reset();
       onOpenChange(false);
-      toast.success(t.wishes.reserveDialog.success);
+      toast.success("Wish reserved successfully");
     } else {
-      toast.error(t.error);
+      toast.error("Failed to reserve wish");
     }
     setIsLoading(false);
   };
 
   const formContent = (
-    <form onSubmit={form.handleSubmit(handleReserve)} className="space-y-4">
-      <div className="grid gap-2">
+    <form onSubmit={form.handleSubmit(handleReserve)}>
+      <div className="flex flex-col space-y-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="name">{t.wishes.reserveDialog.nameLabel}</Label>
+          <Label htmlFor="name">Name</Label>
           {form.formState.errors.name && (
             <span className="text-sm text-red-600 leading-none">
               {form.formState.errors.name.message}
@@ -85,7 +84,7 @@ export function ReserveWishDialog({
         <Input
           {...form.register("name")}
           id="name"
-          placeholder={t.wishes.reserveDialog.namePlaceholder}
+          placeholder="Enter your name"
         />
       </div>
     </form>
@@ -94,32 +93,30 @@ export function ReserveWishDialog({
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t.wishes.reserveDialog.headline}</DialogTitle>
+            <DialogTitle>Reserve wish</DialogTitle>
             <DialogDescription>
-              {t.wishes.reserveDialog.description}
+              Reserve this wish for yourself
             </DialogDescription>
           </DialogHeader>
           {formContent}
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-4">
+          <DialogFooter className="grid grid-cols-2 gap-2">
             <Button
-              className="w-full"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              {t.wishes.reserveDialog.cancelButton}
+              Cancel
             </Button>
             <Button
-              className="w-full"
               onClick={form.handleSubmit(handleReserve)}
               disabled={!form.formState.isValid || isLoading}
               isLoading={isLoading}
             >
-              {t.wishes.reserveDialog.button}
+              Reserve
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     );
@@ -129,28 +126,24 @@ export function ReserveWishDialog({
     <Drawer open={open} onOpenChange={onOpenChange} repositionInputs={false}>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>{t.wishes.reserveDialog.headline}</DrawerTitle>
-          <DrawerDescription>
-            {t.wishes.reserveDialog.description}
-          </DrawerDescription>
+          <DrawerTitle>Reserve wish</DrawerTitle>
+          <DrawerDescription>Reserve this wish for yourself</DrawerDescription>
         </DrawerHeader>
-        {formContent}
-        <DrawerFooter className="pt-2">
+        <div className="px-4">{formContent}</div>
+        <DrawerFooter>
           <Button
-            className="w-full"
             onClick={form.handleSubmit(handleReserve)}
             disabled={!form.formState.isValid || isLoading}
             isLoading={isLoading}
           >
-            {t.wishes.reserveDialog.button}
+            Reserve
           </Button>
           <Button
-            className="w-full"
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
           >
-            {t.wishes.reserveDialog.cancelButton}
+            Cancel
           </Button>
         </DrawerFooter>
       </DrawerContent>

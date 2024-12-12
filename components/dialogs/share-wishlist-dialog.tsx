@@ -6,12 +6,12 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
   DrawerDescription,
   DrawerFooter,
@@ -24,7 +24,6 @@ import { Copy, Check } from "lucide-react";
 import { toggleWishlistSharing } from "@/actions/wishlist";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import toast from "react-hot-toast";
-import { useTranslations } from "@/hooks/use-translations";
 
 interface ShareWishlistDialogProps {
   wishlistId: string;
@@ -47,7 +46,6 @@ export function ShareWishlistDialog({
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const [showCheck, setShowCheck] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
-  const t = useTranslations();
 
   React.useEffect(() => {
     if (currentShareId) {
@@ -60,7 +58,7 @@ export function ShareWishlistDialog({
   const copyToClipboard = () => {
     navigator.clipboard.writeText(shareUrl);
     setShowCheck(true);
-    toast.success(t.wishes.shareDialog.copiedToClipboard);
+    toast.success("Link copied to clipboard");
 
     setTimeout(() => {
       setShowCheck(false);
@@ -77,14 +75,16 @@ export function ShareWishlistDialog({
         setCurrentShareId(result.shareId);
         toast.success(
           result.isShared
-            ? t.wishes.shareDialog.enableSuccess
-            : t.wishes.shareDialog.disableSuccess
+            ? "Wishlist shared successfully"
+            : "Wishlist unshared successfully"
         );
       } else {
-        toast.error(result.error || t.error);
+        toast.error(result.error || "Failed to toggle wishlist sharing");
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t.error);
+      toast.error(
+        err instanceof Error ? err.message : "Failed to toggle wishlist sharing"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -111,19 +111,17 @@ export function ShareWishlistDialog({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t.wishes.shareDialog.headline}</DialogTitle>
+            <DialogTitle>Share wishlist</DialogTitle>
             <DialogDescription>
               {sharing
-                ? t.wishes.shareDialog.descriptionEnabled
-                : t.wishes.shareDialog.descriptionDisabled}
+                ? "Share your wishlist with others"
+                : "Hide your wishlist from others"}
             </DialogDescription>
           </DialogHeader>
           {sharing && (
             <div className="flex flex-col gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="link">
-                  {t.wishes.shareDialog.shareLinkLabel}
-                </Label>
+              <div className="flex space-y-2 flex-col">
+                <Label htmlFor="link">Share link</Label>
                 <div className="flex items-center space-x-2">
                   <Input
                     id="link"
@@ -136,27 +134,23 @@ export function ShareWishlistDialog({
               </div>
             </div>
           )}
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+          <DialogFooter className="grid grid-cols-2 gap-2">
             <Button
-              className="w-full"
               variant="outline"
               onClick={() => setOpen(false)}
               disabled={isLoading}
             >
-              {t.wishes.shareDialog.cancelButton}
+              Cancel
             </Button>
             <Button
-              className="w-full"
               onClick={handleToggleSharing}
               variant={sharing ? "destructive" : "default"}
               disabled={isLoading}
               isLoading={isLoading}
             >
-              {sharing
-                ? t.wishes.shareDialog.disableButton
-                : t.wishes.shareDialog.enableButton}
+              {sharing ? "Hide" : "Share"}
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     );
@@ -166,18 +160,16 @@ export function ShareWishlistDialog({
     <Drawer open={open} onOpenChange={setOpen} repositionInputs={false}>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>{t.wishes.shareDialog.headline}</DrawerTitle>
+          <DrawerTitle>Share wishlist</DrawerTitle>
           <DrawerDescription>
             {sharing
-              ? t.wishes.shareDialog.descriptionEnabled
-              : t.wishes.shareDialog.descriptionDisabled}
+              ? "Your wishlist can now be shared with others. Send the link to your friends and family to let them know what you want!"
+              : "Your wishlist is currently hidden from others. No one can see it until you activate share below."}
           </DrawerDescription>
         </DrawerHeader>
         {sharing && (
-          <div className="grid gap-2">
-            <Label htmlFor="mobile-link">
-              {t.wishes.shareDialog.shareLinkLabel}
-            </Label>
+          <div className="px-4 flex flex-col space-y-2">
+            <Label htmlFor="mobile-link">Share link</Label>
             <div className="flex items-center space-x-2">
               <Input
                 id="mobile-link"
@@ -195,15 +187,11 @@ export function ShareWishlistDialog({
             variant={sharing ? "destructive" : "default"}
             isLoading={isLoading}
           >
-            {sharing
-              ? t.wishes.shareDialog.disableButton
-              : t.wishes.shareDialog.enableButton}
+            {sharing ? "Hide" : "Share"}
           </Button>
-          <DrawerClose asChild>
-            <Button variant="outline">
-              {t.wishes.shareDialog.cancelButton}
-            </Button>
-          </DrawerClose>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

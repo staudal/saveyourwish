@@ -10,7 +10,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Drawer, DrawerContent, DrawerFooter } from "@/components/ui/drawer";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { CreateWishForm } from "../forms/create-wish-form";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { CURRENCY_VALUES } from "@/constants";
@@ -19,6 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getUrlMetadata } from "@/actions/wish";
 import toast from "react-hot-toast";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface CreateWishDialogProps {
   wishlistId: string;
@@ -66,13 +74,23 @@ interface CreateWishFlowProps {
   setFormValues: (values: FormValues) => void;
   availableImages: string[];
   setAvailableImages: (images: string[]) => void;
-  formRef: React.RefObject<any>;
+  formRef: React.RefObject<{
+    reset: (values: FormValues) => void;
+    setSelectedFile: (file: File | null) => void;
+    setPreviewUrl: (url: string | null) => void;
+    setValue: <T extends keyof FormValues>(
+      name: T,
+      value: FormValues[T]
+    ) => void;
+  }>;
   handleReset: () => void;
   handlePasteUrl: () => void;
   handleNext: () => void;
   handleCreateManually: () => void;
   isImageSelectorOpen: boolean;
   setIsImageSelectorOpen: (open: boolean) => void;
+  onPriceSync?: () => void;
+  isPriceSyncing: boolean;
 }
 
 function DesktopDialog({
@@ -93,6 +111,8 @@ function DesktopDialog({
   handleCreateManually,
   availableImages,
   setIsImageSelectorOpen,
+  onPriceSync,
+  isPriceSyncing,
 }: CreateWishFlowProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -102,8 +122,8 @@ function DesktopDialog({
             <DialogHeader>
               <DialogTitle>Add something to your wishlist</DialogTitle>
               <DialogDescription>
-                Found something special? Let's add it to your wishlist! Drop a
-                link below and we'll do the magic
+                Found something special? Let&apos;s add it to your wishlist!
+                Drop a link below and we&apos;ll do the magic.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2 py-2">
@@ -150,9 +170,9 @@ function DesktopDialog({
         ) : (
           <>
             <DialogHeader>
-              <DialogTitle>Create a new wish</DialogTitle>
+              <DialogTitle>Fill in the details</DialogTitle>
               <DialogDescription>
-                Fill in the details for your wish.
+                Tell us more about what you&apos;d like to receive.
               </DialogDescription>
             </DialogHeader>
             <CreateWishForm
@@ -168,6 +188,8 @@ function DesktopDialog({
               isManualMode={!formValues.autoUpdatePrice}
               availableImages={availableImages}
               onImageSelectorOpen={() => setIsImageSelectorOpen(true)}
+              onPriceSync={onPriceSync}
+              isPriceSyncing={isPriceSyncing}
             />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={handleReset}>
@@ -217,15 +239,32 @@ function MobileDrawer({
   handleCreateManually,
   setIsImageSelectorOpen,
   availableImages,
+  onPriceSync,
+  isPriceSyncing,
 }: CreateWishFlowProps) {
   return (
     <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerContent>
+      <DrawerContent className="max-h-[90vh]">
         {step === "url" ? (
-          <div className="p-4 space-y-6">
-            <div className="space-y-4">
+          <>
+            <DrawerHeader>
+              <DrawerTitle>Add something to your wishlist</DrawerTitle>
+              <DrawerDescription>
+                Found something special? Let&apos;s add it to your wishlist!
+                Drop a link below and we&apos;ll do the magic.
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="p-4">
               <div className="space-y-2">
-                <Label htmlFor="url">Product URL</Label>
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="url">Link to product</Label>
+                  <span
+                    className="text-sm text-primary cursor-pointer flex items-center gap-1"
+                    onClick={handlePasteUrl}
+                  >
+                    Paste URL from clipboard
+                  </span>
+                </div>
                 <Input
                   id="url"
                   placeholder="e.g. https://www.amazon.com/dp/B08N5L5R6Q"
@@ -233,76 +272,83 @@ function MobileDrawer({
                   onChange={(e) => setUrl(e.target.value)}
                 />
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={handlePasteUrl}
-              >
-                Paste URL
-              </Button>
             </div>
-            <div className="flex flex-col gap-2">
-              <Button onClick={handleNext} disabled={isLoading || !url}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Fetching details...
-                  </>
-                ) : (
-                  "Next"
-                )}
-              </Button>
+            <DrawerFooter className="grid grid-cols-2 gap-2">
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleCreateManually}
               >
-                Create manually
+                <BrickWall />
+                Manually
               </Button>
-            </div>
-          </div>
+              <Button onClick={handleNext} disabled={isLoading || !url}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="animate-spin" />
+                    Fetching...
+                  </>
+                ) : (
+                  <>
+                    <Brain />
+                    Fetch
+                  </>
+                )}
+              </Button>
+            </DrawerFooter>
+          </>
         ) : (
           <>
-            <div className="p-4">
-              <CreateWishForm
-                ref={formRef}
-                wishlistId={wishlistId}
-                onSuccess={() => {
-                  handleReset();
-                  setOpen(false);
-                }}
-                onLoadingChange={setIsLoading}
-                values={formValues}
-                onChange={setFormValues}
-                isManualMode={!formValues.autoUpdatePrice}
-                availableImages={availableImages}
-                onImageSelectorOpen={() => setIsImageSelectorOpen(true)}
-              />
-            </div>
-            <DrawerFooter>
-              <div className="flex w-full flex-col-reverse gap-2">
-                <Button type="button" variant="ghost" onClick={handleReset}>
-                  Start over
-                </Button>
-                <Button variant="outline" onClick={() => setOpen(false)}>
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  form="create-wish-form"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    "Save"
-                  )}
-                </Button>
+            <DrawerHeader className="border-b">
+              <DrawerTitle>Fill in the details</DrawerTitle>
+              <DrawerDescription>
+                Tell us more about what you&apos;d like to receive.
+              </DrawerDescription>
+            </DrawerHeader>
+            <ScrollArea className="h-[60vh]" type="always" scrollHideDelay={0}>
+              <div className="px-4 py-4">
+                <div className="space-y-4">
+                  <CreateWishForm
+                    ref={formRef}
+                    wishlistId={wishlistId}
+                    onSuccess={() => {
+                      handleReset();
+                      setOpen(false);
+                    }}
+                    onLoadingChange={setIsLoading}
+                    values={formValues}
+                    onChange={setFormValues}
+                    isManualMode={!formValues.autoUpdatePrice}
+                    availableImages={availableImages}
+                    onImageSelectorOpen={() => setIsImageSelectorOpen(true)}
+                    onPriceSync={onPriceSync}
+                    isPriceSyncing={isPriceSyncing}
+                  />
+                </div>
               </div>
+            </ScrollArea>
+            <DrawerFooter className="grid grid-cols-2 gap-2 border-t">
+              <Button type="button" variant="outline" onClick={handleReset}>
+                <RotateCcw />
+                Start over
+              </Button>
+              <Button
+                type="submit"
+                form="create-wish-form"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <BadgePlus />
+                    Create
+                  </>
+                )}
+              </Button>
             </DrawerFooter>
           </>
         )}
@@ -321,10 +367,19 @@ export function CreateWishDialog({
   const [formValues, setFormValues] =
     React.useState<FormValues>(initialFormValues);
   const [availableImages, setAvailableImages] = React.useState<string[]>([]);
-  const formRef = React.useRef<any>(null);
+  const formRef = React.useRef<{
+    reset: (values: FormValues) => void;
+    setSelectedFile: (file: File | null) => void;
+    setPreviewUrl: (url: string | null) => void;
+    setValue: <T extends keyof FormValues>(
+      name: T,
+      value: FormValues[T]
+    ) => void;
+  }>(null);
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const [url, setUrl] = React.useState("");
   const [isImageSelectorOpen, setIsImageSelectorOpen] = React.useState(false);
+  const [isPriceSyncing, setIsPriceSyncing] = React.useState(false);
 
   const handleReset = () => {
     formRef.current?.reset(initialFormValues);
@@ -340,6 +395,7 @@ export function CreateWishDialog({
       setUrl(text);
     } catch (err) {
       toast.error("Failed to read clipboard");
+      console.error(err);
     }
   };
 
@@ -371,6 +427,7 @@ export function CreateWishDialog({
       }
     } catch (e) {
       toast.error("Failed to process URL");
+      console.error(e);
     } finally {
       setIsLoading(false);
     }
@@ -384,6 +441,32 @@ export function CreateWishDialog({
       isUrlLocked: false,
     });
     setStep("form");
+  };
+
+  const handlePriceSync = async () => {
+    if (!formValues.destinationUrl) return;
+
+    try {
+      setIsPriceSyncing(true);
+      const result = await getUrlMetadata(formValues.destinationUrl);
+
+      if (result.success && result.data && result.data.price) {
+        setFormValues((prev) => ({
+          ...prev,
+          price: result.data.price ?? prev.price,
+          currency:
+            result.data.currency && isCurrencyValue(result.data.currency)
+              ? result.data.currency
+              : prev.currency,
+          autoUpdatePrice: true,
+        }));
+      }
+    } catch (e) {
+      toast.error("Failed to sync price");
+      console.error(e);
+    } finally {
+      setIsPriceSyncing(false);
+    }
   };
 
   const sharedProps = {
@@ -407,6 +490,8 @@ export function CreateWishDialog({
     handleCreateManually,
     isImageSelectorOpen,
     setIsImageSelectorOpen,
+    onPriceSync: handlePriceSync,
+    isPriceSyncing,
   };
 
   return (

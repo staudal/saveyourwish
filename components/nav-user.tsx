@@ -20,7 +20,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { User } from "next-auth";
-import { useTranslations } from "@/hooks/use-translations";
 
 interface NavUserProps {
   user: User;
@@ -29,7 +28,6 @@ interface NavUserProps {
 export function NavUser({ user }: NavUserProps) {
   const { isMobile } = useSidebar();
   const { setTheme } = useTheme();
-  const t = useTranslations();
 
   const handleSignOut = async () => {
     await signOutAction();
@@ -119,17 +117,17 @@ export function NavUser({ user }: NavUserProps) {
             <DropdownMenuGroup>
               <DropdownMenuItem onClick={() => setTheme("light")}>
                 <Sun className="mr-2 h-4 w-4" />
-                {t.sidebar.light}
+                Light
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setTheme("dark")}>
                 <Moon className="mr-2 h-4 w-4" />
-                {t.sidebar.dark}
+                Dark
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut}>
               <LogOut className="mr-2 h-4 w-4" />
-              {t.sidebar.signOut}
+              Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

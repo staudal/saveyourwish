@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { type wishes } from "@/lib/db";
 import { type InferSelectModel } from "drizzle-orm";
-import { useTranslations } from "@/hooks/use-translations";
 
 type Wish = InferSelectModel<typeof wishes>;
 
@@ -27,8 +26,6 @@ export function WishActions({
   onAdjustImage,
   onEdit,
 }: WishActionsProps) {
-  const t = useTranslations();
-
   return (
     <div className="absolute right-2 top-2 z-10">
       <DropdownMenu>
@@ -38,21 +35,21 @@ export function WishActions({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-40">
-          <DropdownMenuLabel>{t.wishes.actions.manage}</DropdownMenuLabel>
+          <DropdownMenuLabel>Manage</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => onEdit(wish)}>
             <PencilIcon className="h-4 w-4 mr-2" />
-            <span>{t.wishes.actions.edit.button}</span>
+            <span>Edit</span>
           </DropdownMenuItem>
           {wish.imageUrl && (
             <DropdownMenuItem onClick={() => onAdjustImage(wish)}>
               <Move className="h-4 w-4 mr-2" />
-              <span>{t.wishes.actions.adjustImage.button}</span>
+              <span>Adjust image</span>
             </DropdownMenuItem>
           )}
           <DropdownMenuItem onClick={() => onDelete(wish)}>
             <Trash2Icon className="h-4 w-4 mr-2" />
-            <span>{t.wishes.actions.delete.button}</span>
+            <span>Delete</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

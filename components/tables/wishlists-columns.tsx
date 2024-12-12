@@ -5,34 +5,36 @@ import { ArrowUpDown, Pencil, Trash2, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/components/ui/currency-select";
 import { calculateAveragePrice, convertToUSD } from "@/constants";
-import { useTranslations } from "@/hooks/use-translations";
 import { useState } from "react";
 import { DeleteWishlistDialog } from "../dialogs/delete-wishlist-dialog";
 import { EditWishlistDialog } from "../dialogs/edit-wishlist-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Wishlist } from "../wishes/grid/types";
 import { ShareWishlistDialog } from "../dialogs/share-wishlist-dialog";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
-  const t = useTranslations();
+  const isDesktop = useMediaQuery("(min-width: 768px)");
 
   return (
     <>
       <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowShareDialog(true);
-          }}
-        >
-          <span className="sr-only">{t.wishes.shareDialog.button}</span>
-          <Share2 className="h-4 w-4" />
-        </Button>
+        {isDesktop && (
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowShareDialog(true);
+            }}
+          >
+            <span className="sr-only">Share</span>
+            <Share2 className="h-4 w-4" />
+          </Button>
+        )}
         <Button
           variant="outline"
           size="icon"
@@ -41,7 +43,7 @@ function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
             setShowEditDialog(true);
           }}
         >
-          <span className="sr-only">{t.wishlists.editDialog.trigger}</span>
+          <span className="sr-only">Edit</span>
           <Pencil className="h-4 w-4" />
         </Button>
         <Button
@@ -52,7 +54,7 @@ function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
             setShowDeleteDialog(true);
           }}
         >
-          <span className="sr-only">{t.wishlists.deleteDialog.trigger}</span>
+          <span className="sr-only">Delete</span>
           <Trash2 className="h-4 w-4" />
         </Button>
       </div>
@@ -117,15 +119,13 @@ function WishAvatarGroup({ wishes }: { wishes: Wishlist["wishes"] }) {
 }
 
 export function useWishlistColumns() {
-  const t = useTranslations();
-
   const columns: ColumnDef<Wishlist>[] = [
     {
       accessorKey: "title",
       header: ({ column }) => {
         return (
           <div className="flex items-center">
-            {t.wishlists.dataTable.title}
+            Title
             <Button
               variant="ghost"
               size="icon"
@@ -149,7 +149,7 @@ export function useWishlistColumns() {
       header: ({ column }) => {
         return (
           <div className="flex items-center">
-            {t.wishlists.dataTable.wishCount}
+            Wish count
             <Button
               variant="ghost"
               size="icon"
@@ -182,7 +182,7 @@ export function useWishlistColumns() {
       header: ({ column }) => {
         return (
           <div className="flex items-center">
-            {t.wishlists.dataTable.averagePrice}
+            Average price
             <Button
               variant="ghost"
               size="icon"

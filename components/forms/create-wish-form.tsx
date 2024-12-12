@@ -57,19 +57,23 @@ interface CreateWishFormProps {
   isManualMode?: boolean;
   availableImages?: string[];
   onImageSelectorOpen?: () => void;
+  onPriceSync?: () => void;
+  isPriceSyncing?: boolean;
 }
 
 interface FormRef {
   reset: (values: FormValues) => void;
   setSelectedFile: (file: File | null) => void;
   setPreviewUrl: (url: string | null) => void;
-  setValue: (name: keyof FormValues, value: any) => void;
+  setValue: (
+    name: keyof FormValues,
+    value: FormValues[keyof FormValues]
+  ) => void;
 }
 
 export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
   (props, ref) => {
     const router = useRouter();
-    const [_, setIsSaving] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
@@ -87,7 +91,7 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
       if (imageUrl && !previewUrl) {
         setPreviewUrl(imageUrl);
       }
-    }, [form.watch("imageUrl"), previewUrl]);
+    }, [form, previewUrl]);
 
     React.useImperativeHandle(ref, () => ({
       reset: (values: FormValues) => {
@@ -97,7 +101,7 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
       },
       setSelectedFile,
       setPreviewUrl,
-      setValue: (name: keyof FormValues, value: any) =>
+      setValue: (name: keyof FormValues, value: FormValues[keyof FormValues]) =>
         form.setValue(name, value),
     }));
 
@@ -126,7 +130,6 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
 
     const onSubmit = async (data: z.infer<typeof formSchema>) => {
       try {
-        setIsSaving(true);
         props.onLoadingChange?.(true);
 
         let imageUrl = data.imageUrl;
@@ -174,7 +177,6 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
         console.error("Form submission error:", error);
         toast.error("Failed to create wish. Please try again.");
       } finally {
-        setIsSaving(false);
         props.onLoadingChange?.(false);
       }
     };
@@ -213,7 +215,7 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
       <form
         id="create-wish-form"
         onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-6"
+        className="space-y-4"
       >
         {/* Product URL */}
         <div className="space-y-2">
@@ -232,21 +234,18 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
               className={cn(
                 "pr-8",
                 form.formState.errors.destinationUrl && "border-red-500",
-                props.values.autoUpdatePrice && "bg-muted"
+                "bg-muted"
               )}
-              disabled={props.values.autoUpdatePrice}
+              disabled
             />
           </div>
-          {props.values.autoUpdatePrice && (
-            <p className="text-xs text-muted-foreground">
-              We've locked this URL since we found the product details
-              automatically
-            </p>
-          )}
+          <p className="text-xs text-muted-foreground">
+            URL is locked because details were fetched automatically
+          </p>
         </div>
 
         {/* Image Selection */}
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <div className="flex justify-between items-center">
             <Label>What does it look like?</Label>
             {(props.availableImages?.length ?? 0) > 1 && (
@@ -289,6 +288,7 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
                       src={previewUrl}
                       alt="Preview"
                       fill
+                      sizes="(max-width: 768px) 100vw, 33vw"
                       className="object-contain rounded-md"
                     />
                   </div>
@@ -304,7 +304,10 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className={cn(
+                      "h-8 w-8 absolute top-2 right-2",
+                      "opacity-70 hover:opacity-100 transition-opacity"
+                    )}
                     onClick={(e) => {
                       e.stopPropagation();
                       handleRemoveImage();
@@ -315,8 +318,8 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
                 </div>
               ) : (
                 <div className="text-center">
-                  <UploadCloud className="mx-auto h-8 w-8 text-muted-foreground mb-1" />
-                  <p className="text-sm text-muted-foreground">
+                  <UploadCloud className="mx-auto h-6 w-6 text-muted-foreground mb-1" />
+                  <p className="text-xs text-muted-foreground">
                     Click to upload image
                   </p>
                 </div>
@@ -325,8 +328,8 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
           </div>
 
           {/* Available Images Carousel */}
-          {isImagesExpanded && (props.availableImages?.length ?? 0) > 1 && (
-            <div className="w-full mt-2">
+          {(props.availableImages?.length ?? 0) > 1 && isImagesExpanded && (
+            <div className="mt-2">
               <Carousel className="w-full">
                 <CarouselContent>
                   {props.availableImages!.map((url, index) => (
@@ -339,34 +342,45 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
                             : "border-transparent"
                         )}
                         onClick={() => handleSelectAvailableImage(url)}
+                        role="button"
+                        tabIndex={isImagesExpanded ? 0 : -1}
                       >
                         <Image
                           src={url}
                           alt={`Product image ${index + 1}`}
                           fill
+                          sizes="(max-width: 768px) 100vw, 33vw"
                           className="object-cover"
                         />
                       </div>
                     </CarouselItem>
                   ))}
                 </CarouselContent>
-                <CarouselPrevious type="button" className="left-2" />
-                <CarouselNext type="button" className="right-2" />
+                <CarouselPrevious
+                  type="button"
+                  className="left-2"
+                  tabIndex={isImagesExpanded ? 0 : -1}
+                />
+                <CarouselNext
+                  type="button"
+                  className="right-2"
+                  tabIndex={isImagesExpanded ? 0 : -1}
+                />
               </Carousel>
             </div>
           )}
           {/* Help Text */}
           <p className="text-xs text-muted-foreground">
             {(props.availableImages?.length ?? 0) > 1
-              ? "We found multiple product photos! Upload your own or check out the other options"
+              ? "Choose an image from the carousel or upload your own"
               : (props.availableImages?.length ?? 0) === 1
-              ? "We found a product photo! Feel free to upload your own instead"
-              : "Show others what you're wishing for"}
+              ? "Use the image above or upload your own"
+              : "Upload your own image"}
           </p>
         </div>
 
         {/* Title */}
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <Label htmlFor="title">What should we call it?</Label>
           <Input
             {...form.register("title")}
@@ -381,46 +395,75 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
         </div>
 
         {/* Price and Currency */}
-        <div className="space-y-1.5">
-          <Label>How much does it cost?</Label>
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <Label>How much does it cost?</Label>
+            {props.values.destinationUrl && (
+              <span
+                className="text-xs text-primary cursor-pointer hover:underline"
+                onClick={async () => {
+                  if (!props.isPriceSyncing) {
+                    if (props.values.autoUpdatePrice) {
+                      props.onChange({
+                        ...props.values,
+                        autoUpdatePrice: false,
+                      });
+                    } else {
+                      await props.onPriceSync?.();
+                      form.setValue("price", props.values.price);
+                      form.setValue("currency", props.values.currency);
+                    }
+                  }
+                }}
+              >
+                {props.isPriceSyncing
+                  ? "Syncing..."
+                  : props.values.autoUpdatePrice
+                  ? "Switch to manual"
+                  : "Enable auto-sync"}
+              </span>
+            )}
+          </div>
           <div className="flex gap-2">
             <Input
-              {...form.register("price", {
-                valueAsNumber: true,
-                setValueAs: (v: string) =>
-                  v === "" || isNaN(parseFloat(v)) ? undefined : parseFloat(v),
-              })}
+              {...form.register("price")}
               type="number"
               step="0.01"
               placeholder="0.00"
-              className={cn(
-                "flex-1",
-                form.formState.errors.price && "border-red-500"
-              )}
+              className="flex-1"
+              disabled={props.values.autoUpdatePrice}
             />
             <CurrencySelect
               value={form.watch("currency") || "USD"}
               onValueChange={(value) => form.setValue("currency", value)}
               className="w-[110px]"
+              disabled={props.values.autoUpdatePrice}
             />
           </div>
-          {form.formState.errors.price && (
-            <p className="text-sm text-red-500">
-              {form.formState.errors.price.message}
-            </p>
-          )}
+          <p className="text-xs text-muted-foreground h-4">
+            {props.values.autoUpdatePrice
+              ? "The price will be synced with the destination website"
+              : props.values.destinationUrl
+              ? "Manually enter the price or enable auto-sync"
+              : "\u00A0"}{" "}
+            {/* Non-breaking space to maintain height */}
+          </p>
         </div>
 
         {/* Quantity Selector */}
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <Label>How many would make you happy?</Label>
-          <div className="grid grid-cols-5 gap-3 w-full">
-            {[1, 2, 3, 4].map((num) => (
+          <div className="grid grid-cols-4 gap-3 w-full md:grid-cols-5">
+            {[1, 2, 3, 4].map((num, index) => (
               <Button
                 key={num}
                 type="button"
                 variant={form.watch("quantity") === num ? "default" : "outline"}
-                className="w-full h-9"
+                className={cn(
+                  "w-full h-9",
+                  // Hide the fourth button on mobile
+                  index === 3 && "hidden md:block"
+                )}
                 onClick={() => {
                   form.setValue("quantity", num);
                   setCustomQuantity("");
@@ -452,7 +495,7 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
         </div>
 
         {/* Collapsible Description */}
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <div
             className="flex items-center justify-between cursor-pointer"
             onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}

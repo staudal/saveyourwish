@@ -10,7 +10,6 @@ import { ExternalLink, GripVertical } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
-import { useTranslations } from "@/hooks/use-translations";
 
 type Wish = InferSelectModel<typeof wishes>;
 
@@ -62,8 +61,6 @@ export function WishCard({
     id: wish.id,
     disabled: !isReordering,
   });
-  const t = useTranslations();
-
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -137,9 +134,7 @@ export function WishCard({
                   <span>{formatUrl(wish.destinationUrl)}</span>
                 </a>
               ) : (
-                <span className="text-xs text-muted-foreground">
-                  {t.wishes.wishCard.noLink}
-                </span>
+                <span className="text-xs text-muted-foreground">No link</span>
               )}
               {wish.quantity && (
                 <span className="text-xs text-muted-foreground">
@@ -160,13 +155,13 @@ export function WishCard({
             {wish.reservation ? (
               <div className="flex items-center justify-between">
                 <div className="text-sm text-muted-foreground">
-                  {t.wishes.wishCard.reservedBy} {wish.reservation.reservedBy}
+                  Reserved by {wish.reservation.reservedBy}
                 </div>
                 <Button
                   variant={"destructive"}
                   onClick={() => onReserve?.(wish)}
                 >
-                  {t.wishes.wishCard.removeReservation}
+                  Remove reservation
                 </Button>
               </div>
             ) : (
@@ -175,7 +170,7 @@ export function WishCard({
                 className="w-full"
                 onClick={() => onReserve?.(wish)}
               >
-                {t.wishes.wishCard.reserve}
+                Reserve
               </Button>
             )}
           </div>

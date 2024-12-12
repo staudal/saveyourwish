@@ -21,7 +21,6 @@ import { deleteAccount } from "@/actions/user";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import React from "react";
 import toast from "react-hot-toast";
-import { useTranslations } from "@/hooks/use-translations";
 import { useRouter } from "next/navigation";
 
 interface DeleteAccountDialogProps {
@@ -35,7 +34,6 @@ export function DeleteAccountDialog({
 }: DeleteAccountDialogProps) {
   const [isLoading, setIsLoading] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const t = useTranslations();
   const router = useRouter();
 
   async function handleDelete() {
@@ -44,10 +42,10 @@ export function DeleteAccountDialog({
     const result = await deleteAccount();
 
     if (result.success) {
-      toast.success(t.settings.deleteAccount.success);
+      toast.success("Account deleted successfully");
       router.push("/login");
     } else {
-      toast.error(result.error || t.error);
+      toast.error(result.error || "Failed to delete account");
     }
 
     setIsLoading(false);
@@ -58,9 +56,9 @@ export function DeleteAccountDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>{t.settings.deleteAccount.headline}</DialogTitle>
+            <DialogTitle>Delete account</DialogTitle>
             <DialogDescription>
-              {t.settings.deleteAccount.description}
+              Permanently delete your account and all associated data.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
@@ -70,7 +68,7 @@ export function DeleteAccountDialog({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              {t.settings.deleteAccount.cancel}
+              Cancel
             </Button>
             <Button
               className="w-full"
@@ -79,7 +77,7 @@ export function DeleteAccountDialog({
               disabled={isLoading}
               isLoading={isLoading}
             >
-              {t.settings.deleteAccount.delete}
+              Delete account
             </Button>
           </div>
         </DialogContent>
@@ -91,9 +89,9 @@ export function DeleteAccountDialog({
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>{t.settings.deleteAccount.headline}</DrawerTitle>
+          <DrawerTitle>Delete account</DrawerTitle>
           <DrawerDescription>
-            {t.settings.deleteAccount.description}
+            Permanently delete your account and all associated data.
           </DrawerDescription>
         </DrawerHeader>
         <DrawerFooter className="pt-2">
@@ -103,11 +101,11 @@ export function DeleteAccountDialog({
             disabled={isLoading}
             isLoading={isLoading}
           >
-            {t.settings.deleteAccount.delete}
+            Delete account
           </Button>
           <DrawerClose asChild>
             <Button variant="outline" disabled={isLoading}>
-              {t.settings.deleteAccount.cancel}
+              Cancel
             </Button>
           </DrawerClose>
         </DrawerFooter>

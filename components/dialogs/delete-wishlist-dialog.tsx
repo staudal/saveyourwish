@@ -22,7 +22,6 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import toast from "react-hot-toast";
-import { useTranslations } from "@/hooks/use-translations";
 
 interface DeleteWishlistDialogProps {
   id: string;
@@ -38,7 +37,6 @@ export function DeleteWishlistDialog({
   const router = useRouter();
   const [isLoading, setIsLoading] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const t = useTranslations();
 
   async function handleDelete() {
     setIsLoading(true);
@@ -46,11 +44,11 @@ export function DeleteWishlistDialog({
     const result = await deleteWishlist(id);
 
     if (result.success) {
-      toast.success(t.wishlists.deleteDialog.success);
+      toast.success("Wishlist deleted successfully");
       router.refresh();
       onOpenChange(false);
     } else {
-      toast.error(result.error || t.error);
+      toast.error(result.error || "Failed to delete wishlist");
     }
 
     setIsLoading(false);
@@ -61,9 +59,9 @@ export function DeleteWishlistDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>{t.wishlists.deleteDialog.headline}</DialogTitle>
+            <DialogTitle>Delete wishlist</DialogTitle>
             <DialogDescription>
-              {t.wishlists.deleteDialog.description}
+              Are you sure you want to delete this wishlist?
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
@@ -73,7 +71,7 @@ export function DeleteWishlistDialog({
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              {t.wishlists.deleteDialog.cancel}
+              Cancel
             </Button>
             <Button
               className="w-full"
@@ -82,7 +80,7 @@ export function DeleteWishlistDialog({
               disabled={isLoading}
               isLoading={isLoading}
             >
-              {t.wishlists.deleteDialog.delete}
+              Delete
             </Button>
           </div>
         </DialogContent>
@@ -94,9 +92,9 @@ export function DeleteWishlistDialog({
     <Drawer open={open} onOpenChange={onOpenChange} repositionInputs={false}>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>{t.wishlists.deleteDialog.headline}</DrawerTitle>
+          <DrawerTitle>Delete wishlist</DrawerTitle>
           <DrawerDescription>
-            {t.wishlists.deleteDialog.description}
+            Are you sure you want to delete this wishlist?
           </DrawerDescription>
         </DrawerHeader>
         <DrawerFooter className="pt-2">
@@ -106,11 +104,11 @@ export function DeleteWishlistDialog({
             disabled={isLoading}
             isLoading={isLoading}
           >
-            {t.wishlists.deleteDialog.delete}
+            Delete
           </Button>
           <DrawerClose asChild>
             <Button variant="outline" disabled={isLoading}>
-              {t.wishlists.deleteDialog.cancel}
+              Cancel
             </Button>
           </DrawerClose>
         </DrawerFooter>

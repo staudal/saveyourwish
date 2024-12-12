@@ -9,12 +9,11 @@ import { Input } from "@/components/ui/input";
 import { updateWishlist, updateWishlistCoverImage } from "@/actions/wishlist";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { useTranslations } from "@/hooks/use-translations";
 import { uploadImageToBlob } from "@/lib/blob";
 import React from "react";
 import Image from "next/image";
+import imageCompression from "browser-image-compression";
 
-const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB
 const ACCEPTED_IMAGE_TYPES = [
   "image/jpeg",
   "image/jpg",
@@ -35,21 +34,17 @@ export function EditWishlistForm({
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     wishlist.coverImage || null
   );
-  const t = useTranslations();
 
   const formSchema = z.object({
-    title: z.string().min(2, { message: t.wishlists.editDialog.titleError }),
+    title: z
+      .string()
+      .min(2, { message: "Title must be at least 2 characters" }),
     coverImage: z
       .custom<FileList>()
       .optional()
       .refine(
         (files) => !files || files.length === 0 || files.length === 1,
         "One file is required"
-      )
-      .refine(
-        (files) =>
-          !files || files.length === 0 || files?.[0]?.size <= MAX_FILE_SIZE,
-        `Max file size is 4MB`
       )
       .refine(
         (files) =>
@@ -100,13 +95,22 @@ export function EditWishlistForm({
       // Handle cover image update if provided
       if (values.coverImage?.[0]) {
         const file = values.coverImage[0];
-        const arrayBuffer = await file.arrayBuffer();
+
+        // Compress image before upload
+        const options = {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1920,
+          useWebWorker: true,
+        };
+
+        const compressedFile = await imageCompression(file, options);
+        const arrayBuffer = await compressedFile.arrayBuffer();
         const uint8Array = new Uint8Array(arrayBuffer);
 
         const uploadResult = await uploadImageToBlob(
           {
-            name: file.name,
-            type: file.type,
+            name: compressedFile.name,
+            type: compressedFile.type,
             data: Array.from(uint8Array),
           },
           wishlist.id
@@ -126,12 +130,12 @@ export function EditWishlistForm({
         }
       }
 
-      toast.success(t.wishlists.editDialog.success);
+      toast.success("Wishlist updated successfully!");
       router.refresh();
       onSuccess?.();
     } catch (error) {
       console.error(error);
-      toast.error((error as Error).message || t.error);
+      toast.error((error as Error).message || "Something went wrong");
     } finally {
       onLoadingChange?.(false);
     }
@@ -141,11 +145,11 @@ export function EditWishlistForm({
     <form
       id="edit-wishlist-form"
       onSubmit={form.handleSubmit(onSubmit)}
-      className="grid gap-4"
+      className="space-y-4"
     >
-      <div className="grid gap-2">
+      <div className="flex flex-col space-y-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="title">{t.wishlists.editDialog.titleLabel}</Label>
+          <Label htmlFor="title">Title</Label>
           {form.formState.errors.title && (
             <span className="text-sm text-red-600 leading-none">
               {form.formState.errors.title.message}
@@ -155,11 +159,11 @@ export function EditWishlistForm({
         <Input
           {...form.register("title")}
           id="title"
-          placeholder={t.wishlists.editDialog.titlePlaceholder}
+          placeholder="My wishlist"
         />
       </div>
 
-      <div className="grid gap-2">
+      <div className="flex flex-col space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="coverImage">Cover Image</Label>
           {form.formState.errors.coverImage && (
@@ -174,6 +178,8 @@ export function EditWishlistForm({
               src={previewUrl}
               alt="Cover preview"
               className="w-full h-32 object-cover"
+              width={1000}
+              height={1000}
             />
           </div>
         )}

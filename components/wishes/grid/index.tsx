@@ -20,17 +20,16 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { updateBulkWishPositions } from "@/actions/wish";
 import toast from "react-hot-toast";
-import { EditWishDialog } from "@/components/dialogs/edit-wish-dialog";
 import { DeleteWishDialog } from "@/components/dialogs/delete-wish-dialog";
 import { ImagePositionDialog } from "@/components/dialogs/image-position-dialog";
 import { ShareWishlistDialog } from "@/components/dialogs/share-wishlist-dialog";
-import { CreateWishDialog } from "@/components/dialogs/create-wish-dialog";
-import { useTranslations } from "@/hooks/use-translations";
-import { ArrowUpDown, Check, Plus, Share2, X } from "lucide-react";
+import { ArrowUpDown, Check, Plus, Share2, X, Pencil } from "lucide-react";
 import { ReserveWishDialog } from "@/components/dialogs/reserve-wish-dialog";
 import { RemoveReservationDialog } from "@/components/dialogs/remove-reservation-dialog";
 import { Wish } from "./types";
 import Image from "next/image";
+import { WishDialog } from "@/components/dialogs/wish-dialog";
+import { EditWishlistDialog } from "@/components/dialogs/edit-wishlist-dialog";
 
 interface WishesGridProps {
   wishes: Wish[];
@@ -40,6 +39,7 @@ interface WishesGridProps {
   shareId?: string | null;
   title: string;
   coverImage?: string | null;
+  onEdit?: () => void;
 }
 
 export function WishesGrid({
@@ -50,6 +50,7 @@ export function WishesGrid({
   shareId = null,
   title,
   coverImage,
+  onEdit,
 }: WishesGridProps) {
   const [items, setItems] = useState(wishes);
   const [reorderState, setReorderState] = useState({
@@ -69,9 +70,9 @@ export function WishesGrid({
     reserve: false,
     removeReservation: false,
     share: false,
+    editWishlist: false,
   });
 
-  const t = useTranslations();
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -111,14 +112,14 @@ export function WishesGrid({
     const result = await updateBulkWishPositions(wishlistId, positions);
 
     if (result.success) {
-      toast.success(t.wishes.reorderMode.success);
+      toast.success("Wishes reordered successfully!");
       setReorderState({
         isReordering: false,
         hasChanges: false,
         isSaving: false,
       });
     } else {
-      toast.error(t.error);
+      toast.error("Something went wrong");
       setReorderState((prev) => ({ ...prev, isSaving: false }));
     }
   };
@@ -185,11 +186,25 @@ export function WishesGrid({
                   variant="outline"
                   size="icon"
                   onClick={() =>
+                    setDialogState((prev) => ({ ...prev, editWishlist: true }))
+                  }
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() =>
                     setDialogState((prev) => ({ ...prev, share: true }))
                   }
                 >
                   <Share2 className="h-4 w-4" />
                 </Button>
+                {onEdit && (
+                  <Button variant="outline" size="icon" onClick={onEdit}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
                 {wishes.length > 0 && (
                   <Button
                     variant="outline"
@@ -261,12 +276,13 @@ export function WishesGrid({
       </DndContext>
 
       {/* Dialogs */}
-      <CreateWishDialog
-        wishlistId={wishlistId}
+      <WishDialog
+        mode="create"
         open={dialogState.create}
         setOpen={(open) =>
           setDialogState((prev) => ({ ...prev, create: open }))
         }
+        wishlistId={wishlistId}
       />
       <ShareWishlistDialog
         wishlistId={wishlistId}
@@ -277,15 +293,14 @@ export function WishesGrid({
       />
       {selectedWish && (
         <>
-          <EditWishDialog
-            wish={selectedWish}
+          <WishDialog
+            mode="edit"
             open={dialogState.edit}
-            onOpenChange={(open) =>
-              setDialogState((prev) => ({ ...prev, edit: open }))
-            }
             setOpen={(open) =>
               setDialogState((prev) => ({ ...prev, edit: open }))
             }
+            wish={selectedWish}
+            wishlistId={wishlistId}
           />
           <DeleteWishDialog
             id={selectedWish.id}
@@ -320,6 +335,13 @@ export function WishesGrid({
           />
         </>
       )}
+      <EditWishlistDialog
+        open={dialogState.editWishlist}
+        setOpen={(open) =>
+          setDialogState((prev) => ({ ...prev, editWishlist: open }))
+        }
+        wishlist={{ id: wishlistId, title, coverImage }}
+      />
     </div>
   );
 }

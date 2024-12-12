@@ -26,7 +26,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CreateWishlistDialog } from "../dialogs/create-wishlist-dialog";
-import { useTranslations } from "@/hooks/use-translations";
 import { Wishlist } from "../wishes/grid/types";
 
 interface DataTableProps<TData, TValue> {
@@ -68,7 +67,6 @@ export function DataTable<TData extends Wishlist, TValue>({
       columnVisibility,
     },
   });
-  const t = useTranslations();
 
   return (
     <div className="w-full space-y-4">
@@ -77,7 +75,7 @@ export function DataTable<TData extends Wishlist, TValue>({
           <CreateWishlistDialog />
           <div className="flex items-center gap-4">
             <Input
-              placeholder={t.wishlists.dataTable.searchPlaceholder}
+              placeholder="Search"
               value={
                 (table.getColumn("title")?.getFilterValue() as string) ?? ""
               }
@@ -141,7 +139,7 @@ export function DataTable<TData extends Wishlist, TValue>({
                     colSpan={columns.length}
                     className="h-24 text-center"
                   >
-                    {t.wishlists.dataTable.noWishlistsFound}
+                    No wishlists found
                   </TableCell>
                 </TableRow>
               )}
@@ -158,7 +156,7 @@ export function DataTable<TData extends Wishlist, TValue>({
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
-            {t.wishlists.dataTable.previous}
+            Previous
           </Button>
           <Button
             variant="outline"
@@ -166,7 +164,7 @@ export function DataTable<TData extends Wishlist, TValue>({
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
-            {t.wishlists.dataTable.next}
+            Next
           </Button>
         </div>
       </div>

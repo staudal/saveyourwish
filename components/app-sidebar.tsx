@@ -19,7 +19,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
-import { useTranslations } from "@/hooks/use-translations";
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   user: User;
@@ -27,28 +26,27 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 
 export function AppSidebar({ user, ...props }: AppSidebarProps) {
   const { setOpenMobile } = useSidebar();
-  const t = useTranslations();
   const data = {
     navMain: [
       {
-        title: t.sidebar.wishlists,
+        title: "Wishlists",
         url: "/dashboard/wishlists",
         icon: List,
       },
       {
-        title: t.sidebar.settings,
+        title: "Settings",
         url: "/dashboard/settings",
         icon: Settings2,
       },
     ],
     navSecondary: [
       {
-        title: t.sidebar.support,
+        title: "Support",
         url: "mailto:jakob@saveyourwish.com?subject=Support",
         icon: LifeBuoy,
       },
       {
-        title: t.sidebar.feedback,
+        title: "Feedback",
         url: "mailto:jakob@saveyourwish.com?subject=Feedback",
         icon: Send,
       },

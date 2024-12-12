@@ -21,25 +21,23 @@ import {
 } from "@/components/ui/drawer";
 import { CreateWishlistForm } from "../forms/create-wishlist-form";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { useTranslations } from "@/hooks/use-translations";
 
 export function CreateWishlistDialog() {
   const [open, setOpen] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const t = useTranslations();
 
   if (isDesktop) {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button>{t.wishlists.createDialog.trigger}</Button>
+          <Button>Create wishlist</Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>{t.wishlists.createDialog.headline}</DialogTitle>
+            <DialogTitle>Create wishlist</DialogTitle>
             <DialogDescription>
-              {t.wishlists.createDialog.description}
+              Create a new wishlist to track your favorite items.
             </DialogDescription>
           </DialogHeader>
           <CreateWishlistForm
@@ -53,7 +51,7 @@ export function CreateWishlistDialog() {
               onClick={() => setOpen(false)}
               disabled={isLoading}
             >
-              {t.wishlists.createDialog.cancel}
+              Cancel
             </Button>
             <Button
               className="w-full"
@@ -62,7 +60,7 @@ export function CreateWishlistDialog() {
               disabled={isLoading}
               isLoading={isLoading}
             >
-              {t.wishlists.createDialog.create}
+              Create
             </Button>
           </div>
         </DialogContent>
@@ -73,20 +71,22 @@ export function CreateWishlistDialog() {
   return (
     <Drawer open={open} onOpenChange={setOpen} repositionInputs={false}>
       <DrawerTrigger asChild>
-        <Button>{t.wishlists.createDialog.trigger}</Button>
+        <Button>Create wishlist</Button>
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>{t.wishlists.createDialog.headline}</DrawerTitle>
+          <DrawerTitle>Create wishlist</DrawerTitle>
           <DrawerDescription>
-            {t.wishlists.createDialog.description}
+            Create a new wishlist to track your favorite items.
           </DrawerDescription>
         </DrawerHeader>
-        <CreateWishlistForm
-          onSuccess={() => setOpen(false)}
-          onLoadingChange={setIsLoading}
-        />
-        <DrawerFooter className="pt-2">
+        <div className="px-4">
+          <CreateWishlistForm
+            onSuccess={() => setOpen(false)}
+            onLoadingChange={setIsLoading}
+          />
+        </div>
+        <DrawerFooter>
           <Button
             className="w-full"
             type="submit"
@@ -94,7 +94,7 @@ export function CreateWishlistDialog() {
             disabled={isLoading}
             isLoading={isLoading}
           >
-            {t.wishlists.createDialog.create}
+            Create
           </Button>
           <Button
             className="w-full"
@@ -102,7 +102,7 @@ export function CreateWishlistDialog() {
             onClick={() => setOpen(false)}
             disabled={isLoading}
           >
-            {t.wishlists.createDialog.cancel}
+            Cancel
           </Button>
         </DrawerFooter>
       </DrawerContent>
