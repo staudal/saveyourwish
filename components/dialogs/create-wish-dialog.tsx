@@ -100,10 +100,10 @@ function DesktopDialog({
         {step === "url" ? (
           <>
             <DialogHeader>
-              <DialogTitle>Create a new wish</DialogTitle>
+              <DialogTitle>Add something to your wishlist</DialogTitle>
               <DialogDescription>
-                Throw in a link to a product and we'll fetch the details for you
-                or create a wish manually.
+                Found something special? Let's add it to your wishlist! Drop a
+                link below and we'll do the magic
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2 py-2">

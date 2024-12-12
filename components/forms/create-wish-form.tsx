@@ -218,7 +218,7 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
         {/* Product URL */}
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <Label>Link to product</Label>
+            <Label>Where can it be found?</Label>
             {form.formState.errors.destinationUrl && (
               <p className="text-sm text-red-500 leading-none">
                 {form.formState.errors.destinationUrl.message}
@@ -228,7 +228,7 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
           <div className="flex gap-2">
             <Input
               {...form.register("destinationUrl")}
-              placeholder="Paste product URL here"
+              placeholder="Paste the link to where you found it"
               className={cn(
                 "pr-8",
                 form.formState.errors.destinationUrl && "border-red-500",
@@ -239,7 +239,8 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
           </div>
           {props.values.autoUpdatePrice && (
             <p className="text-xs text-muted-foreground">
-              URL is locked because details were fetched automatically
+              We've locked this URL since we found the product details
+              automatically
             </p>
           )}
         </div>
@@ -247,7 +248,7 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
         {/* Image Selection */}
         <div className="space-y-1.5">
           <div className="flex justify-between items-center">
-            <Label>Image</Label>
+            <Label>What does it look like?</Label>
             {(props.availableImages?.length ?? 0) > 1 && (
               <span
                 className="text-xs text-primary cursor-pointer hover:underline flex items-center"
@@ -357,20 +358,20 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
           {/* Help Text */}
           <p className="text-xs text-muted-foreground">
             {(props.availableImages?.length ?? 0) > 1
-              ? "Multiple product images available. Click above to upload your own or expand to see other options."
+              ? "We found multiple product photos! Upload your own or check out the other options"
               : (props.availableImages?.length ?? 0) === 1
-              ? "Product image loaded. Click above to upload your own instead."
-              : "Click above to upload an image"}
+              ? "We found a product photo! Feel free to upload your own instead"
+              : "Show others what you're wishing for"}
           </p>
         </div>
 
         {/* Title */}
         <div className="space-y-1.5">
-          <Label htmlFor="title">Title</Label>
+          <Label htmlFor="title">What should we call it?</Label>
           <Input
             {...form.register("title")}
             id="title"
-            placeholder="Enter a title"
+            placeholder="Give your wish a name"
           />
           {form.formState.errors.title && (
             <p className="text-sm text-red-600">
@@ -381,7 +382,7 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
 
         {/* Price and Currency */}
         <div className="space-y-1.5">
-          <Label>Price</Label>
+          <Label>How much does it cost?</Label>
           <div className="flex gap-2">
             <Input
               {...form.register("price", {
@@ -412,7 +413,7 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
 
         {/* Quantity Selector */}
         <div className="space-y-1.5">
-          <Label>How many would you like?</Label>
+          <Label>How many would make you happy?</Label>
           <div className="grid grid-cols-5 gap-3 w-full">
             {[1, 2, 3, 4].map((num) => (
               <Button
@@ -456,7 +457,7 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
             className="flex items-center justify-between cursor-pointer"
             onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
           >
-            <Label className="cursor-pointer">Description (optional)</Label>
+            <Label className="cursor-pointer">Want to add more details?</Label>
             <Button
               type="button"
               variant="ghost"
