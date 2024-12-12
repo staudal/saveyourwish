@@ -2,6 +2,7 @@
 
 import { put, del } from "@vercel/blob";
 import { auth } from "@/lib/auth";
+import sharp from "sharp";
 
 export async function uploadImageToBlob(
   fileData: {
@@ -15,16 +16,33 @@ export async function uploadImageToBlob(
     const session = await auth();
     if (!session?.user?.id) throw new Error("Unauthorized");
 
-    // Convert array back to Uint8Array and then to Blob
-    const uint8Array = new Uint8Array(fileData.data);
-    const blob = new Blob([uint8Array], { type: fileData.type });
+    // Convert array back to Buffer
+    const buffer = Buffer.from(fileData.data);
+
+    // Generate unique filename
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(2, 8);
+    const extension = fileData.type.split("/")[1] || "jpg";
+    const uniqueFilename = `product-${timestamp}-${randomString}.${extension}`;
+
+    // Process image with sharp
+    const processedBuffer = await sharp(buffer)
+      .resize(800, 800, {
+        fit: "inside",
+        withoutEnlargement: true,
+      })
+      .jpeg({
+        quality: 80,
+        progressive: true,
+      })
+      .toBuffer();
 
     const uploadedBlob = await put(
-      `users/${session.user.id}/wishlists/${wishlistId}/${fileData.name}`,
-      blob,
+      `users/${session.user.id}/wishlists/${wishlistId}/${uniqueFilename}`,
+      processedBuffer,
       {
         access: "public",
-        addRandomSuffix: true,
+        contentType: fileData.type,
       }
     );
 

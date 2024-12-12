@@ -99,13 +99,6 @@ export function ImagePositionDialog({
     ? imageAspectRatio > containerAspectRatio
     : false;
 
-  console.log("Image dimensions:", {
-    imageAspectRatio,
-    containerAspectRatio,
-    isImageTallerThanContainer,
-    isImageWiderThanContainer,
-  });
-
   const isHorizontalEnabled = zoom > 1 || isImageWiderThanContainer;
   const isVerticalEnabled = zoom > 1 || isImageTallerThanContainer;
 

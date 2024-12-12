@@ -6,26 +6,20 @@ import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { createWish, getUrlMetadata } from "@/actions/wish";
-import { useState, useEffect, useMemo, forwardRef } from "react";
+import { createWish } from "@/actions/wish";
+import { uploadImageToBlob } from "@/lib/blob";
+import { useState, forwardRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { CurrencySelect } from "@/components/ui/currency-select";
 import { CURRENCY_VALUES } from "@/constants";
 import toast from "react-hot-toast";
-import { Loader2 } from "lucide-react";
-import { Button } from "../ui/button";
+import Image from "next/image";
+import imageCompression from "browser-image-compression";
 import { FormValues, initialFormValues } from "../dialogs/create-wish-dialog";
 import React from "react";
-import { Switch } from "@/components/ui/switch";
-import Image from "next/image";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
-import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { UploadCloud, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const formSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters").max(100),
@@ -45,7 +39,6 @@ const formSchema = z.object({
     (val) => (val === "" || isNaN(Number(val)) ? undefined : Number(val)),
     z.number().optional()
   ),
-  autoUpdatePrice: z.boolean().optional(),
 });
 
 interface CreateWishFormProps {
@@ -54,457 +47,380 @@ interface CreateWishFormProps {
   onLoadingChange?: (isLoading: boolean) => void;
   values: FormValues;
   onChange: (values: FormValues) => void;
+  isManualMode?: boolean;
 }
 
 interface FormRef {
   reset: (values: FormValues) => void;
+  setSelectedFile: (file: File | null) => void;
+  setPreviewUrl: (url: string | null) => void;
+  setValue: (name: keyof FormValues, value: any) => void;
 }
 
 export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
-  ({ wishlistId, onSuccess, onLoadingChange, values, onChange }, ref) => {
+  (props, ref) => {
     const router = useRouter();
-    const [isLoading, setIsLoading] = useState(false);
-    const [isFetching, setIsFetching] = useState(false);
-    const [availableImages, setAvailableImages] = useState<string[]>([]);
+    const [_, setIsSaving] = useState(false);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+    const [customQuantity, setCustomQuantity] = useState("");
 
     const form = useForm({
       resolver: zodResolver(formSchema),
-      defaultValues: values,
+      defaultValues: props.values,
     });
 
+    // Update preview when imageUrl changes
+    useEffect(() => {
+      const imageUrl = form.watch("imageUrl");
+      if (imageUrl && !previewUrl) {
+        setPreviewUrl(imageUrl);
+      }
+    }, [form.watch("imageUrl"), previewUrl]);
+
     React.useImperativeHandle(ref, () => ({
-      reset: (values: FormValues) => form.reset(values),
+      reset: (values: FormValues) => {
+        form.reset(values);
+        setSelectedFile(null);
+        setPreviewUrl(values.imageUrl || null);
+      },
+      setSelectedFile,
+      setPreviewUrl,
+      setValue: (name: keyof FormValues, value: any) =>
+        form.setValue(name, value),
     }));
 
-    useEffect(() => {
-      onLoadingChange?.(isLoading || isFetching);
-    }, [isLoading, isFetching, onLoadingChange]);
-
-    const destinationUrl = form.watch("destinationUrl");
-    const isValidUrl = useMemo(() => {
-      if (!destinationUrl) return false;
+    const compressImage = async (file: File) => {
       try {
-        new URL(destinationUrl);
-        return true;
-      } catch {
-        return false;
-      }
-    }, [destinationUrl]);
+        const options = {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 800,
+          useWebWorker: true,
+        };
 
-    const handleAutofill = async () => {
-      const url = form.getValues("destinationUrl");
-      if (!url) {
-        form.setError("destinationUrl", { message: "Please enter a URL" });
-        return;
-      }
+        const compressedFile = await imageCompression(file, options);
+        const buffer = await compressedFile.arrayBuffer();
 
-      try {
-        setIsFetching(true);
-        const result = await getUrlMetadata(url);
-
-        if (result.success && result.data) {
-          const newValues = { ...values };
-
-          if (result.data.images) {
-            setAvailableImages(result.data.images);
-            if (result.data.images.length > 0) {
-              newValues.imageUrl = result.data.images[0];
-            }
-          }
-
-          // Update all available fields but don't link the price
-          if (result.data.title) newValues.title = result.data.title;
-          if (result.data.price) newValues.price = result.data.price;
-          if (result.data.currency) {
-            newValues.currency =
-              (result.data.currency as (typeof CURRENCY_VALUES)[number]) ||
-              "USD";
-          }
-          if (result.data.description)
-            newValues.description = result.data.description;
-          if (result.data.destinationUrl)
-            newValues.destinationUrl = result.data.destinationUrl;
-
-          // Don't set autoUpdatePrice here
-          newValues.autoUpdatePrice = false;
-
-          form.reset(newValues);
-          onChange(newValues);
-          toast.success("Product details filled successfully!");
-        } else {
-          toast.error("Failed to fetch product details");
-        }
-      } catch (e) {
-        form.setError("destinationUrl", {
-          message: "Please enter a valid URL",
-        });
-      } finally {
-        setIsFetching(false);
-      }
-    };
-
-    const handlePriceLink = async () => {
-      const url = form.getValues("destinationUrl");
-      if (!url) {
-        toast.error("Please enter a valid URL");
-        return;
-      }
-
-      try {
-        setIsFetching(true);
-        const result = await getUrlMetadata(url);
-
-        if (
-          result.success &&
-          result.data &&
-          result.data.price &&
-          result.data.currency
-        ) {
-          const newValues = { ...values };
-
-          // Only update price-related fields if both price and currency are present
-          newValues.price = result.data.price;
-          newValues.currency =
-            (result.data.currency as (typeof CURRENCY_VALUES)[number]) || "USD";
-          newValues.autoUpdatePrice = true;
-
-          form.reset(newValues);
-          onChange(newValues);
-          toast.success("Price linked successfully!");
-        } else {
-          toast.error("No linkable price found on this website");
-          onChange({
-            ...values,
-            autoUpdatePrice: false,
-          });
-        }
-      } catch (e) {
-        toast.error("Failed to find a linkable price");
-        onChange({
-          ...values,
-          autoUpdatePrice: false,
-        });
-      } finally {
-        setIsFetching(false);
+        return {
+          success: true as const,
+          data: Array.from(new Uint8Array(buffer)),
+          type: compressedFile.type,
+          name: compressedFile.name,
+        };
+      } catch (error) {
+        console.error("Compression error:", error);
+        return { success: false as const, error: "Failed to compress image" };
       }
     };
 
     const onSubmit = async (data: z.infer<typeof formSchema>) => {
-      setIsLoading(true);
-      const result = await createWish(wishlistId, {
-        ...data,
-        autoUpdatePrice: values.autoUpdatePrice,
-      });
+      try {
+        setIsSaving(true);
+        props.onLoadingChange?.(true);
 
-      if (result.success) {
-        toast.success("Wish created successfully!");
-        form.reset(initialFormValues);
-        onChange(initialFormValues);
-        router.refresh();
-        onSuccess?.();
-      } else {
-        toast.error(result.error || "Something went wrong");
+        let imageUrl = data.imageUrl;
+        if (selectedFile) {
+          const compressResult = await compressImage(selectedFile);
+          if (!compressResult.success) {
+            toast.error("Failed to process image. Please try a smaller image.");
+            return;
+          }
+
+          const uploadResult = await uploadImageToBlob(
+            {
+              name: compressResult.name,
+              type: compressResult.type,
+              data: compressResult.data,
+            },
+            props.wishlistId
+          );
+
+          if (!uploadResult.success) {
+            toast.error("Failed to upload image");
+            return;
+          }
+
+          imageUrl = uploadResult.url;
+        }
+
+        const result = await createWish(props.wishlistId, {
+          ...data,
+          imageUrl,
+          autoUpdatePrice: props.values.autoUpdatePrice,
+        });
+
+        if (result.success) {
+          form.reset(initialFormValues);
+          setCustomQuantity("");
+          props.onChange?.(initialFormValues);
+          toast.success("Wish created successfully!");
+          router.refresh();
+          props.onSuccess?.();
+        } else {
+          toast.error(result.error || "Something went wrong");
+        }
+      } catch (error) {
+        console.error("Form submission error:", error);
+        toast.error("Failed to create wish. Please try again.");
+      } finally {
+        setIsSaving(false);
+        props.onLoadingChange?.(false);
       }
-      setIsLoading(false);
     };
 
-    useEffect(() => {
-      const subscription = form.watch(() => {
-        const formValues = form.getValues();
-        onChange({
-          ...formValues,
-          autoUpdatePrice: values.autoUpdatePrice,
-          isUrlLocked: values.isUrlLocked,
-        });
-      });
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        setSelectedFile(file);
+        const tempUrl = URL.createObjectURL(file);
+        setPreviewUrl(tempUrl);
+      }
+    };
 
-      return () => subscription.unsubscribe();
-    }, [form, onChange, values.autoUpdatePrice, values.isUrlLocked]);
+    const handleRemoveImage = () => {
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      form.setValue("imageUrl", "");
+      if (document.getElementById("image-upload")) {
+        (document.getElementById("image-upload") as HTMLInputElement).value =
+          "";
+      }
+    };
 
     return (
       <form
         id="create-wish-form"
         onSubmit={form.handleSubmit(onSubmit)}
-        className="grid gap-4"
+        className="space-y-6"
       >
-        <div className="grid gap-4 md:grid-cols-[2fr,1fr]">
-          {/* Left column - main form fields */}
-          <div className="grid gap-4">
-            <div className="grid gap-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="destinationUrl">Product URL</Label>
-                {form.formState.errors.destinationUrl && (
-                  <span className="text-sm text-red-600 leading-none">
-                    {form.formState.errors.destinationUrl.message}
-                  </span>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <Input
-                  {...form.register("destinationUrl")}
-                  id="destinationUrl"
-                  placeholder="e.g. https://www.amazon.com/dp/B08N5L5R6Q"
-                  className={
-                    values.autoUpdatePrice
-                      ? "bg-muted text-muted-foreground"
-                      : ""
-                  }
-                  disabled={values.autoUpdatePrice}
-                />
-                <Button
-                  type="button"
-                  onClick={() => handleAutofill()}
-                  disabled={isFetching || !isValidUrl}
-                >
-                  {isFetching ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Fetching...
-                    </>
-                  ) : (
-                    "Autofill"
-                  )}
-                </Button>
-              </div>
-              {isValidUrl && (
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="auto-update-price"
-                    checked={values.autoUpdatePrice}
-                    onCheckedChange={async (checked) => {
-                      if (checked) {
-                        await handlePriceLink();
-                      } else {
-                        onChange({
-                          ...values,
-                          autoUpdatePrice: false,
-                        });
-                      }
-                    }}
-                  />
-                  <Label htmlFor="auto-update-price">
-                    Keep price updated with website
-                  </Label>
-                </div>
+        {/* Product URL */}
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <Label>Link to product</Label>
+            {form.formState.errors.destinationUrl && (
+              <p className="text-sm text-red-500 leading-none">
+                {form.formState.errors.destinationUrl.message}
+              </p>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Input
+              {...form.register("destinationUrl")}
+              placeholder="Paste product URL here"
+              className={cn(
+                "pr-8",
+                form.formState.errors.destinationUrl && "border-red-500",
+                props.values.autoUpdatePrice && "bg-muted"
               )}
-            </div>
+              disabled={props.values.autoUpdatePrice}
+            />
+          </div>
+          {props.values.autoUpdatePrice && (
+            <p className="text-xs text-muted-foreground">
+              URL is locked because details were fetched automatically
+            </p>
+          )}
+        </div>
 
-            <div className="grid gap-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="title">Title (required)</Label>
-                {form.formState.errors.title && (
-                  <span className="text-sm text-red-600 leading-none">
-                    {form.formState.errors.title.message}
-                  </span>
-                )}
-              </div>
-              <Input
-                {...form.register("title")}
-                id="title"
-                placeholder="Enter a title"
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <div className="flex justify-between w-full items-center">
-                <Label htmlFor="price">Price</Label>
-                {form.formState.errors.price && (
-                  <span className="text-sm text-red-600 leading-none">
-                    {form.formState.errors.price.message}
-                  </span>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <Input
-                  value={
-                    values.autoUpdatePrice
-                      ? values.price?.toString() || ""
-                      : undefined
-                  }
-                  {...(!values.autoUpdatePrice &&
-                    form.register("price", {
-                      valueAsNumber: true,
-                      setValueAs: (v: string) =>
-                        v === "" || isNaN(parseFloat(v))
-                          ? undefined
-                          : parseFloat(v),
-                    }))}
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  placeholder="Enter a price"
-                  className={
-                    values.autoUpdatePrice
-                      ? "bg-muted text-muted-foreground"
-                      : ""
-                  }
-                  disabled={values.autoUpdatePrice}
-                />
-                <CurrencySelect
-                  value={form.watch("currency") || "USD"}
-                  onValueChange={(value) => form.setValue("currency", value)}
-                  disabled={values.autoUpdatePrice}
-                  className={
-                    values.autoUpdatePrice
-                      ? "bg-muted text-muted-foreground"
-                      : ""
-                  }
-                />
-              </div>
-              {values.autoUpdatePrice && (
-                <div className="bg-muted border p-3 rounded-md flex items-center gap-2 text-sm">
-                  <div>
-                    <p className="font-medium">Price linked to product URL</p>
-                    <p className="text-muted-foreground">
-                      Automatically updates when the product price changes
+        {/* Image Upload */}
+        <div className="space-y-1.5">
+          <div className="flex justify-between items-center">
+            <Label>Image</Label>
+            {form.formState.errors.imageUrl && (
+              <p className="text-sm text-red-500 leading-none">
+                {form.formState.errors.imageUrl.message}
+              </p>
+            )}
+          </div>
+          <div className="relative group">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+              id="image-upload"
+            />
+            <div
+              onClick={() => document.getElementById("image-upload")?.click()}
+              className={cn(
+                "relative w-full h-24 rounded-lg border border-dashed transition-colors duration-200 ease-in-out",
+                "flex items-center justify-center cursor-pointer",
+                "hover:border-primary hover:bg-muted/50",
+                previewUrl ? "border-border bg-muted/20" : "border-border"
+              )}
+            >
+              {previewUrl ? (
+                <div className="relative w-full h-full p-2 flex items-center gap-4">
+                  <div className="relative h-full aspect-square">
+                    <Image
+                      src={previewUrl}
+                      alt="Preview"
+                      fill
+                      className="object-contain rounded-md"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-muted-foreground truncate">
+                      {selectedFile
+                        ? selectedFile.name
+                        : "Image selected from URL"}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Click to change image
                     </p>
                   </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveImage();
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <UploadCloud className="mx-auto h-8 w-8 text-muted-foreground mb-1" />
+                  <p className="text-sm text-muted-foreground">
+                    Click to upload image
+                  </p>
                 </div>
               )}
             </div>
-
-            <div className="grid gap-2">
-              <div className="flex justify-between w-full items-center">
-                <Label htmlFor="description">Description</Label>
-                {form.formState.errors.description && (
-                  <span className="text-sm text-red-600 leading-none">
-                    {form.formState.errors.description.message}
-                  </span>
-                )}
-              </div>
-              <Textarea
-                {...form.register("description")}
-                id="description"
-                placeholder="Enter a description"
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <div className="flex justify-between w-full items-center">
-                <Label htmlFor="quantity">Quantity</Label>
-                {form.formState.errors.quantity && (
-                  <span className="text-sm text-red-600 leading-none">
-                    {form.formState.errors.quantity.message}
-                  </span>
-                )}
-              </div>
-              <Input
-                {...form.register("quantity", {
-                  valueAsNumber: true,
-                  min: 1,
-                })}
-                id="quantity"
-                type="number"
-                min="1"
-                placeholder="Enter quantity"
-              />
-            </div>
           </div>
+        </div>
 
-          {/* Right column - image preview */}
-          <div className="grid gap-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="imageUrl">Image URL</Label>
-              {form.formState.errors.imageUrl && (
-                <span className="text-sm text-red-600 leading-none">
-                  {form.formState.errors.imageUrl.message}
-                </span>
-              )}
-            </div>
+        {/* Title */}
+        <div className="space-y-1.5">
+          <Label htmlFor="title">Title</Label>
+          <Input
+            {...form.register("title")}
+            id="title"
+            placeholder="Enter a title"
+          />
+          {form.formState.errors.title && (
+            <p className="text-sm text-red-600">
+              {form.formState.errors.title.message}
+            </p>
+          )}
+        </div>
+
+        {/* Price and Currency */}
+        <div className="space-y-1.5">
+          <Label>Price</Label>
+          <div className="flex gap-2">
             <Input
-              {...form.register("imageUrl")}
-              id="imageUrl"
-              placeholder="Enter an image URL"
+              {...form.register("price", {
+                valueAsNumber: true,
+                setValueAs: (v: string) =>
+                  v === "" || isNaN(parseFloat(v)) ? undefined : parseFloat(v),
+              })}
+              type="number"
+              step="0.01"
+              placeholder="0.00"
+              className={cn(
+                "flex-1",
+                form.formState.errors.price && "border-red-500"
+              )}
             />
-            {availableImages.length > 0 ? (
-              <div className="grid gap-2">
-                <Label>Product Images</Label>
-                <Carousel
-                  className="w-full"
-                  opts={{
-                    loop: true,
-                  }}
-                  setApi={(api) => {
-                    if (!api) return;
-
-                    // Set initial image only if different
-                    const currentIndex = api.selectedScrollSnap();
-                    const currentImage = availableImages[currentIndex];
-                    if (
-                      currentImage &&
-                      currentImage !== form.getValues("imageUrl")
-                    ) {
-                      form.setValue("imageUrl", currentImage, {
-                        shouldDirty: false,
-                      });
-                    }
-
-                    // Set up the select handler
-                    const onSelect = () => {
-                      const index = api.selectedScrollSnap();
-                      const image = availableImages[index];
-                      if (image && image !== form.getValues("imageUrl")) {
-                        form.setValue("imageUrl", image, {
-                          shouldDirty: false,
-                        });
-                      }
-                    };
-
-                    api.on("select", onSelect);
-                    return () => api.off("select", onSelect);
-                  }}
-                >
-                  <CarouselContent>
-                    {availableImages.map((imageUrl, index) => (
-                      <CarouselItem key={index}>
-                        <Card>
-                          <CardContent className="relative aspect-square p-1">
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <Image
-                                src={imageUrl}
-                                alt={`Product image ${index + 1}`}
-                                fill
-                                className="object-contain"
-                                onError={() => {
-                                  console.error(
-                                    `Failed to load image: ${imageUrl}`
-                                  );
-                                  setAvailableImages((current) =>
-                                    current.filter((url) => url !== imageUrl)
-                                  );
-                                }}
-                              />
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                  <CarouselPrevious type="button" />
-                  <CarouselNext type="button" />
-                </Carousel>
-                <div className="text-sm text-muted-foreground text-center">
-                  {`Image ${
-                    form.watch("imageUrl")
-                      ? availableImages.indexOf(form.watch("imageUrl")!) + 1
-                      : 1
-                  } of ${availableImages.length}`}
-                </div>
-              </div>
-            ) : form.watch("imageUrl") ? (
-              <div className="relative aspect-square w-full overflow-hidden rounded-lg border bg-muted">
-                <Image
-                  src={form.watch("imageUrl")}
-                  alt="Product preview"
-                  fill
-                  className="object-contain"
-                  onError={(e) => {
-                    e.currentTarget.src = "/placeholder-image.png";
-                  }}
-                />
-              </div>
-            ) : null}
+            <CurrencySelect
+              value={form.watch("currency") || "USD"}
+              onValueChange={(value) => form.setValue("currency", value)}
+              className="w-[110px]"
+            />
           </div>
+          {form.formState.errors.price && (
+            <p className="text-sm text-red-500">
+              {form.formState.errors.price.message}
+            </p>
+          )}
+        </div>
+
+        {/* Quantity Selector */}
+        <div className="space-y-1.5">
+          <Label>How many would you like?</Label>
+          <div className="grid grid-cols-5 gap-3 w-full">
+            {[1, 2, 3, 4].map((num) => (
+              <Button
+                key={num}
+                type="button"
+                variant={form.watch("quantity") === num ? "default" : "outline"}
+                className="w-full h-9"
+                onClick={() => {
+                  form.setValue("quantity", num);
+                  setCustomQuantity("");
+                }}
+              >
+                {num === 1 ? "Just one" : num}
+              </Button>
+            ))}
+            <Input
+              type="number"
+              min="1"
+              placeholder="More?"
+              className="w-full h-9"
+              value={customQuantity}
+              onChange={(e) => {
+                const value = e.target.value;
+                setCustomQuantity(value);
+                const numValue = parseInt(value);
+                if (!isNaN(numValue) && numValue > 0) {
+                  form.setValue("quantity", numValue);
+                }
+              }}
+              onClick={(e) => {
+                const input = e.target as HTMLInputElement;
+                input.select();
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Collapsible Description */}
+        <div className="space-y-1.5">
+          <div
+            className="flex items-center justify-between cursor-pointer"
+            onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+          >
+            <Label className="cursor-pointer">Description (optional)</Label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2 hover:bg-transparent"
+            >
+              {isDescriptionExpanded ? (
+                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              )}
+            </Button>
+          </div>
+          {isDescriptionExpanded && (
+            <Textarea
+              {...form.register("description")}
+              placeholder="Add a description"
+              className={cn(
+                "min-h-[100px] resize-none",
+                form.formState.errors.description && "border-red-500"
+              )}
+            />
+          )}
+          {!isDescriptionExpanded && form.watch("description") && (
+            <p className="text-sm text-muted-foreground line-clamp-1">
+              {form.watch("description")}
+            </p>
+          )}
+          {form.formState.errors.description && (
+            <p className="text-sm text-red-500">
+              {form.formState.errors.description.message}
+            </p>
+          )}
         </div>
       </form>
     );

@@ -13,6 +13,7 @@ import {
   currencyExtractor,
   imageExtractor,
 } from "@/lib/metadata-extractor";
+import { deleteImageFromBlob, uploadImageToBlob } from "@/lib/blob";
 
 const metadataSchema = z.object({
   title: z.string().optional(),
@@ -53,6 +54,35 @@ export async function createWish(
 
     if (!wishlist) throw new Error("Wishlist not found");
 
+    let finalImageUrl = data.imageUrl;
+
+    // If there's an external image URL, upload it to Blob
+    if (data.imageUrl && data.imageUrl.startsWith("http")) {
+      try {
+        const imageResponse = await fetch(data.imageUrl);
+        const imageBlob = await imageResponse.blob();
+        const file = new File([imageBlob], "product-image.jpg", {
+          type: imageBlob.type,
+        });
+
+        const uploadResult = await uploadImageToBlob(
+          {
+            name: file.name,
+            type: file.type,
+            data: Array.from(new Uint8Array(await file.arrayBuffer())),
+          },
+          wishlistId
+        );
+
+        if (uploadResult.success) {
+          finalImageUrl = uploadResult.url;
+        }
+      } catch (error) {
+        console.error("Image upload error:", error);
+        // Keep the original URL if upload fails
+      }
+    }
+
     // Get the highest position
     const highestPosition = await db
       .select({ position: sql<number>`COALESCE(MAX(position), 0)` })
@@ -62,6 +92,7 @@ export async function createWish(
 
     await db.insert(wishes).values({
       ...data,
+      imageUrl: finalImageUrl,
       wishlistId,
       position: highestPosition + 1,
     });
@@ -125,26 +156,23 @@ export async function deleteWish(id: string, wishlistId: string) {
     const session = await auth();
     if (!session?.user?.id) throw new Error("Unauthorized");
 
-    // Verify wishlist belongs to user
-    const wishlist = await db
+    // Get the wish BEFORE deleting it to get the image URL
+    const wish = await db
       .select()
-      .from(wishlists)
-      .where(
-        and(eq(wishlists.id, wishlistId), eq(wishlists.userId, session.user.id))
-      )
+      .from(wishes)
+      .where(eq(wishes.id, id))
       .then((rows) => rows[0]);
 
-    if (!wishlist) throw new Error("Wishlist not found");
+    if (wish?.imageUrl) {
+      await deleteImageFromBlob(wish.imageUrl);
+    }
 
     await db.delete(wishes).where(eq(wishes.id, id));
-
-    if (wishlist?.shareId && wishlist.shared) {
-      revalidatePath(`/shared/${wishlist.shareId}`);
-    }
 
     revalidatePath(`/dashboard/wishlists/${wishlistId}`);
     return { success: true };
   } catch (error) {
+    console.error("Error in deleteWish:", error);
     return { success: false, error: "Failed to delete wish" };
   }
 }
@@ -284,22 +312,18 @@ export async function updateWish(
     const session = await auth();
     if (!session?.user?.id) throw new Error("Unauthorized");
 
-    // Verify wishlist belongs to user
-    const wishlist = await db
+    // Get the current wish to check if we need to delete the old image
+    const currentWish = await db
       .select()
-      .from(wishlists)
-      .where(
-        and(eq(wishlists.id, wishlistId), eq(wishlists.userId, session.user.id))
-      )
+      .from(wishes)
+      .where(eq(wishes.id, id))
       .then((rows) => rows[0]);
 
-    if (!wishlist) throw new Error("Wishlist not found");
+    if (currentWish?.imageUrl && currentWish.imageUrl !== data.imageUrl) {
+      await deleteImageFromBlob(currentWish.imageUrl);
+    }
 
     await db.update(wishes).set(data).where(eq(wishes.id, id));
-
-    if (wishlist?.shareId && wishlist.shared) {
-      revalidatePath(`/shared/${wishlist.shareId}`);
-    }
 
     revalidatePath(`/dashboard/wishlists/${wishlistId}`);
     return { success: true };
