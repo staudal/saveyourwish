@@ -309,22 +309,15 @@ export const currencyExtractor: BaseMetadataExtractor = {
 export const imageExtractor: ImageExtractor = {
   extract: (document: Document) => {
     console.log("Starting image detection...");
-    const images: string[] = [];
+    const images: { url: string; score: number }[] = [];
 
     const normalizeUrl = (url: string, baseUri: string): string | undefined => {
       try {
-        // Handle protocol-relative URLs
-        if (url.startsWith("//")) {
-          url = `https:${url}`;
-        }
-
-        // Convert to absolute URL and ensure HTTPS
+        if (url.startsWith("//")) url = `https:${url}`;
         let absoluteUrl = new URL(url, baseUri).href;
-        // Convert HTTP to HTTPS
         if (absoluteUrl.startsWith("http:")) {
           absoluteUrl = absoluteUrl.replace("http:", "https:");
         }
-
         return absoluteUrl;
       } catch (e) {
         console.error("Error normalizing URL:", e);
@@ -332,10 +325,50 @@ export const imageExtractor: ImageExtractor = {
       }
     };
 
-    const addUniqueImage = (url: string) => {
+    const normalizeImageUrl = (url: string): string => {
+      // Remove size constraints from common e-commerce sites
+      return url
+        .replace(/\?imwidth=\d+/, "") // Remove Zalando's imwidth parameter
+        .replace(/\?w=\d+/, "") // Remove generic width parameter
+        .replace(/&width=\d+/, "") // Remove width as query param
+        .replace(/&size=\d+/, "") // Remove size constraints
+        .replace(/&filter=[^&]+/, ""); // Remove image filters
+    };
+
+    const scoreImage = (element: Element, url: string): number => {
+      let score = 0;
+
+      // Prefer larger images
+      const width = parseInt(element.getAttribute("width") || "0");
+      const height = parseInt(element.getAttribute("height") || "0");
+      if (width > 500) score += 3;
+      if (height > 500) score += 3;
+
+      // Prefer images with product-related classes/IDs
+      const productTerms = ["product", "main", "hero", "primary", "featured"];
+      const elementString = element.outerHTML.toLowerCase();
+      productTerms.forEach((term) => {
+        if (elementString.includes(term)) score += 2;
+      });
+
+      // Prefer images from meta tags
+      if (element.tagName === "META") score += 4;
+
+      // Avoid small thumbnails and icons
+      if (url.includes("thumb") || url.includes("icon")) score -= 2;
+      if (width < 200 || height < 200) score -= 2;
+
+      return score;
+    };
+
+    const addUniqueImage = (element: Element, url: string) => {
       const normalizedUrl = normalizeUrl(url, document.baseURI);
-      if (normalizedUrl && !images.includes(normalizedUrl)) {
-        images.push(normalizedUrl);
+      if (normalizedUrl) {
+        const cleanUrl = normalizeImageUrl(normalizedUrl);
+        if (!images.some((img) => img.url === cleanUrl)) {
+          const score = scoreImage(element, cleanUrl);
+          images.push({ url: cleanUrl, score });
+        }
       }
     };
 
@@ -374,26 +407,40 @@ export const imageExtractor: ImageExtractor = {
             : element.getAttribute(attr);
 
         if (imageUrl) {
-          addUniqueImage(imageUrl);
+          addUniqueImage(element, imageUrl);
         }
       });
     }
 
-    // Handle large images
-    const allImages = Array.from(document.querySelectorAll("img"));
-    allImages.forEach((img) => {
-      const src = img.getAttribute("src");
-      if (src) {
-        const width = parseInt(img.getAttribute("width") || "0");
-        const height = parseInt(img.getAttribute("height") || "0");
-        if (width > 200 && height > 200) {
-          addUniqueImage(src);
-        }
-      }
-    });
+    // Add JSON-LD image extraction
+    const scriptElements = document.querySelectorAll(
+      'script[type="application/ld+json"]'
+    );
 
-    console.log(`Found ${images.length} images:`, images);
-    return images;
+    for (const script of scriptElements) {
+      try {
+        const jsonData = JSON.parse(script.textContent || "");
+        const imageUrls = Array.isArray(jsonData.image)
+          ? jsonData.image
+          : [jsonData.image];
+
+        if (imageUrls.length > 0) {
+          imageUrls.forEach((url: string) => {
+            if (url) addUniqueImage(script, url);
+          });
+        }
+      } catch (e) {
+        console.error("Error parsing JSON-LD:", e);
+      }
+    }
+
+    // Sort images by score and return URLs only
+    const sortedImages = images
+      .sort((a, b) => b.score - a.score)
+      .map((img) => img.url);
+
+    console.log("Found and scored images:", images);
+    return sortedImages;
   },
 
   clean: (imageUrl: string, baseUrl?: string): string => {

@@ -20,6 +20,13 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import { UploadCloud, X, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 const formSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters").max(100),
@@ -48,6 +55,8 @@ interface CreateWishFormProps {
   values: FormValues;
   onChange: (values: FormValues) => void;
   isManualMode?: boolean;
+  availableImages?: string[];
+  onImageSelectorOpen?: () => void;
 }
 
 interface FormRef {
@@ -65,6 +74,7 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
     const [customQuantity, setCustomQuantity] = useState("");
+    const [isImagesExpanded, setIsImagesExpanded] = useState(false);
 
     const form = useForm({
       resolver: zodResolver(formSchema),
@@ -175,6 +185,17 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
         setSelectedFile(file);
         const tempUrl = URL.createObjectURL(file);
         setPreviewUrl(tempUrl);
+        form.setValue("imageUrl", "");
+      }
+    };
+
+    const handleSelectAvailableImage = (url: string) => {
+      form.setValue("imageUrl", url);
+      setPreviewUrl(url);
+      setSelectedFile(null);
+      if (document.getElementById("image-upload")) {
+        (document.getElementById("image-upload") as HTMLInputElement).value =
+          "";
       }
     };
 
@@ -223,16 +244,26 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
           )}
         </div>
 
-        {/* Image Upload */}
+        {/* Image Selection */}
         <div className="space-y-1.5">
           <div className="flex justify-between items-center">
             <Label>Image</Label>
-            {form.formState.errors.imageUrl && (
-              <p className="text-sm text-red-500 leading-none">
-                {form.formState.errors.imageUrl.message}
-              </p>
+            {(props.availableImages?.length ?? 0) > 1 && (
+              <span
+                className="text-xs text-primary cursor-pointer hover:underline flex items-center"
+                onClick={() => setIsImagesExpanded(!isImagesExpanded)}
+              >
+                {isImagesExpanded ? "Hide other images" : "Show other images"}
+                {isImagesExpanded ? (
+                  <ChevronUp className="ml-1 h-3 w-3" />
+                ) : (
+                  <ChevronDown className="ml-1 h-3 w-3" />
+                )}
+              </span>
             )}
           </div>
+
+          {/* Image Upload/Preview */}
           <div className="relative group">
             <input
               type="file"
@@ -262,9 +293,7 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-muted-foreground truncate">
-                      {selectedFile
-                        ? selectedFile.name
-                        : "Image selected from URL"}
+                      {selectedFile ? selectedFile.name : "Image selected"}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       Click to change image
@@ -293,6 +322,46 @@ export const CreateWishForm = forwardRef<FormRef, CreateWishFormProps>(
               )}
             </div>
           </div>
+
+          {/* Available Images Carousel */}
+          {isImagesExpanded && (props.availableImages?.length ?? 0) > 1 && (
+            <div className="w-full mt-2">
+              <Carousel className="w-full">
+                <CarouselContent>
+                  {props.availableImages!.map((url, index) => (
+                    <CarouselItem key={index} className="basis-1/3">
+                      <div
+                        className={cn(
+                          "relative aspect-square cursor-pointer rounded-lg overflow-hidden border-2",
+                          url === form.watch("imageUrl")
+                            ? "border-primary"
+                            : "border-transparent"
+                        )}
+                        onClick={() => handleSelectAvailableImage(url)}
+                      >
+                        <Image
+                          src={url}
+                          alt={`Product image ${index + 1}`}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious type="button" className="left-2" />
+                <CarouselNext type="button" className="right-2" />
+              </Carousel>
+            </div>
+          )}
+          {/* Help Text */}
+          <p className="text-xs text-muted-foreground">
+            {(props.availableImages?.length ?? 0) > 1
+              ? "Multiple product images available. Click above to upload your own or expand to see other options."
+              : (props.availableImages?.length ?? 0) === 1
+              ? "Product image loaded. Click above to upload your own instead."
+              : "Click above to upload an image"}
+          </p>
         </div>
 
         {/* Title */}

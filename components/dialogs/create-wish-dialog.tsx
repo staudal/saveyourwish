@@ -71,6 +71,8 @@ interface CreateWishFlowProps {
   handlePasteUrl: () => void;
   handleNext: () => void;
   handleCreateManually: () => void;
+  isImageSelectorOpen: boolean;
+  setIsImageSelectorOpen: (open: boolean) => void;
 }
 
 function DesktopDialog({
@@ -89,6 +91,8 @@ function DesktopDialog({
   handlePasteUrl,
   handleNext,
   handleCreateManually,
+  availableImages,
+  setIsImageSelectorOpen,
 }: CreateWishFlowProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -162,6 +166,8 @@ function DesktopDialog({
               values={formValues}
               onChange={setFormValues}
               isManualMode={!formValues.autoUpdatePrice}
+              availableImages={availableImages}
+              onImageSelectorOpen={() => setIsImageSelectorOpen(true)}
             />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={handleReset}>
@@ -209,6 +215,8 @@ function MobileDrawer({
   handlePasteUrl,
   handleNext,
   handleCreateManually,
+  setIsImageSelectorOpen,
+  availableImages,
 }: CreateWishFlowProps) {
   return (
     <Drawer open={open} onOpenChange={setOpen}>
@@ -268,6 +276,8 @@ function MobileDrawer({
                 values={formValues}
                 onChange={setFormValues}
                 isManualMode={!formValues.autoUpdatePrice}
+                availableImages={availableImages}
+                onImageSelectorOpen={() => setIsImageSelectorOpen(true)}
               />
             </div>
             <DrawerFooter>
@@ -314,6 +324,7 @@ export function CreateWishDialog({
   const formRef = React.useRef<any>(null);
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const [url, setUrl] = React.useState("");
+  const [isImageSelectorOpen, setIsImageSelectorOpen] = React.useState(false);
 
   const handleReset = () => {
     formRef.current?.reset(initialFormValues);
@@ -333,10 +344,7 @@ export function CreateWishDialog({
   };
 
   const handleNext = async () => {
-    if (!url) {
-      toast.error("Please enter a URL");
-      return;
-    }
+    if (!url) return;
 
     try {
       setIsLoading(true);
@@ -345,28 +353,21 @@ export function CreateWishDialog({
       if (result.success && result.data) {
         const newValues = { ...initialFormValues };
         newValues.destinationUrl = result.data.destinationUrl || url;
-
-        if (result.data.images?.[0]) {
-          newValues.imageUrl = result.data.images[0];
-        }
-
         if (result.data.title) newValues.title = result.data.title;
         if (result.data.price) newValues.price = result.data.price;
         if (result.data.currency && isCurrencyValue(result.data.currency)) {
           newValues.currency = result.data.currency;
-        } else {
-          newValues.currency = "USD";
         }
         if (result.data.description)
           newValues.description = result.data.description;
-
+        if (result.data.images?.length) {
+          setAvailableImages(result.data.images);
+          newValues.imageUrl = result.data.images[0];
+        }
         newValues.autoUpdatePrice = true;
 
         setFormValues(newValues);
-        formRef.current?.reset(newValues);
         setStep("form");
-      } else {
-        toast.error("Failed to fetch product details");
       }
     } catch (e) {
       toast.error("Failed to process URL");
@@ -404,12 +405,18 @@ export function CreateWishDialog({
     handlePasteUrl,
     handleNext,
     handleCreateManually,
+    isImageSelectorOpen,
+    setIsImageSelectorOpen,
   };
 
-  return isDesktop ? (
-    <DesktopDialog {...sharedProps} />
-  ) : (
-    <MobileDrawer {...sharedProps} />
+  return (
+    <>
+      {isDesktop ? (
+        <DesktopDialog {...sharedProps} />
+      ) : (
+        <MobileDrawer {...sharedProps} />
+      )}
+    </>
   );
 }
 
