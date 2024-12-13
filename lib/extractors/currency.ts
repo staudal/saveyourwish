@@ -1,79 +1,172 @@
-import { BaseMetadataExtractor, Selector } from "./types";
-import { extractFromSelectors, extractFromJsonLd } from "./utils";
-import { CURRENCIES } from "@/constants";
+import { BaseMetadataExtractor } from "./types";
+import {
+  extractFromSelectors,
+  extractFromJsonLd,
+  normalizeCurrency,
+  extractCurrencyFromText,
+  LANGUAGE_CODE_REGEX,
+} from "@/lib/utils";
+import {
+  CURRENCIES,
+  TLD_TO_LANGUAGE,
+  CURRENCY_CONFIDENCE,
+  CURRENCY_SELECTORS,
+} from "@/constants";
 
-const VALID_CURRENCIES = Object.freeze(new Set(CURRENCIES.map((c) => c.value)));
-const CURRENCY_SYMBOL_MAP = Object.freeze(
-  Object.fromEntries(
-    CURRENCIES.filter((c) => c.symbol).map((c) => [c.symbol, c.value])
-  )
-);
+// Pre-compile selectors for performance
+const PRICE_ELEMENTS_SELECTOR = CURRENCY_SELECTORS.PRICE.join(", ");
 
-const isValidCurrency = (currency: string): boolean =>
-  VALID_CURRENCIES.has(currency.toUpperCase());
+// Create a map of symbols to arrays of possible currencies
+const SYMBOL_TO_CURRENCIES = CURRENCIES.reduce((acc, curr) => {
+  if (curr.symbol) {
+    if (!acc[curr.symbol]) {
+      acc[curr.symbol] = [];
+    }
+    acc[curr.symbol].push(curr.value);
+  }
+  return acc;
+}, {} as Record<string, string[]>);
 
-const normalizeCurrency = (currency: string): string | undefined => {
-  const normalized = currency.toUpperCase();
-  return isValidCurrency(normalized) ? normalized : undefined;
-};
+// Create language to currency mapping from TLDs
+const LANG_TO_CURRENCY = CURRENCIES.reduce((acc, curr) => {
+  curr.tlds.forEach((tld) => {
+    const baseTld = tld.split(".").pop() || tld;
+    const langCode = TLD_TO_LANGUAGE[baseTld];
+    if (langCode) {
+      acc[langCode] = curr.value;
+    }
+  });
+  return acc;
+}, {} as Record<string, string>);
+
+type FoundCurrencies = Map<
+  string,
+  {
+    confidence: number;
+    source: "code" | "symbol";
+  }
+>;
 
 export const currencyExtractor: BaseMetadataExtractor = {
   extract: (document: Document): string | undefined => {
     try {
-      // Use utility functions in extraction logic
-      const jsonLdPaths: (string | number)[][] = [
-        ["priceCurrency"],
-        ["offers", "priceCurrency"],
-        [0, "priceCurrency"],
-        ["offers", 0, "priceCurrency"],
-        ["offers", 0, "priceSpecification", "priceCurrency"],
-      ];
-
-      const jsonLdCurrency = extractFromJsonLd(document, jsonLdPaths);
-      if (jsonLdCurrency) return normalizeCurrency(jsonLdCurrency);
-
-      const currencySelectors: Selector[] = [
-        { selector: 'meta[property="og:price:currency"]', attr: "content" },
-        {
-          selector: 'meta[property="product:price:currency"]',
-          attr: "content",
-        },
-        { selector: '[itemprop="priceCurrency"]', attr: "content" },
-        { selector: "[data-currency]", attr: "content" },
-      ];
-
-      const metaCurrency = extractFromSelectors(document, currencySelectors);
-      if (metaCurrency) {
-        return normalizeCurrency(metaCurrency);
+      // 1. Check JSON-LD (highest priority)
+      const jsonLdCurrency = extractFromJsonLd(
+        document,
+        CURRENCY_SELECTORS.JSONLD_PATHS.map((path) => [...path])
+      );
+      if (jsonLdCurrency) {
+        const normalized = normalizeCurrency(jsonLdCurrency);
+        if (normalized) return normalized;
       }
 
-      // Try currency symbols as last resort
-      const priceElements = document.querySelectorAll(
-        ".price, .product-price, .special-price, [class*='price']"
-      );
+      // 2. Check meta tags and microdata
+      const metaCurrency = extractFromSelectors(document, [
+        ...CURRENCY_SELECTORS.META,
+      ]);
+      if (metaCurrency) {
+        const normalized = normalizeCurrency(metaCurrency);
+        if (normalized) return normalized;
+      }
 
+      // 3. Try currency codes and symbols in price-related elements
+      const priceElements = document.querySelectorAll(PRICE_ELEMENTS_SELECTOR);
+      const foundCurrencies: FoundCurrencies = new Map();
+
+      // First check for language hints at document level
+      const documentLang = document.documentElement.lang
+        ?.toLowerCase()
+        ?.split("-")[0];
+      if (
+        documentLang?.match(LANGUAGE_CODE_REGEX) &&
+        LANG_TO_CURRENCY[documentLang]
+      ) {
+        foundCurrencies.set(LANG_TO_CURRENCY[documentLang], {
+          confidence: CURRENCY_CONFIDENCE.LANGUAGE,
+          source: "code",
+        });
+      }
+
+      // Then check for language hints in the DOM, starting from the top
+      const langElements = document.querySelectorAll("[lang]");
+      langElements.forEach((el) => {
+        const lang = el.getAttribute("lang")?.toLowerCase()?.split("-")[0];
+        if (lang?.match(LANGUAGE_CODE_REGEX) && LANG_TO_CURRENCY[lang]) {
+          // Check if this element contains any price elements
+          const priceElementsInLang = el.querySelectorAll(
+            PRICE_ELEMENTS_SELECTOR
+          );
+          if (priceElementsInLang.length > 0) {
+            foundCurrencies.set(LANG_TO_CURRENCY[lang], {
+              confidence: CURRENCY_CONFIDENCE.LANGUAGE,
+              source: "code",
+            });
+          }
+        }
+      });
+
+      // Finally check individual price elements
       for (const element of priceElements) {
-        const priceText = element.textContent;
+        const priceText = element.textContent?.trim();
         if (!priceText) continue;
 
-        // Check symbols first
-        for (const [symbol, currency] of Object.entries(CURRENCY_SYMBOL_MAP)) {
-          if (priceText.includes(symbol)) {
-            return currency;
-          }
+        // Check for currency codes first (higher confidence)
+        const currencyFromText = extractCurrencyFromText(priceText);
+        if (currencyFromText) {
+          foundCurrencies.set(currencyFromText, {
+            confidence: CURRENCY_CONFIDENCE.CODE,
+            source: "code",
+          });
+          continue;
         }
 
-        // Then check currency codes
-        for (const currency of CURRENCIES) {
-          if (priceText.toUpperCase().includes(currency.value)) {
-            return currency.value;
+        // Then check for symbols (lower confidence)
+        for (const [symbol, currencies] of Object.entries(
+          SYMBOL_TO_CURRENCIES
+        )) {
+          if (priceText.includes(symbol)) {
+            if (currencies.length === 1) {
+              // Unambiguous symbol
+              foundCurrencies.set(currencies[0], {
+                confidence: CURRENCY_CONFIDENCE.UNAMBIGUOUS_SYMBOL,
+                source: "symbol",
+              });
+            } else {
+              // For ambiguous symbols, add all possibilities with lower confidence
+              currencies.forEach((curr) => {
+                foundCurrencies.set(curr, {
+                  confidence: CURRENCY_CONFIDENCE.AMBIGUOUS_SYMBOL,
+                  source: "symbol",
+                });
+              });
+            }
           }
         }
+      }
+
+      // Return the currency with highest confidence
+      if (foundCurrencies.size > 0) {
+        const [currency] = Array.from(foundCurrencies.entries()).sort(
+          (a, b) => {
+            const confidenceDiff = b[1].confidence - a[1].confidence;
+            // If same confidence, prefer code over symbol
+            return confidenceDiff !== 0
+              ? confidenceDiff
+              : a[1].source === "code"
+              ? -1
+              : 1;
+          }
+        )[0];
+        return currency;
       }
 
       return undefined;
     } catch (error) {
-      console.error("Currency extraction failed:", error);
+      if (error instanceof DOMException) {
+        console.error("DOM manipulation error:", error);
+      } else {
+        console.error("Currency extraction failed:", error);
+      }
       return undefined;
     }
   },
