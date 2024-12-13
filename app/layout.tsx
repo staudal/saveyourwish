@@ -12,8 +12,57 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "SaveYourWish",
-  description: "Making your wishlists more fun",
+  metadataBase: new URL("https://saveyourwish.com"),
+  title: {
+    default: "SaveYourWish - Create and Share Wishlists",
+    template: "%s | SaveYourWish",
+  },
+  description:
+    "Create, share, and manage wishlists for birthdays, holidays, and special occasions. Avoid duplicate gifts and make gift-giving a delightful experience.",
+  keywords: [
+    "wishlist",
+    "gift registry",
+    "gift list",
+    "birthday wishlist",
+    "wedding registry",
+    "gift management",
+  ],
+  authors: [{ name: "Jakob Staudal" }],
+  creator: "Jakob Staudal",
+  publisher: "SaveYourWish",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-icon.png",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://saveyourwish.com",
+    siteName: "SaveYourWish",
+    title: "SaveYourWish - Create and Share Wishlists",
+    description:
+      "Create, share, and manage wishlists for birthdays, holidays, and special occasions.",
+    images: [
+      {
+        url: "/api/og",
+        width: 1200,
+        height: 630,
+        alt: "SaveYourWish Preview",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SaveYourWish - Create and Share Wishlists",
+    description:
+      "Create, share, and manage wishlists for birthdays, holidays, and special occasions.",
+    images: ["/api/og"],
+  },
 };
 
 export const viewport: Viewport = {
