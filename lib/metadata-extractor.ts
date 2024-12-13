@@ -270,7 +270,12 @@ export const imageExtractor: ImageExtractor = {
   extract: (document: Document) => {
     const images: { url: string; score: number }[] = [];
 
-    const normalizeUrl = (url: string, baseUri: string): string | undefined => {
+    const normalizeUrl = (
+      url: string | null | undefined,
+      baseUri: string
+    ): string | undefined => {
+      if (!url) return undefined;
+
       try {
         if (url.startsWith("//")) url = `https:${url}`;
         let absoluteUrl = new URL(url, baseUri).href;
@@ -320,7 +325,12 @@ export const imageExtractor: ImageExtractor = {
       return score;
     };
 
-    const addUniqueImage = (element: Element, url: string) => {
+    const addUniqueImage = (
+      element: Element,
+      url: string | null | undefined
+    ) => {
+      if (!url) return;
+
       const normalizedUrl = normalizeUrl(url, document.baseURI);
       if (normalizedUrl) {
         const cleanUrl = normalizeImageUrl(normalizedUrl);
