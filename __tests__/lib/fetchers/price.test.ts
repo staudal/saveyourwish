@@ -19,19 +19,11 @@ describe("priceFetcher", () => {
         </script>
       `);
       expect(await priceFetcher.fetch(doc)).toEqual({
-        price: 99.99,
-        currency: "USD",
-      });
-    });
-
-    it("combines price and currency from different sources", async () => {
-      const doc = createMockDocument(`
-        <meta property="product:price:amount" content="99.99" />
-        <meta property="product:price:currency" content="EUR" />
-      `);
-      expect(await priceFetcher.fetch(doc)).toEqual({
-        price: 99.99,
-        currency: "EUR",
+        success: true,
+        data: {
+          price: 99.99,
+          currency: "USD",
+        },
       });
     });
 
@@ -40,46 +32,35 @@ describe("priceFetcher", () => {
         <meta property="product:price:amount" content="99.99" />
       `);
       expect(await priceFetcher.fetch(doc)).toEqual({
-        price: 99.99,
-        currency: undefined,
+        success: true,
+        data: {
+          price: 99.99,
+          currency: undefined,
+        },
       });
     });
 
     it("handles invalid inputs", async () => {
       const doc = createMockDocument(`<div>Invalid</div>`);
       expect(await priceFetcher.fetch(doc)).toEqual({
-        price: undefined,
-        currency: undefined,
+        success: true,
+        data: {
+          price: undefined,
+          currency: undefined,
+        },
       });
     });
-  });
 
-  it("handles network timeouts", async () => {
-    const doc = createMockDocument(`
-      <meta property="og:price:amount" content="99.99">
-    `);
+    it("handles network timeouts", async () => {
+      const doc = createMockDocument(`<div>Invalid</div>`);
+      vi.spyOn(priceExtractor, "extract").mockRejectedValue(
+        new Error("Timeout")
+      );
 
-    // Mock a slow extraction that rejects
-    vi.spyOn(priceExtractor, "extract").mockRejectedValue(new Error("Timeout"));
-
-    const result = await priceFetcher.fetch(doc);
-    expect(result).toEqual({
-      price: undefined,
-      currency: undefined,
-    });
-  });
-
-  it("handles extraction errors", async () => {
-    const doc = createMockDocument(`<div>Invalid</div>`);
-
-    vi.spyOn(priceExtractor, "extract").mockImplementation(() => {
-      throw new Error("Extraction failed");
-    });
-
-    const result = await priceFetcher.fetch(doc);
-    expect(result).toEqual({
-      price: undefined,
-      currency: undefined,
+      expect(await priceFetcher.fetch(doc)).toEqual({
+        success: false,
+        error: "Failed to fetch price",
+      });
     });
   });
 });

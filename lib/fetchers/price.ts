@@ -1,10 +1,19 @@
-import { currencyExtractor, priceExtractor } from "@/lib/extractors";
+import { priceExtractor } from "../extractors/price";
+import { currencyExtractor } from "../extractors/currency";
+import { JSDOM } from "jsdom";
 
 const FETCH_TIMEOUT = 5000;
 
 export const priceFetcher = {
-  async fetch(document: Document) {
+  async fetch(input: string | Document) {
     try {
+      const document =
+        typeof input === "string"
+          ? await fetch(input)
+              .then((res) => res.text())
+              .then((html) => new JSDOM(html).window.document)
+          : input;
+
       const [price, currency] = await Promise.all([
         Promise.race([
           priceExtractor.extract(document),
@@ -15,10 +24,10 @@ export const priceFetcher = {
         currencyExtractor.extract(document),
       ]);
 
-      return { price, currency };
+      return { success: true, data: { price, currency } };
     } catch (error) {
       console.error("Price fetching failed:", error);
-      return { price: undefined, currency: undefined };
+      return { success: false, error: "Failed to fetch price" };
     }
   },
 };

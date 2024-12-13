@@ -34,7 +34,7 @@ import {
 } from "@/actions/wish";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { CURRENCY_VALUES } from "@/constants";
+import { CURRENCIES } from "@/constants";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { uploadImageToBlob } from "@/lib/blob";
@@ -88,8 +88,7 @@ export function WishDialog({
         : {
             title: wish!.title,
             price: wish!.price ?? undefined,
-            currency: (wish!.currency ??
-              "USD") as (typeof CURRENCY_VALUES)[number],
+            currency: (wish!.currency ?? "USD") as string,
             imageUrl: wish!.imageUrl ?? "",
             destinationUrl: wish!.destinationUrl ?? "",
             description: wish!.description ?? "",
@@ -103,7 +102,7 @@ export function WishDialog({
       form.reset({
         title: wish.title,
         price: wish.price ?? undefined,
-        currency: (wish.currency ?? "USD") as (typeof CURRENCY_VALUES)[number],
+        currency: (wish.currency ?? "USD") as string,
         imageUrl: wish.imageUrl ?? "",
         destinationUrl: wish.destinationUrl ?? "",
         description: wish.description ?? "",
@@ -244,13 +243,8 @@ export function WishDialog({
     }
   };
 
-  const isCurrencyValue = (
-    value: string | undefined
-  ): value is (typeof CURRENCY_VALUES)[number] => {
-    return (
-      !!value &&
-      CURRENCY_VALUES.includes(value as (typeof CURRENCY_VALUES)[number])
-    );
+  const isCurrencyValue = (value: string | undefined): value is string => {
+    return !!value && Object.keys(CURRENCIES).includes(value);
   };
 
   const handleCreateManually = () => {
@@ -410,8 +404,7 @@ export function WishDialog({
                     form.reset({
                       title: wish!.title,
                       price: wish!.price ?? undefined,
-                      currency: (wish!.currency ??
-                        "USD") as (typeof CURRENCY_VALUES)[number],
+                      currency: (wish!.currency ?? "USD") as string,
                       imageUrl: wish!.imageUrl ?? "",
                       destinationUrl: wish!.destinationUrl ?? "",
                       description: wish!.description ?? "",
@@ -463,8 +456,7 @@ export function WishDialog({
                     form.reset({
                       title: wish!.title,
                       price: wish!.price ?? undefined,
-                      currency: (wish!.currency ??
-                        "USD") as (typeof CURRENCY_VALUES)[number],
+                      currency: (wish!.currency ?? "USD") as string,
                       imageUrl: wish!.imageUrl ?? "",
                       destinationUrl: wish!.destinationUrl ?? "",
                       description: wish!.description ?? "",

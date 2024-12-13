@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { eq, and, sql } from "drizzle-orm";
 import { deleteImageFromBlob, uploadImageToBlob } from "@/lib/blob";
-import { fetchPrice, fetchTitle, fetchImages } from "@/lib/fetchers";
+import { priceFetcher, fetchTitle, fetchImages } from "@/lib/fetchers";
 
 type WishInput = {
   title: string;
@@ -458,7 +458,7 @@ export async function getUrlMetadata(url: string) {
     // Fetch all metadata in parallel
     const [titleResult, priceResult, imagesResult] = await Promise.all([
       fetchTitle(url),
-      fetchPrice(url),
+      priceFetcher.fetch(url),
       fetchImages(url),
     ]);
 
@@ -473,7 +473,7 @@ export async function getUrlMetadata(url: string) {
       metadata.title = titleResult.data.title;
     }
 
-    if (priceResult.success) {
+    if (priceResult.success && priceResult.data) {
       metadata.price = priceResult.data.price;
       metadata.currency = priceResult.data.currency;
     }
@@ -497,5 +497,5 @@ export async function getUrlMetadata(url: string) {
 }
 
 export async function getUrlPrice(url: string) {
-  return fetchPrice(url);
+  return priceFetcher.fetch(url);
 }
