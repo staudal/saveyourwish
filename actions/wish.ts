@@ -5,27 +5,8 @@ import { wishes, wishlists, wishReservations } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { eq, and, sql } from "drizzle-orm";
-import { z } from "zod";
-import { JSDOM, VirtualConsole } from "jsdom";
-import {
-  titleExtractor,
-  priceExtractor,
-  currencyExtractor,
-  imageExtractor,
-} from "@/lib/metadata-extractor";
 import { deleteImageFromBlob, uploadImageToBlob } from "@/lib/blob";
-import { headers } from "next/headers";
-
-const metadataSchema = z.object({
-  title: z.string().optional(),
-  price: z.number().optional(),
-  currency: z.string().optional(),
-  imageUrl: z.string().optional(),
-  images: z.array(z.string()).optional(),
-  description: z.string().optional(),
-  destinationUrl: z.string(),
-  autoUpdatePrice: z.boolean(),
-});
+import { fetchPrice, fetchTitle, fetchImages } from "@/lib/fetchers";
 
 type WishInput = {
   title: string;
@@ -441,102 +422,6 @@ export async function removeReservation(wishId: string) {
   }
 }
 
-export async function getUrlMetadata(url: string) {
-  try {
-    const response = await fetch(url, {
-      headers: {
-        // Simulate a browser request
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        Accept:
-          "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-        // Forward the origin and referer from the client request
-        Origin: headers().get("origin") || "https://saveyourwish.com",
-        Referer: headers().get("referer") || "https://saveyourwish.com",
-      },
-    });
-
-    if (!response.ok) {
-      console.error(`Failed to fetch URL (${response.status}): ${url}`);
-      return {
-        success: false,
-        error: `Failed to fetch URL: ${response.statusText}`,
-      };
-    }
-
-    const html = await response.text();
-
-    // Configure JSDOM to prevent preloading
-    const dom = new JSDOM(html, {
-      runScripts: "outside-only",
-      resources: "usable",
-      pretendToBeVisual: true,
-      virtualConsole: new VirtualConsole().sendTo(console, {
-        omitJSDOMErrors: true,
-      }),
-      beforeParse(window) {
-        // Prevent preload/prefetch
-        const originalCreateElement = window.document.createElement;
-        window.document.createElement = function (
-          tagName: string,
-          options?: ElementCreationOptions
-        ) {
-          const element = originalCreateElement.call(this, tagName, options);
-          if (tagName.toLowerCase() === "link") {
-            Object.defineProperty(element, "rel", {
-              get: () => null,
-              set: () => {},
-            });
-          }
-          return element;
-        };
-      },
-    });
-
-    const document = dom.window.document;
-
-    const rawTitle = titleExtractor.extract(document, url);
-    const rawPrice = priceExtractor.extract(document);
-    const currency = currencyExtractor.extract(document);
-    const images = imageExtractor.extract(document);
-
-    const metadata: Record<string, any> = {
-      destinationUrl: url,
-      autoUpdatePrice: false,
-      images,
-      imageUrl: images[0],
-    };
-
-    if (rawTitle) {
-      metadata.title = titleExtractor.clean?.(rawTitle, url) ?? rawTitle;
-    }
-
-    if (rawPrice) {
-      const cleanPrice = priceExtractor.clean(rawPrice);
-      const numericPrice = parseFloat(cleanPrice);
-      if (!isNaN(numericPrice)) {
-        metadata.price = numericPrice;
-      }
-    }
-
-    if (currency) {
-      metadata.currency = currency;
-    }
-
-    return {
-      success: true,
-      data: metadataSchema.parse(metadata),
-    };
-  } catch (error) {
-    console.error("Error fetching URL:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch URL",
-    };
-  }
-}
-
 export async function fetchAndUploadImage(
   imageUrl: string,
   wishlistId: string
@@ -566,4 +451,51 @@ export async function fetchAndUploadImage(
     console.error("Error fetching and uploading image:", error);
     return { success: false as const, error: "Failed to process image" };
   }
+}
+
+export async function getUrlMetadata(url: string) {
+  try {
+    // Fetch all metadata in parallel
+    const [titleResult, priceResult, imagesResult] = await Promise.all([
+      fetchTitle(url),
+      fetchPrice(url),
+      fetchImages(url),
+    ]);
+
+    // Build metadata object
+    const metadata: Record<string, any> = {
+      destinationUrl: url,
+      autoUpdatePrice: false,
+    };
+
+    // Add successful results to metadata
+    if (titleResult.success) {
+      metadata.title = titleResult.data.title;
+    }
+
+    if (priceResult.success) {
+      metadata.price = priceResult.data.price;
+      metadata.currency = priceResult.data.currency;
+    }
+
+    if (imagesResult.success) {
+      metadata.images = imagesResult.data.images;
+      metadata.imageUrl = imagesResult.data.imageUrl;
+    }
+
+    return {
+      success: true,
+      data: metadata,
+    };
+  } catch (error) {
+    console.error("Error fetching metadata:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+export async function getUrlPrice(url: string) {
+  return fetchPrice(url);
 }

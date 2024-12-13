@@ -7,25 +7,31 @@ export const WISHLIST_CATEGORIES = [
 
 export type DialogState = "url" | "configure";
 
-export const CURRENCIES = [
-  { value: "USD", label: "US Dollar", symbol: "$" },
-  { value: "EUR", label: "Euro", symbol: "€" },
-  { value: "DKK", label: "Danish Krone", symbol: "kr" },
-  { value: "SEK", label: "Swedish Krona", symbol: "kr" },
-  { value: "NOK", label: "Norwegian Krone", symbol: "kr" },
-  { value: "GBP", label: "British Pound", symbol: "£" },
+type CurrencyInfo = {
+  readonly value: string;
+  readonly label: string;
+  readonly symbol: string;
+  readonly tlds: readonly string[];
+};
+
+export const CURRENCIES: readonly CurrencyInfo[] = [
+  { value: "USD", label: "US Dollar", symbol: "$", tlds: ["us"] },
+  { value: "EUR", label: "Euro", symbol: "€", tlds: ["eu"] },
+  { value: "DKK", label: "Danish Krone", symbol: "kr", tlds: ["dk"] },
+  { value: "SEK", label: "Swedish Krona", symbol: "kr", tlds: ["se"] },
+  { value: "NOK", label: "Norwegian Krone", symbol: "kr", tlds: ["no"] },
+  { value: "GBP", label: "British Pound", symbol: "£", tlds: ["uk", "co.uk"] },
+  { value: "JPY", label: "Japanese Yen", symbol: "¥", tlds: ["jp"] },
+  { value: "CHF", label: "Swiss Franc", symbol: "CHF", tlds: ["ch"] },
+  { value: "CAD", label: "Canadian Dollar", symbol: "CAD", tlds: ["ca"] },
+  { value: "AUD", label: "Australian Dollar", symbol: "AUD", tlds: ["au"] },
+  { value: "NZD", label: "New Zealand Dollar", symbol: "NZD", tlds: ["nz"] },
+  { value: "CNY", label: "Chinese Yuan", symbol: "¥", tlds: ["cn"] },
+  { value: "HKD", label: "Hong Kong Dollar", symbol: "HKD", tlds: ["hk"] },
+  { value: "SGD", label: "Singapore Dollar", symbol: "SGD", tlds: ["sg"] },
 ] as const;
 
 export type Currency = (typeof CURRENCIES)[number]["value"];
-
-export const CURRENCY_VALUES = [
-  "USD",
-  "EUR",
-  "DKK",
-  "SEK",
-  "NOK",
-  "GBP",
-] as const;
 
 // Example conversion rates (you should use a real exchange rate API in production)
 const EXCHANGE_RATES: Record<Currency, number> = {

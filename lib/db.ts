@@ -123,6 +123,10 @@ export const wishes = pgTable("wish", {
   imageZoom: real("imageZoom").default(1),
   position: integer("position").notNull(),
   autoUpdatePrice: boolean("autoUpdatePrice").notNull().default(false),
+  priceUpdateFailures: integer("price_update_failures").notNull().default(0),
+  lastPriceUpdateAttempt: timestamp("last_price_update_attempt", {
+    mode: "date",
+  }),
 });
 
 export const wishReservations = pgTable("wish_reservations", {

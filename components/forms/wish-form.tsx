@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CurrencySelect } from "@/components/ui/currency-select";
-import { Currency, CURRENCY_VALUES } from "@/constants";
+import { CURRENCIES, Currency } from "@/constants";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,7 @@ export const formSchema = z.object({
     (val) => (val === "" || isNaN(Number(val)) ? undefined : Number(val)),
     z.number().min(0.01, "Price must be at least 0.01").optional()
   ),
-  currency: z.enum(CURRENCY_VALUES),
+  currency: z.enum(CURRENCIES.map((c) => c.value) as [string, ...string[]]),
   imageUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   destinationUrl: z.string().url("Must be a valid URL"),
   description: z.string().max(1000).optional(),
@@ -170,9 +170,9 @@ export function WishForm({
         form.setValue("price", result.data.price);
         if (
           result.data.currency &&
-          CURRENCY_VALUES.includes(result.data.currency as Currency)
+          CURRENCIES.map((c) => c.value).includes(result.data.currency)
         ) {
-          form.setValue("currency", result.data.currency as Currency);
+          form.setValue("currency", result.data.currency);
         }
         form.setValue("autoUpdatePrice", true);
         return true;
@@ -461,7 +461,9 @@ export function WishForm({
           />
           <CurrencySelect
             value={form.watch("currency") || "USD"}
-            onValueChange={(value) => form.setValue("currency", value)}
+            onValueChange={(value: Currency) =>
+              form.setValue("currency", value)
+            }
             className={cn(
               form.formState.errors.currency && "border-destructive",
               "w-[110px]"
