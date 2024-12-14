@@ -81,7 +81,7 @@ export async function getWishes(wishlistId: string, isSharedAccess?: boolean) {
     if (!wishlist) throw new Error("Wishlist not found");
   }
 
-  return await db
+  const results = await db
     .select({
       id: wishes.id,
       title: wishes.title,
@@ -106,6 +106,12 @@ export async function getWishes(wishlistId: string, isSharedAccess?: boolean) {
     .leftJoin(wishReservations, eq(wishes.id, wishReservations.wishId))
     .where(eq(wishes.wishlistId, wishlistId))
     .orderBy(wishes.position);
+
+  return results.map((wish) => ({
+    ...wish,
+    priceUpdateFailures: 0,
+    lastPriceUpdateAttempt: null,
+  }));
 }
 
 export async function deleteWish(id: string, wishlistId: string) {
