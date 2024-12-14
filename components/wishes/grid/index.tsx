@@ -238,7 +238,7 @@ export function WishesGrid({
 
   return (
     <div className="space-y-6">
-      {coverImage && renderHeader()}
+      {renderHeader()}
 
       <DndContext
         sensors={sensors}
