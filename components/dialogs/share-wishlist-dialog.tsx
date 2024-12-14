@@ -114,8 +114,8 @@ export function ShareWishlistDialog({
             <DialogTitle>Share wishlist</DialogTitle>
             <DialogDescription>
               {sharing
-                ? "Share your wishlist with others"
-                : "Hide your wishlist from others"}
+                ? "Your wishlist can be accessed by anyone with the link below"
+                : "Click the button below and receive a link that you can share with your friends and family"}
             </DialogDescription>
           </DialogHeader>
           {sharing && (
