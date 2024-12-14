@@ -105,7 +105,6 @@ export const currencyExtractor: BaseMetadataExtractor<string> = {
 
       // Add TLD-based detection
       const tld = getTldFromUrl(document.URL);
-      console.log("URL TLD detection:", { url: document.URL, tld });
 
       if (tld) {
         const currencyFromTld = CURRENCIES.find((curr) =>
@@ -190,10 +189,6 @@ export const currencyExtractor: BaseMetadataExtractor<string> = {
       for (const element of priceElements) {
         // Skip conversion elements entirely
         if (isConversionElement(element as Element)) {
-          console.log(
-            "Skipping conversion element:",
-            element.textContent?.trim()
-          );
           continue;
         }
 
@@ -203,10 +198,6 @@ export const currencyExtractor: BaseMetadataExtractor<string> = {
         // Check for currency codes
         const currencyFromText = extractCurrencyFromText(priceText);
         if (currencyFromText) {
-          console.log("Found currency code:", {
-            text: priceText,
-            currency: currencyFromText,
-          });
           foundCurrencies.set(currencyFromText, {
             confidence: CURRENCY_CONFIDENCE.CODE,
             source: "code",
@@ -252,21 +243,14 @@ export const currencyExtractor: BaseMetadataExtractor<string> = {
 
       // Return the currency with highest confidence
       if (foundCurrencies.size > 0) {
-        console.log("\nFound currencies with sources:");
         const candidates = Array.from(foundCurrencies.entries());
-        candidates.forEach(([currency, metadata]) => {
-          console.log(
-            `${currency}: confidence=${metadata.confidence}, source=${metadata.source}`
-          );
-        });
 
         // Sort by confidence, then preserve original order for equal confidence
-        const [selectedCurrency, metadata] = candidates.sort((a, b) => {
+        const [selectedCurrency] = candidates.sort((a, b) => {
           const confidenceDiff = b[1].confidence - a[1].confidence;
           return confidenceDiff !== 0 ? confidenceDiff : -1; // Keep original order when equal
         })[0];
 
-        console.log(`Selected: ${selectedCurrency} (${metadata.source})`);
         return selectedCurrency;
       }
 
