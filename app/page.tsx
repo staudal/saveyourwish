@@ -6,21 +6,19 @@ import { Hero } from "@/components/home/hero";
 import { PrimaryFeatures } from "@/components/home/primary-features";
 import { SecondaryFeatures } from "@/components/home/secondary-features";
 import { type Metadata } from "next";
+import { faqs } from "@/components/home/faq";
 
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
-  mainEntity: [
-    {
-      "@type": "Question",
-      name: "Is this service really free?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Yes! Our wishlist service is completely free to use. Create as many wishlists as you want and share them with anyone.",
-      },
+  mainEntity: faqs.flat().map((faq) => ({
+    "@type": "Question",
+    name: faq.question,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: faq.answer,
     },
-    // Add all other FAQ items here
-  ],
+  })),
 };
 
 export default function Home() {
@@ -33,7 +31,7 @@ export default function Home() {
       <header className="bg-white">
         <Header />
       </header>
-      <main>
+      <main className="bg-white">
         <article>
           <Hero />
           <section aria-labelledby="features-heading">
