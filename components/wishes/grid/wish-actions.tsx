@@ -37,17 +37,17 @@ export function WishActions({
         <DropdownMenuContent align="end" className="w-40">
           <DropdownMenuLabel>Manage</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => onEdit(wish)}>
+          <DropdownMenuItem onSelect={() => onEdit(wish)}>
             <PencilIcon className="h-4 w-4 mr-2" />
             <span>Edit</span>
           </DropdownMenuItem>
           {wish.imageUrl && (
-            <DropdownMenuItem onClick={() => onAdjustImage(wish)}>
+            <DropdownMenuItem onSelect={() => onAdjustImage(wish)}>
               <Move className="h-4 w-4 mr-2" />
               <span>Adjust image</span>
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem onClick={() => onDelete(wish)}>
+          <DropdownMenuItem onSelect={() => onDelete(wish)}>
             <Trash2Icon className="h-4 w-4 mr-2" />
             <span>Delete</span>
           </DropdownMenuItem>
