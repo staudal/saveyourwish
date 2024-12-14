@@ -1,6 +1,7 @@
 import { imageExtractor } from "@/lib/extractors/image";
 import { describe, it, expect } from "vitest";
 import { setupTestEnv } from "@/__tests__/lib/test-utils";
+import { IMAGE_LIMITS } from "@/constants";
 
 describe("imageExtractor", () => {
   const { createMockDocument } = setupTestEnv();
@@ -253,6 +254,42 @@ describe("imageExtractor", () => {
       `);
       const results = imageExtractor.extract(doc);
       expect(results[0]).toMatch(/normal\.jpg$/);
+    });
+  });
+
+  describe("image limits", () => {
+    it("limits the number of returned images to MAX_IMAGES", () => {
+      // Create more images than the limit
+      const imageUrls = Array.from(
+        { length: 20 },
+        (_, i) => `https://example.com/image${i + 1}.jpg`
+      );
+
+      const html = imageUrls
+        .map((url) => `<img src="${url}" width="800" height="800" />`)
+        .join("\n");
+
+      const doc = createMockDocument(html);
+      const results = imageExtractor.extract(doc);
+
+      expect(results.length).toBeLessThanOrEqual(IMAGE_LIMITS.MAX_IMAGES);
+      expect(results).toHaveLength(IMAGE_LIMITS.MAX_IMAGES);
+    });
+
+    it("returns all images when less than MAX_IMAGES", () => {
+      const imageUrls = Array.from(
+        { length: 5 },
+        (_, i) => `https://example.com/image${i + 1}.jpg`
+      );
+
+      const html = imageUrls
+        .map((url) => `<img src="${url}" width="800" height="800" />`)
+        .join("\n");
+
+      const doc = createMockDocument(html);
+      const results = imageExtractor.extract(doc);
+
+      expect(results).toHaveLength(5);
     });
   });
 });

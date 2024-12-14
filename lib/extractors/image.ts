@@ -2,7 +2,11 @@ import { ImageExtractor, Selector } from "./types";
 import { MinimalDocument } from "../fetchers/types";
 import { normalizeImageUrl, scoreImage } from "./utils";
 import { HTMLElement } from "node-html-parser";
-import { IMAGE_SELECTORS, IMAGE_URL_NORMALIZATION } from "@/constants";
+import {
+  IMAGE_SELECTORS,
+  IMAGE_URL_NORMALIZATION,
+  IMAGE_LIMITS,
+} from "@/constants";
 
 export const imageExtractor: ImageExtractor = {
   extract: (document: Document | MinimalDocument): string[] => {
@@ -107,6 +111,7 @@ export const imageExtractor: ImageExtractor = {
     return images
       .filter((img) => img.score >= 0) // Filter out negative scores (thumbnails)
       .sort((a, b) => b.score - a.score)
+      .slice(0, IMAGE_LIMITS.MAX_IMAGES) // Limit to max number of images
       .map((img) => img.url);
   },
 

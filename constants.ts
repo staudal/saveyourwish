@@ -204,6 +204,10 @@ export const BOT_DETECTION_PATTERNS = [
   "bot check",
 ] as const;
 
+export const IMAGE_LIMITS = {
+  MAX_IMAGES: 8,
+} as const;
+
 export const TITLE_SELECTORS = {
   META: [
     { selector: 'meta[property="og:title"]', attr: "content" },
