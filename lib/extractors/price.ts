@@ -15,7 +15,9 @@ export const priceExtractor: BaseMetadataExtractor<number> = {
       );
       if (jsonLdPrice) {
         const price = cleanPrice(jsonLdPrice);
-        if (price) return price;
+        if (price) {
+          return price;
+        }
       }
 
       // 2. Try meta tags
@@ -24,27 +26,59 @@ export const priceExtractor: BaseMetadataExtractor<number> = {
       ]);
       if (metaPrice) {
         const price = cleanPrice(metaPrice);
-        if (price) return price;
+        if (price) {
+          return price;
+        }
       }
 
-      // 3. Try price elements
-      const priceElements = document.querySelectorAll("*");
+      // 3. Try specific price selectors first
+      const priceSelector = PRICE_SELECTORS.PRICE.join(", ");
+      const priceElements = document.querySelectorAll(priceSelector);
       const candidates: number[] = [];
 
       for (const element of priceElements) {
-        if (
-          element.tagName === "SCRIPT" ||
-          element.tagName === "STYLE" ||
-          element.closest("script") ||
-          element.closest("style")
-        )
-          continue;
-
-        const price = cleanPrice(element.textContent?.trim());
-        if (price) candidates.push(price);
+        const text = element.textContent?.trim();
+        const price = cleanPrice(text);
+        if (price) {
+          candidates.push(price);
+        }
       }
 
-      return candidates.length > 0 ? Math.min(...candidates) : undefined;
+      // 4. If no prices found, try all elements as fallback
+      if (candidates.length === 0) {
+        const allElements = document.querySelectorAll("*");
+        for (const element of allElements) {
+          if (
+            element.tagName === "SCRIPT" ||
+            element.tagName === "STYLE" ||
+            element.closest("script") ||
+            element.closest("style")
+          )
+            continue;
+
+          const text = element.textContent?.trim();
+          const price = cleanPrice(text);
+          if (price) {
+            candidates.push(price);
+          }
+        }
+      }
+
+      if (candidates.length > 0) {
+        // Get the most frequent price
+        const priceFrequency = new Map<number, number>();
+        candidates.forEach((price) => {
+          priceFrequency.set(price, (priceFrequency.get(price) || 0) + 1);
+        });
+
+        const [selectedPrice] = [...priceFrequency.entries()].sort(
+          (a, b) => b[1] - a[1]
+        ); // Sort by frequency
+
+        return selectedPrice[0];
+      }
+
+      return undefined;
     } catch {
       return undefined;
     }
@@ -140,8 +174,14 @@ function parseNumber(str: string): number | undefined {
       if (!s.includes(",") && s.includes(".")) {
         return Number(s);
       }
-      // Only comma, treat as group separator (1,234)
+      // Comma could be decimal or group separator
       if (s.includes(",") && !s.includes(".")) {
+        // If comma is followed by exactly 2 digits, it's a decimal separator
+        const parts = s.split(",");
+        if (parts[1]?.length === 2) {
+          return Number(s.replace(",", "."));
+        }
+        // Otherwise treat as group separator
         return Number(s.replace(/,/g, ""));
       }
       // No separators (1234)

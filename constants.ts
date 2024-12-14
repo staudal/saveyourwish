@@ -188,7 +188,22 @@ export const PRICE_SELECTORS = {
     { selector: 'meta[property="product:price:amount"]', attr: "content" },
     { selector: 'meta[itemprop="price"]', attr: "content" },
   ],
-  PRICE: [".price", "[itemprop='price']"],
+  PRICE: [
+    ".price",
+    "[itemprop='price']",
+    ".product-price",
+    ".offer-price",
+    ".sales-price",
+    ".current-price",
+    "#priceblock_ourprice",
+    "#priceblock_dealprice",
+    ".a-price .a-offscreen", // Amazon specific
+    "#price_inside_buybox", // Amazon specific
+    "[data-price-type='finalPrice']",
+    "[data-price-amount]",
+    ".product-info-price .price",
+    ".product-price-value",
+  ],
 } as const;
 
 export const IMAGE_LIMITS = {
