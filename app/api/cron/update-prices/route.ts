@@ -6,6 +6,7 @@ import { getUrlPrice } from "@/actions/wish";
 export const runtime = "edge";
 
 const MAX_FAILURES = 3; // After 3 failed attempts, disable auto-update
+const MIN_UPDATE_INTERVAL = 1000 * 60 * 60; // 1 hour in milliseconds
 
 export async function GET(request: Request) {
   try {
@@ -21,25 +22,67 @@ export async function GET(request: Request) {
       .from(wishes)
       .where(eq(wishes.autoUpdatePrice, true));
 
+    console.log(`Starting price update for ${autoUpdateWishes.length} wishes`);
+
     // Update prices
     const updates = await Promise.allSettled(
       autoUpdateWishes.map(async (wish) => {
         if (!wish.destinationUrl) return;
 
+        // Check update frequency
+        if (wish.lastPriceUpdateAttempt) {
+          const timeSinceLastUpdate =
+            Date.now() - wish.lastPriceUpdateAttempt.getTime();
+          if (timeSinceLastUpdate < MIN_UPDATE_INTERVAL) {
+            return {
+              id: wish.id,
+              success: false,
+              error: "Update too frequent",
+            };
+          }
+        }
+
         try {
           const priceData = await getUrlPrice(wish.destinationUrl);
 
           if (priceData.success && priceData.data) {
+            // Validate price data
+            if (priceData.data.price <= 0) {
+              const newFailureCount = (wish.priceUpdateFailures || 0) + 1;
+              await db
+                .update(wishes)
+                .set({
+                  priceUpdateFailures: newFailureCount,
+                  lastPriceUpdateAttempt: new Date(),
+                  autoUpdatePrice: newFailureCount < MAX_FAILURES,
+                })
+                .where(eq(wishes.id, wish.id));
+
+              return {
+                id: wish.id,
+                success: false,
+                error: "Invalid price",
+                failureCount: newFailureCount,
+                autoUpdateDisabled: newFailureCount >= MAX_FAILURES,
+              };
+            }
+
             // Reset failures count on success
             await db
               .update(wishes)
               .set({
                 price: priceData.data.price,
                 currency: priceData.data.currency || wish.currency,
-                priceUpdateFailures: 0, // Reset counter on success
+                priceUpdateFailures: 0,
                 lastPriceUpdateAttempt: new Date(),
               })
               .where(eq(wishes.id, wish.id));
+
+            console.log(
+              `Updated price for wish ${wish.id}: ${wish.price ?? "N/A"} -> ${
+                priceData.data.price
+              } ${priceData.data.currency || wish.currency}`
+            );
 
             return {
               id: wish.id,
@@ -62,6 +105,10 @@ export async function GET(request: Request) {
             })
             .where(eq(wishes.id, wish.id));
 
+          console.error(
+            `Failed to update price for wish ${wish.id}: No price data found`
+          );
+
           return {
             id: wish.id,
             success: false,
@@ -80,6 +127,12 @@ export async function GET(request: Request) {
               autoUpdatePrice: newFailureCount < MAX_FAILURES,
             })
             .where(eq(wishes.id, wish.id));
+
+          console.error(
+            `Failed to update price for wish ${wish.id}: ${
+              error instanceof Error ? error.message : "Unknown error"
+            }`
+          );
 
           return {
             id: wish.id,
@@ -100,6 +153,10 @@ export async function GET(request: Request) {
       (result) =>
         result.status === "fulfilled" && result.value?.autoUpdateDisabled
     ).length;
+
+    console.log(
+      `Price update complete. ${successCount}/${autoUpdateWishes.length} wishes updated successfully`
+    );
 
     return NextResponse.json({
       success: true,
