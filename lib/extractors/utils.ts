@@ -49,6 +49,12 @@ export function extractFromSelectors(
 }
 
 export const normalizeImageUrl = (url: string): string => {
+  // Handle relative URLs that start with @
+  if (url.startsWith("@")) {
+    return url.substring(1); // Remove the @ symbol
+  }
+
+  // Clean the URL
   return url
     .replace(/\?imwidth=\d+/, "")
     .replace(/\?w=\d+/, "")

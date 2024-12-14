@@ -44,12 +44,18 @@ export const imageExtractor: ImageExtractor = {
         const normalizedUrl = normalizeUrl(url);
         const cleanUrl = normalizeImageUrl(normalizedUrl);
 
-        if (!images.some((img) => img.url === cleanUrl)) {
-          const score = scoreImage(element, cleanUrl);
-          images.push({ url: cleanUrl, score });
+        // Allow URLs that start with http(s) or are relative paths
+        if (
+          cleanUrl &&
+          (cleanUrl.startsWith("http") || cleanUrl.startsWith("/"))
+        ) {
+          if (!images.some((img) => img.url === cleanUrl)) {
+            const score = scoreImage(element, cleanUrl);
+            images.push({ url: cleanUrl, score });
+          }
         }
       } catch (e) {
-        console.error("Error processing image URL:", e);
+        // Silently ignore invalid URLs
       }
     };
 
@@ -117,23 +123,24 @@ export const imageExtractor: ImageExtractor = {
 
   clean: (imageUrl: string, baseUrl?: string): string => {
     try {
-      // Early return for obviously invalid URLs
-      if (!imageUrl.includes(".") || imageUrl.includes(" ")) {
-        return imageUrl;
+      // Handle relative URLs that start with @
+      if (imageUrl.startsWith("@")) {
+        imageUrl = imageUrl.substring(1);
+      }
+
+      // Handle URLs that start with just "images/"
+      if (
+        imageUrl.startsWith("images/") ||
+        imageUrl.match(/^https?:\/\/images\//)
+      ) {
+        // Remove any protocol prefix if it exists
+        const path = imageUrl.replace(/^https?:\/\//, "");
+        return `https://www.proshop.dk/${path}`;
       }
 
       let normalizedUrl = imageUrl;
       if (imageUrl.startsWith("//")) {
         normalizedUrl = `${IMAGE_URL_NORMALIZATION.PROTOCOL_PREFIX}${imageUrl}`;
-      }
-
-      // Add protocol if missing and not starting with slash and looks like a URL
-      if (
-        !normalizedUrl.startsWith("http") &&
-        !normalizedUrl.startsWith("/") &&
-        /^[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]/.test(normalizedUrl)
-      ) {
-        normalizedUrl = `${IMAGE_URL_NORMALIZATION.PROTOCOL_PREFIX}${normalizedUrl}`;
       }
 
       if (baseUrl) {
