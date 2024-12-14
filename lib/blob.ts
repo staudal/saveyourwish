@@ -1,7 +1,5 @@
 "use server";
 
-export const runtime = "nodejs";
-
 import { put, del } from "@vercel/blob";
 import { auth } from "@/lib/auth";
 import sharp from "sharp";
