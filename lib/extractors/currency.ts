@@ -44,7 +44,7 @@ type FoundCurrencies = Map<
   string,
   {
     confidence: number;
-    source: "code" | "symbol";
+    source: "code" | "symbol" | "format";
   }
 >;
 
@@ -83,10 +83,11 @@ export const currencyExtractor: BaseMetadataExtractor<string> = {
       // 3. Initialize foundCurrencies map before using it
       const foundCurrencies: FoundCurrencies = new Map();
 
-      // Add TLD-based detection after metadata checks but before symbol detection
+      // Add TLD-based detection
       const tld = getTldFromUrl(document.URL);
+      console.log("URL TLD detection:", { url: document.URL, tld });
+
       if (tld) {
-        // Find currency matching TLD
         const currencyFromTld = CURRENCIES.find((curr) =>
           curr.tlds.some((t) => t.endsWith(tld))
         )?.value;
@@ -102,6 +103,24 @@ export const currencyExtractor: BaseMetadataExtractor<string> = {
       // 4. Try currency codes and symbols in price-related elements
       const priceElements = document.querySelectorAll(PRICE_ELEMENTS_SELECTOR);
 
+      // Add Danish price format detection
+      const hasDanishPriceFormat = Array.from(
+        priceElements as NodeListOf<HTMLElement>
+      ).some((el) => {
+        const text = el.textContent?.trim();
+        return text && /\d+,\-$/.test(text); // Matches "XXX,-" format
+      });
+
+      if (hasDanishPriceFormat) {
+        const existing = foundCurrencies.get("DKK");
+        foundCurrencies.set("DKK", {
+          confidence: existing
+            ? existing.confidence + CURRENCY_CONFIDENCE.FORMAT
+            : CURRENCY_CONFIDENCE.FORMAT,
+          source: "format",
+        });
+      }
+
       // First check for language hints at document level
       const documentLang = document.documentElement.lang
         ?.toLowerCase()
@@ -110,14 +129,20 @@ export const currencyExtractor: BaseMetadataExtractor<string> = {
         documentLang?.match(LANGUAGE_CODE_REGEX) &&
         LANG_TO_CURRENCY[documentLang]
       ) {
+        const existing = foundCurrencies.get(LANG_TO_CURRENCY[documentLang]);
         foundCurrencies.set(LANG_TO_CURRENCY[documentLang], {
-          confidence: CURRENCY_CONFIDENCE.LANGUAGE,
+          confidence: Math.max(
+            existing?.confidence || 0,
+            CURRENCY_CONFIDENCE.LANGUAGE
+          ),
           source: "code",
         });
       }
 
-      // Then check for language hints in the DOM, starting from the top
+      // Then check for language hints in the DOM
       const langElements = document.querySelectorAll("[lang]");
+      let highestLevelLang: { lang: string; currency: string } | undefined;
+
       langElements.forEach((el) => {
         const lang = el.getAttribute("lang")?.toLowerCase()?.split("-")[0];
         if (lang?.match(LANGUAGE_CODE_REGEX) && LANG_TO_CURRENCY[lang]) {
@@ -126,13 +151,20 @@ export const currencyExtractor: BaseMetadataExtractor<string> = {
             PRICE_ELEMENTS_SELECTOR
           );
           if (priceElementsInLang.length > 0) {
-            foundCurrencies.set(LANG_TO_CURRENCY[lang], {
-              confidence: CURRENCY_CONFIDENCE.LANGUAGE,
-              source: "code",
-            });
+            // Only update if we haven't found a language yet (prefer outer context)
+            if (!highestLevelLang) {
+              highestLevelLang = { lang, currency: LANG_TO_CURRENCY[lang] };
+            }
           }
         }
       });
+
+      if (highestLevelLang) {
+        foundCurrencies.set(highestLevelLang.currency, {
+          confidence: CURRENCY_CONFIDENCE.LANGUAGE,
+          source: "code",
+        });
+      }
 
       // Finally check individual price elements
       for (const element of priceElements) {
@@ -155,18 +187,30 @@ export const currencyExtractor: BaseMetadataExtractor<string> = {
         )) {
           if (priceText.includes(symbol)) {
             if (currencies.length === 1) {
-              // Unambiguous symbol
-              foundCurrencies.set(currencies[0], {
-                confidence: CURRENCY_CONFIDENCE.UNAMBIGUOUS_SYMBOL,
-                source: "symbol",
-              });
-            } else {
-              // For ambiguous symbols, add all possibilities with lower confidence
-              currencies.forEach((curr) => {
-                foundCurrencies.set(curr, {
-                  confidence: CURRENCY_CONFIDENCE.AMBIGUOUS_SYMBOL,
+              // Unambiguous symbol - only update if higher confidence
+              const existing = foundCurrencies.get(currencies[0]);
+              if (
+                !existing ||
+                existing.confidence < CURRENCY_CONFIDENCE.UNAMBIGUOUS_SYMBOL
+              ) {
+                foundCurrencies.set(currencies[0], {
+                  confidence: CURRENCY_CONFIDENCE.UNAMBIGUOUS_SYMBOL,
                   source: "symbol",
                 });
+              }
+            } else {
+              // For ambiguous symbols - only update if higher confidence
+              currencies.forEach((curr) => {
+                const existing = foundCurrencies.get(curr);
+                if (
+                  !existing ||
+                  existing.confidence < CURRENCY_CONFIDENCE.AMBIGUOUS_SYMBOL
+                ) {
+                  foundCurrencies.set(curr, {
+                    confidence: CURRENCY_CONFIDENCE.AMBIGUOUS_SYMBOL,
+                    source: "symbol",
+                  });
+                }
               });
             }
           }
@@ -175,17 +219,28 @@ export const currencyExtractor: BaseMetadataExtractor<string> = {
 
       // Return the currency with highest confidence
       if (foundCurrencies.size > 0) {
-        const [currency] = Array.from(foundCurrencies.entries()).sort(
-          (a, b) => {
-            const confidenceDiff = b[1].confidence - a[1].confidence;
-            return confidenceDiff !== 0
-              ? confidenceDiff
-              : a[1].source === "code"
-              ? -1
-              : 1;
+        console.log("\nFound currencies with sources:");
+        Array.from(foundCurrencies.entries()).forEach(
+          ([currency, metadata]) => {
+            console.log(
+              `${currency}: confidence=${metadata.confidence}, source=${metadata.source}`
+            );
           }
-        )[0];
-        return currency;
+        );
+
+        const [selectedCurrency, metadata] = Array.from(
+          foundCurrencies.entries()
+        ).sort((a, b) => {
+          const confidenceDiff = b[1].confidence - a[1].confidence;
+          return confidenceDiff !== 0
+            ? confidenceDiff
+            : a[1].source === "code"
+            ? -1
+            : 1;
+        })[0];
+
+        console.log(`Selected: ${selectedCurrency} (${metadata.source})`);
+        return selectedCurrency;
       }
 
       return undefined;

@@ -54,7 +54,7 @@ export const imageExtractor: ImageExtractor = {
             images.push({ url: cleanUrl, score });
           }
         }
-      } catch (e) {
+      } catch {
         // Silently ignore invalid URLs
       }
     };

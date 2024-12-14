@@ -24,7 +24,26 @@ export const CURRENCIES: readonly CurrencyInfo[] = [
     tlds: ["us"],
     locale: "en-US",
   },
-  { value: "EUR", label: "Euro", symbol: "€", tlds: ["eu"], locale: "de-DE" }, // Using German as primary Euro locale
+  {
+    value: "EUR",
+    label: "Euro",
+    symbol: "€",
+    tlds: [
+      "eu",
+      "de",
+      "fr",
+      "it",
+      "es",
+      "nl",
+      "pt",
+      "fi",
+      "ie",
+      "at",
+      "be",
+      "gr",
+    ],
+    locale: "de-DE",
+  },
   {
     value: "DKK",
     label: "Danish Krone",
@@ -115,9 +134,12 @@ export type Currency = (typeof CURRENCIES)[number]["value"];
 
 // Currency extraction confidence scores
 export const CURRENCY_CONFIDENCE = {
-  LANGUAGE: 2.5,
-  CODE: 2.0,
-  TLD: 1.8,
+  JSONLD: 3.0,
+  META: 2.5,
+  TLD: 2.0,
+  LANGUAGE: 1.5,
+  CODE: 1.2,
+  FORMAT: 1.1,
   UNAMBIGUOUS_SYMBOL: 1.0,
   AMBIGUOUS_SYMBOL: 0.5,
 } as const;
