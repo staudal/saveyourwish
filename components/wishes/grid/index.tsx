@@ -30,7 +30,6 @@ import { Wish } from "./types";
 import Image from "next/image";
 import { WishDialog } from "@/components/dialogs/wish-dialog";
 import { EditWishlistDialog } from "@/components/dialogs/edit-wishlist-dialog";
-import { cn } from "@/lib/utils";
 
 interface WishesGridProps {
   wishes: Wish[];
@@ -131,30 +130,18 @@ export function WishesGrid({
   };
 
   const renderHeader = () => (
-    <div
-      className={cn(
-        "w-full relative rounded-lg overflow-hidden border border-border",
-        coverImage ? "h-[200px] md:h-[300px]" : "h-[100px] md:h-[120px]"
-      )}
-    >
+    <div className="w-full h-[200px] md:h-[300px] relative rounded-lg overflow-hidden border border-border">
       {coverImage && (
-        <>
-          <Image
-            src={coverImage}
-            alt={title}
-            className="w-full h-full object-cover"
-            width={1000}
-            height={1000}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
-        </>
+        <Image
+          src={coverImage}
+          alt={title}
+          className="w-full h-full object-cover"
+          width={1000}
+          height={1000}
+        />
       )}
-      <div
-        className={cn(
-          "absolute flex justify-between items-end",
-          coverImage ? "bottom-4 left-4 right-4" : "inset-4"
-        )}
-      >
+      <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+      <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
         <h1 className="text-2xl md:text-3xl font-semibold text-foreground">
           {title}
         </h1>
@@ -251,7 +238,7 @@ export function WishesGrid({
 
   return (
     <div className="space-y-6">
-      {renderHeader()}
+      {coverImage && renderHeader()}
 
       <DndContext
         sensors={sensors}

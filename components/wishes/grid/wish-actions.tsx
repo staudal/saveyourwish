@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { type wishes } from "@/lib/db";
 import { type InferSelectModel } from "drizzle-orm";
-import { useState } from "react";
 
 type Wish = InferSelectModel<typeof wishes>;
 
@@ -27,17 +26,9 @@ export function WishActions({
   onAdjustImage,
   onEdit,
 }: WishActionsProps) {
-  const [open, setOpen] = useState(false);
-
-  const handleAction = (action: (wish: Wish) => void) => {
-    setOpen(false); // Force close the dropdown
-    // Small delay to ensure dropdown is closed before opening dialog
-    setTimeout(() => action(wish), 0);
-  };
-
   return (
     <div className="absolute right-2 top-2 z-10">
-      <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="icon" className="h-8 w-8">
             <MoreHorizontal className="h-4 w-4" />
@@ -46,17 +37,17 @@ export function WishActions({
         <DropdownMenuContent align="end" className="w-40">
           <DropdownMenuLabel>Manage</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => handleAction(onEdit)}>
+          <DropdownMenuItem onClick={() => onEdit(wish)}>
             <PencilIcon className="h-4 w-4 mr-2" />
             <span>Edit</span>
           </DropdownMenuItem>
           {wish.imageUrl && (
-            <DropdownMenuItem onClick={() => handleAction(onAdjustImage)}>
+            <DropdownMenuItem onClick={() => onAdjustImage(wish)}>
               <Move className="h-4 w-4 mr-2" />
               <span>Adjust image</span>
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem onClick={() => handleAction(onDelete)}>
+          <DropdownMenuItem onClick={() => onDelete(wish)}>
             <Trash2Icon className="h-4 w-4 mr-2" />
             <span>Delete</span>
           </DropdownMenuItem>

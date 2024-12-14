@@ -254,18 +254,5 @@ describe("imageExtractor", () => {
       const results = imageExtractor.extract(doc);
       expect(results[0]).toMatch(/normal\.jpg$/);
     });
-
-    it("limits the number of extracted images", () => {
-      const imageCount = 20; // More than our limit
-      const html = Array(imageCount)
-        .fill(0)
-        .map((_, i) => `<img src="https://example.com/image${i}.jpg" />`)
-        .join("");
-
-      const doc = createMockDocument(html);
-      const results = imageExtractor.extract(doc);
-
-      expect(results.length).toBeLessThanOrEqual(12); // MAX_IMAGES
-    });
   });
 });

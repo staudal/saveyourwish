@@ -7,7 +7,6 @@ import { revalidatePath } from "next/cache";
 import { eq, and, sql } from "drizzle-orm";
 import { deleteImageFromBlob, uploadImageToBlob } from "@/lib/blob";
 import { priceFetcher, titleFetcher, imageFetcher } from "@/lib/fetchers";
-import { getDocument } from "@/lib/fetchers/utils";
 
 type WishInput = {
   title: string;
@@ -456,24 +455,22 @@ export async function fetchAndUploadImage(
 
 export async function getUrlMetadata(url: string) {
   try {
+    // Fetch all metadata in parallel
     const [titleResult, priceResult, imagesResult] = await Promise.all([
       titleFetcher.fetch(url),
       priceFetcher.fetch(url),
       imageFetcher.fetch(url),
     ]);
 
-    // Check if all fetchers encountered bot detection
+    // Check for bot detection first
     if (
-      !titleResult.success &&
       !priceResult.success &&
-      !imagesResult.success &&
-      titleResult.error?.includes("blocking automatic data fetching") &&
-      priceResult.error?.includes("blocking automatic data fetching") &&
-      imagesResult.error?.includes("blocking automatic data fetching")
+      priceResult.error === "This retailer requires browser verification"
     ) {
       return {
         success: false,
-        error: titleResult.error, // Use any of the error messages since they're the same
+        error:
+          "This retailer requires browser verification. Please try copying the details manually.",
       };
     }
 
@@ -503,12 +500,21 @@ export async function getUrlMetadata(url: string) {
       data: metadata,
     };
   } catch (error) {
-    throw error;
+    console.error("Error fetching metadata:", error);
+    if (error instanceof Error && error.message.includes("Bot detection")) {
+      return {
+        success: false,
+        error:
+          "This retailer requires browser verification. Please try copying the details manually.",
+      };
+    }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }
 
 export async function getUrlPrice(url: string) {
   return priceFetcher.fetch(url);
 }
-
-export { getDocument };

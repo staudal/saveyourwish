@@ -1,9 +1,8 @@
 import { ImageExtractor, Selector } from "./types";
 import { MinimalDocument } from "../fetchers/types";
 import { normalizeImageUrl, scoreImage } from "./utils";
+import { HTMLElement } from "node-html-parser";
 import { IMAGE_SELECTORS, IMAGE_URL_NORMALIZATION } from "@/constants";
-
-const MAX_IMAGES = 8; // Reasonable limit for product images
 
 export const imageExtractor: ImageExtractor = {
   extract: (document: Document | MinimalDocument): string[] => {
@@ -25,7 +24,8 @@ export const imageExtractor: ImageExtractor = {
           );
         }
         return normalizedUrl;
-      } catch {
+      } catch (e) {
+        console.error("Error normalizing URL:", e);
         return url;
       }
     };
@@ -44,8 +44,8 @@ export const imageExtractor: ImageExtractor = {
           const score = scoreImage(element, cleanUrl);
           images.push({ url: cleanUrl, score });
         }
-      } catch {
-        // Silently ignore errors when processing URLs
+      } catch (e) {
+        console.error("Error processing image URL:", e);
       }
     };
 
@@ -57,66 +57,56 @@ export const imageExtractor: ImageExtractor = {
       { selector: "img", attr: "src" },
     ];
 
-    // Extract from selectors until we hit the limit
+    // Extract from selectors
     for (const { selector, attr } of imageSelectors) {
-      if (images.length >= MAX_IMAGES) break;
-
       const elements = document.querySelectorAll(selector);
-      for (const element of elements) {
-        if (images.length >= MAX_IMAGES) break;
-
+      elements.forEach((element) => {
         let imageUrl;
         if (attr === "src") {
+          // For img elements, get src directly
           imageUrl = element.getAttribute("src");
           if (!imageUrl && element.querySelector("img")) {
+            // If this is a container with an img inside
             imageUrl = element.querySelector("img")?.getAttribute("src");
           }
         } else {
           imageUrl = element.getAttribute(attr);
         }
         if (imageUrl) addUniqueImage(element, imageUrl);
-      }
+      });
     }
 
-    // Extract from JSON-LD with limit
-    if (images.length < MAX_IMAGES) {
-      const scriptElements = document.querySelectorAll(
-        'script[type="application/ld+json"]'
-      );
+    // Extract from JSON-LD
+    const scriptElements = document.querySelectorAll(
+      'script[type="application/ld+json"]'
+    );
 
-      for (const script of scriptElements) {
-        if (images.length >= MAX_IMAGES) break;
-
-        try {
-          const jsonData = JSON.parse(script.textContent || "");
-          for (const path of IMAGE_SELECTORS.JSONLD_PATHS) {
-            if (images.length >= MAX_IMAGES) break;
-
-            let value = jsonData;
-            for (const key of path) {
-              value = value?.[key];
-              if (!value) break;
-            }
-            if (value) {
-              const imageUrls = Array.isArray(value) ? value : [value];
-              for (const url of imageUrls) {
-                if (images.length >= MAX_IMAGES) break;
-                if (typeof url === "string") addUniqueImage(script, url);
-              }
-            }
+    for (const script of scriptElements) {
+      try {
+        const jsonData = JSON.parse(script.textContent || "");
+        for (const path of IMAGE_SELECTORS.JSONLD_PATHS) {
+          let value = jsonData;
+          for (const key of path) {
+            value = value?.[key];
+            if (!value) break;
           }
-        } catch {
-          // Silently continue on JSON parse errors
-          continue;
+          if (value) {
+            const imageUrls = Array.isArray(value) ? value : [value];
+            imageUrls.forEach((url) => {
+              if (typeof url === "string") addUniqueImage(script, url);
+            });
+          }
         }
+      } catch (e) {
+        console.error("Error parsing JSON-LD:", e);
+        // Silently continue on JSON parse errors to allow fallback to other methods
       }
     }
 
     // Sort images by score and return URLs only, filtering out negative scores
     return images
-      .filter((img) => img.score >= 0)
+      .filter((img) => img.score >= 0) // Filter out negative scores (thumbnails)
       .sort((a, b) => b.score - a.score)
-      .slice(0, MAX_IMAGES)
       .map((img) => img.url);
   },
 
@@ -132,8 +122,9 @@ export const imageExtractor: ImageExtractor = {
       }
 
       return new URL(normalizedUrl).href;
-    } catch {
-      // Silently return original URL if invalid
+    } catch (e) {
+      // Return original URL if invalid
+      console.error("Invalid image URL:", e);
       return imageUrl;
     }
   },

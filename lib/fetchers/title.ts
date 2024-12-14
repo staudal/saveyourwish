@@ -10,10 +10,8 @@ export const titleFetcher = {
   ): Promise<FetchResponse<TitleData>> {
     try {
       // URL validation
-      if (typeof input === "string") {
-        if (!input.startsWith("http")) {
-          return { success: false, error: "Invalid URL format" };
-        }
+      if (typeof input === "string" && !input.startsWith("http")) {
+        return { success: false, error: "Invalid URL format" };
       }
 
       // Basic input validation
@@ -48,28 +46,14 @@ export const titleFetcher = {
       };
     } catch (error) {
       console.error("Error fetching title:", error);
-      if (error instanceof Error) {
-        // Handle bot detection errors
-        if (error.message.includes("blocking automatic data fetching")) {
-          return {
-            success: false,
-            error: error.message,
-          };
-        }
-        if (error.message === "Timeout") {
-          return {
-            success: false,
-            error: "Title extraction timed out",
-          };
-        }
-        return {
-          success: false,
-          error: error.message,
-        };
-      }
       return {
         success: false,
-        error: "Unknown error",
+        error:
+          error instanceof Error && error.message === "Timeout"
+            ? "Title extraction timed out"
+            : error instanceof Error
+            ? error.message
+            : "Unknown error",
       };
     }
   },
