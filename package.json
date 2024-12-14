@@ -64,7 +64,6 @@
     "react-hook-form": "^7.53.2",
     "react-hot-toast": "^2.4.1",
     "react-sortablejs": "^6.1.4",
-    "sharp": "^0.33.5",
     "sortablejs": "^1.15.4",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
