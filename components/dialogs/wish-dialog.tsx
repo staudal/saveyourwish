@@ -145,6 +145,11 @@ export function WishDialog({
           form.setValue("imageUrl", result.data.images[0]);
         }
 
+        const canAutoSync =
+          result.data.price !== undefined &&
+          result.data.currency !== undefined &&
+          isCurrencyValue(result.data.currency);
+
         form.reset({
           ...initialFormValues,
           destinationUrl: result.data.destinationUrl || url,
@@ -154,7 +159,7 @@ export function WishDialog({
             ? result.data.currency
             : "USD",
           description: result.data.description || "",
-          autoUpdatePrice: true,
+          autoUpdatePrice: canAutoSync,
           imageUrl: result.data.images?.[0] || "",
         });
         setStep("form");
@@ -244,7 +249,7 @@ export function WishDialog({
   };
 
   const isCurrencyValue = (value: string | undefined): value is string => {
-    return !!value && Object.keys(CURRENCIES).includes(value);
+    return !!value && CURRENCIES.some((c) => c.value === value);
   };
 
   const handleCreateManually = () => {

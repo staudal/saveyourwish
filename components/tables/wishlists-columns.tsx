@@ -4,7 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, Pencil, Trash2, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/components/ui/currency-select";
-import { calculateAveragePrice, convertToUSD } from "@/constants";
+import { calculateAveragePrice, convertToUSD } from "@/lib/utils";
 import { useState } from "react";
 import { DeleteWishlistDialog } from "../dialogs/delete-wishlist-dialog";
 import { EditWishlistDialog } from "../dialogs/edit-wishlist-dialog";

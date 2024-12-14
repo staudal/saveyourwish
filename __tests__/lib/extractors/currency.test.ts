@@ -282,6 +282,18 @@ describe("currencyExtractor", () => {
         expect(currencyExtractor.extract(doc)).toBeUndefined();
       }
     });
+
+    it("respects confidence hierarchy", () => {
+      const doc = createMockDocument(`
+        <html lang="da">
+          <meta property="og:price:currency" content="USD">
+          <div class="price">€32.99</div>
+        </html>
+      `);
+      doc.URL = "https://example.ca";
+      // Meta tag (USD) should win over language hint (DKK), TLD (CAD), and symbol (EUR)
+      expect(currencyExtractor.extract(doc)).toBe("USD");
+    });
   });
 
   describe("number format detection", () => {
@@ -416,6 +428,159 @@ describe("currencyExtractor", () => {
       for (const { html, expected } of variations) {
         const doc = createMockDocument(html);
         expect(currencyExtractor.extract(doc)).toBe(expected);
+      }
+    });
+  });
+
+  describe("TLD-based detection", () => {
+    it("uses TLD to help determine currency", () => {
+      const variations = [
+        {
+          html: '<div class="price">32.99</div>',
+          url: "https://example.ca",
+          expected: "CAD",
+        },
+        {
+          html: '<div class="price">32.99</div>',
+          url: "https://example.co.uk",
+          expected: "GBP",
+        },
+        {
+          html: '<div class="price">32.99</div>',
+          url: "https://example.au",
+          expected: "AUD",
+        },
+      ];
+
+      for (const { html, url, expected } of variations) {
+        const doc = createMockDocument(html);
+        doc.URL = url; // Set URL for TLD detection
+        expect(currencyExtractor.extract(doc)).toBe(expected);
+      }
+    });
+
+    it("handles conflicting TLD and symbol information", () => {
+      const doc = createMockDocument('<div class="price">$32.99</div>');
+      doc.URL = "https://example.ca";
+      expect(currencyExtractor.extract(doc)).toBe("CAD");
+    });
+
+    it("falls back to symbol when TLD is unavailable", () => {
+      const doc = createMockDocument('<div class="price">$32.99</div>');
+      doc.URL = "https://example.com"; // Generic TLD
+      expect(currencyExtractor.extract(doc)).toBe("USD");
+    });
+
+    it("handles multi-region TLDs correctly", () => {
+      const variations = [
+        {
+          html: '<div class="price">32.99</div>',
+          url: "https://example.com.au",
+          expected: "AUD",
+        },
+        {
+          html: '<div class="price">32.99</div>',
+          url: "https://example.co.uk",
+          expected: "GBP",
+        },
+      ];
+
+      for (const { html, url, expected } of variations) {
+        const doc = createMockDocument(html);
+        doc.URL = url;
+        expect(currencyExtractor.extract(doc)).toBe(expected);
+      }
+    });
+
+    it("handles invalid URLs gracefully", () => {
+      const variations = [
+        { url: "not-a-url", html: '<div class="price">$32.99</div>' },
+        { url: "", html: '<div class="price">$32.99</div>' },
+        { url: "https://", html: '<div class="price">$32.99</div>' },
+      ];
+
+      for (const { html, url } of variations) {
+        const doc = createMockDocument(html);
+        doc.URL = url;
+        // Should fall back to symbol-based detection
+        expect(currencyExtractor.extract(doc)).toBe("USD");
+      }
+    });
+
+    it("ignores currency hints from subdomains", () => {
+      const doc = createMockDocument('<div class="price">32.99</div>');
+      doc.URL = "https://ca.example.com";
+      // Should not use 'ca' subdomain as currency hint
+      expect(currencyExtractor.extract(doc)).toBeUndefined();
+    });
+  });
+
+  describe("complex regional cases", () => {
+    it("handles region-specific price formats", () => {
+      const variations = [
+        {
+          html: '<div class="price">32,99 €</div>',
+          url: "https://example.de",
+          expected: "EUR",
+        },
+        {
+          html: '<div class="price">€32.99</div>',
+          url: "https://example.ie",
+          expected: "EUR",
+        },
+      ];
+
+      for (const { html, url, expected } of variations) {
+        const doc = createMockDocument(html);
+        doc.URL = url;
+        expect(currencyExtractor.extract(doc)).toBe(expected);
+      }
+    });
+
+    it("handles mixed currency displays", () => {
+      const doc = createMockDocument(`
+        <div class="price">$32.99 USD</div>
+        <div class="price-conversion">(Approximately €28.99)</div>
+      `);
+      doc.URL = "https://example.com";
+      expect(currencyExtractor.extract(doc)).toBe("USD");
+    });
+
+    it("handles unusual price formats", () => {
+      const variations = [
+        { html: '<div class="price">CHF 32-90</div>', expected: "CHF" },
+        { html: '<div class="price">32.99 $US</div>', expected: "USD" },
+        { html: '<div class="price">32,90.-</div>', expected: undefined },
+        { html: '<div class="price">USD $32.99</div>', expected: "USD" },
+        { html: '<div class="price">$US 32.99</div>', expected: "USD" },
+      ];
+
+      for (const { html, expected } of variations) {
+        const doc = createMockDocument(html);
+        expect(currencyExtractor.extract(doc)).toBe(expected);
+      }
+    });
+
+    it("handles HTML entities in currency symbols", () => {
+      const variations = [
+        { html: '<div class="price">&euro;32.99</div>', expected: "EUR" },
+        { html: '<div class="price">&#x20AC;32.99</div>', expected: "EUR" },
+        { html: '<div class="price">&pound;32.99</div>', expected: "GBP" },
+        { html: '<div class="price">32.99&nbsp;&euro;</div>', expected: "EUR" },
+        {
+          html: '<div class="price">&#165;32.99</div>',
+          expected: ["JPY", "CNY"],
+        },
+      ];
+
+      for (const { html, expected } of variations) {
+        const doc = createMockDocument(html);
+        const result = currencyExtractor.extract(doc);
+        if (Array.isArray(expected)) {
+          expect(expected).toContain(result);
+        } else {
+          expect(result).toBe(expected);
+        }
       }
     });
   });

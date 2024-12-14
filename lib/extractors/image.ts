@@ -1,24 +1,45 @@
 import { ImageExtractor, Selector } from "./types";
+import { MinimalDocument } from "../fetchers/types";
 import { normalizeImageUrl, scoreImage } from "./utils";
+import { HTMLElement } from "node-html-parser";
+import { IMAGE_SELECTORS, IMAGE_URL_NORMALIZATION } from "@/constants";
 
 export const imageExtractor: ImageExtractor = {
-  extract: (document: Document): string[] => {
+  extract: (document: Document | MinimalDocument): string[] => {
     const images: { url: string; score: number }[] = [];
 
+    const normalizeUrl = (url: string): string => {
+      try {
+        let normalizedUrl = url;
+        if (url.startsWith("//")) {
+          normalizedUrl = `${IMAGE_URL_NORMALIZATION.PROTOCOL_PREFIX}${url}`;
+        }
+        if (
+          normalizedUrl.startsWith("http:") &&
+          IMAGE_URL_NORMALIZATION.FORCE_HTTPS
+        ) {
+          normalizedUrl = normalizedUrl.replace(
+            "http:",
+            IMAGE_URL_NORMALIZATION.PROTOCOL_PREFIX
+          );
+        }
+        return normalizedUrl;
+      } catch (e) {
+        console.error("Error normalizing URL:", e);
+        return url;
+      }
+    };
+
     const addUniqueImage = (
-      element: Element,
+      element: Element | HTMLElement,
       url: string | null | undefined
     ) => {
-      if (!url) return;
+      if (!url?.trim()) return;
 
       try {
-        let absoluteUrl = url;
-        if (url.startsWith("//")) absoluteUrl = `https:${url}`;
-        if (absoluteUrl.startsWith("http:")) {
-          absoluteUrl = absoluteUrl.replace("http:", "https:");
-        }
+        const normalizedUrl = normalizeUrl(url);
+        const cleanUrl = normalizeImageUrl(normalizedUrl);
 
-        const cleanUrl = normalizeImageUrl(absoluteUrl);
         if (!images.some((img) => img.url === cleanUrl)) {
           const score = scoreImage(element, cleanUrl);
           images.push({ url: cleanUrl, score });
@@ -30,42 +51,32 @@ export const imageExtractor: ImageExtractor = {
 
     // Extract from meta tags and common selectors
     const imageSelectors: Selector[] = [
-      { selector: 'meta[property="og:image"]', attr: "content" },
-      { selector: 'meta[property="og:image:url"]', attr: "content" },
-      { selector: 'meta[property="og:image:secure_url"]', attr: "content" },
-      { selector: 'meta[name="twitter:image"]', attr: "content" },
-      { selector: 'meta[name="twitter:image:src"]', attr: "content" },
-      { selector: 'meta[property="product:image"]', attr: "content" },
-      { selector: '[itemprop="image"]', attr: "content" },
-      { selector: '[itemprop="image"]', attr: "src" },
-      { selector: "#product-image", attr: "src" },
-      { selector: ".product-image img", attr: "src" },
-      { selector: ".product-image-main img", attr: "src" },
-      { selector: "[data-main-image]", attr: "src" },
-      { selector: ".product-gallery img", attr: "src" },
-      { selector: ".product-images img", attr: "src" },
-      {
-        selector: '[data-gallery-role="gallery-placeholder"] img',
-        attr: "src",
-      },
-      { selector: "#imageBlock img", attr: "src" },
-      { selector: ".imgTagWrapper img", attr: "src" },
+      ...IMAGE_SELECTORS.META,
+      ...IMAGE_SELECTORS.HTML,
+      // Add a catch-all for plain img tags
+      { selector: "img", attr: "src" },
     ];
 
     // Extract from selectors
     for (const { selector, attr } of imageSelectors) {
       const elements = document.querySelectorAll(selector);
       elements.forEach((element) => {
-        const imageUrl =
-          attr === "src"
-            ? element.getAttribute("src")
-            : element.getAttribute(attr);
-        addUniqueImage(element, imageUrl);
+        let imageUrl;
+        if (attr === "src") {
+          // For img elements, get src directly
+          imageUrl = element.getAttribute("src");
+          if (!imageUrl && element.querySelector("img")) {
+            // If this is a container with an img inside
+            imageUrl = element.querySelector("img")?.getAttribute("src");
+          }
+        } else {
+          imageUrl = element.getAttribute(attr);
+        }
+        if (imageUrl) addUniqueImage(element, imageUrl);
       });
     }
 
     // Extract from JSON-LD
-    const jsonLdPaths: (string | number)[][] = [["image"], ["offers", "image"]];
     const scriptElements = document.querySelectorAll(
       'script[type="application/ld+json"]'
     );
@@ -73,7 +84,7 @@ export const imageExtractor: ImageExtractor = {
     for (const script of scriptElements) {
       try {
         const jsonData = JSON.parse(script.textContent || "");
-        for (const path of jsonLdPaths) {
+        for (const path of IMAGE_SELECTORS.JSONLD_PATHS) {
           let value = jsonData;
           for (const key of path) {
             value = value?.[key];
@@ -82,31 +93,37 @@ export const imageExtractor: ImageExtractor = {
           if (value) {
             const imageUrls = Array.isArray(value) ? value : [value];
             imageUrls.forEach((url) => {
-              if (url) addUniqueImage(script, url);
+              if (typeof url === "string") addUniqueImage(script, url);
             });
           }
         }
       } catch (e) {
         console.error("Error parsing JSON-LD:", e);
+        // Silently continue on JSON parse errors to allow fallback to other methods
       }
     }
 
-    // Sort images by score and return URLs only
-    return images.sort((a, b) => b.score - a.score).map((img) => img.url);
+    // Sort images by score and return URLs only, filtering out negative scores
+    return images
+      .filter((img) => img.score >= 0) // Filter out negative scores (thumbnails)
+      .sort((a, b) => b.score - a.score)
+      .map((img) => img.url);
   },
 
   clean: (imageUrl: string, baseUrl?: string): string => {
     try {
+      let normalizedUrl = imageUrl;
       if (imageUrl.startsWith("//")) {
-        imageUrl = `https:${imageUrl}`;
+        normalizedUrl = `${IMAGE_URL_NORMALIZATION.PROTOCOL_PREFIX}${imageUrl}`;
       }
 
       if (baseUrl) {
-        return new URL(imageUrl, baseUrl).href;
+        return new URL(normalizedUrl, baseUrl).href;
       }
 
-      return new URL(imageUrl).href;
+      return new URL(normalizedUrl).href;
     } catch (e) {
+      // Return original URL if invalid
       console.error("Invalid image URL:", e);
       return imageUrl;
     }

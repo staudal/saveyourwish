@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { eq, and, sql } from "drizzle-orm";
 import { deleteImageFromBlob, uploadImageToBlob } from "@/lib/blob";
-import { priceFetcher, fetchTitle, fetchImages } from "@/lib/fetchers";
+import { priceFetcher, titleFetcher, imageFetcher } from "@/lib/fetchers";
 
 type WishInput = {
   title: string;
@@ -457,10 +457,22 @@ export async function getUrlMetadata(url: string) {
   try {
     // Fetch all metadata in parallel
     const [titleResult, priceResult, imagesResult] = await Promise.all([
-      fetchTitle(url),
+      titleFetcher.fetch(url),
       priceFetcher.fetch(url),
-      fetchImages(url),
+      imageFetcher.fetch(url),
     ]);
+
+    // Check for bot detection first
+    if (
+      !priceResult.success &&
+      priceResult.error === "This retailer requires browser verification"
+    ) {
+      return {
+        success: false,
+        error:
+          "This retailer requires browser verification. Please try copying the details manually.",
+      };
+    }
 
     // Build metadata object
     const metadata: Record<string, any> = {
@@ -489,6 +501,13 @@ export async function getUrlMetadata(url: string) {
     };
   } catch (error) {
     console.error("Error fetching metadata:", error);
+    if (error instanceof Error && error.message.includes("Bot detection")) {
+      return {
+        success: false,
+        error:
+          "This retailer requires browser verification. Please try copying the details manually.",
+      };
+    }
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",

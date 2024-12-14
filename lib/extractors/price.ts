@@ -1,150 +1,165 @@
-import { PriceExtractor, Selector } from "./types";
+import { BaseMetadataExtractor } from "./types";
 import { extractFromSelectors, extractFromJsonLd } from "./utils";
-
-// Cache regex patterns for better performance
-const PRICE_PATTERNS = {
-  // Standard formats
-  US_FORMAT: /^\d{1,3}(,\d{3})*\.\d{2}$/, // 1,234.56
-  EU_FORMAT: /^\d{1,3}(\.\d{3})*,\d{2}$/, // 1.234,56
-  NUMERIC: /[-\d.,]+/, // Basic number extraction
-
-  // Additional formats
-  SCIENTIFIC: /^-?\d+\.?\d*e[+-]\d+$/i, // 1.23e-10
-  FRACTIONAL: /^\.?\d+$/, // .99
-  NEGATIVE: /^-\d+\.?\d*$/, // -123.45
-  THOUSANDS: /\d{1,3}([ ,.]\d{3})*([,.]\d+)?$/, // 1 234,56 or 1.234.567,89
-} as const;
+import { PRICE_SELECTORS } from "@/constants";
+import { MinimalDocument } from "@/lib/fetchers/types";
 
 const MAX_SAFE_PRICE = 999999999.99;
 
-export const priceExtractor: PriceExtractor = {
-  extract: (document: Document): number | undefined => {
+export const priceExtractor: BaseMetadataExtractor<number> = {
+  extract: (document: Document | MinimalDocument): number | undefined => {
     try {
-      // Try JSON-LD first
-      const jsonLdPaths: (string | number)[][] = [
-        ["offers", "price"],
-        ["price"],
-        [0, "offers", "price"],
-        [0, "price"],
-        ["offers", 0, "price"],
-        ["offers", 0, "priceSpecification", "price"],
-      ];
-
-      const jsonLdPrice = extractFromJsonLd(document, jsonLdPaths);
+      // 1. Try JSON-LD (highest priority)
+      const jsonLdPrice = extractFromJsonLd(
+        document,
+        PRICE_SELECTORS.JSONLD_PATHS.map((path) => [...path])
+      );
       if (jsonLdPrice) {
-        return priceExtractor.clean(jsonLdPrice);
+        const price = cleanPrice(jsonLdPrice);
+        if (price) return price;
       }
 
-      const priceSelectors: Selector[] = [
-        { selector: 'meta[property="og:price:amount"]', attr: "content" },
-        { selector: 'meta[property="product:price:amount"]', attr: "content" },
-        { selector: '[itemprop="price"]', attr: "content" },
-        { selector: ".price", attr: "textContent" },
-        { selector: ".price-tag", attr: "textContent" },
-        { selector: ".amount", attr: "textContent" },
-        { selector: ".value", attr: "textContent" },
-        { selector: ".price-value", attr: "textContent" },
-        { selector: "[data-price]", attr: "data-price" },
-        { selector: "[data-amount]", attr: "data-amount" },
-        { selector: "[data-price-value]", attr: "data-price-value" },
-      ];
+      // 2. Try meta tags
+      const metaPrice = extractFromSelectors(document, [
+        ...PRICE_SELECTORS.META,
+      ]);
+      if (metaPrice) {
+        const price = cleanPrice(metaPrice);
+        if (price) return price;
+      }
 
-      // Extract price and handle XSS attempts
-      const price = extractFromSelectors(document, priceSelectors, (value) => {
-        if (value.includes("script")) {
-          return "1.99";
-        }
-        const sanitized = value.replace(/<[^>]*>/g, "");
-        const match = sanitized.match(/\d[\d., ]*\d|\d/);
-        return match ? match[0] : undefined;
-      });
+      // 3. Try price elements
+      const priceElements = document.querySelectorAll("*");
+      const candidates: number[] = [];
 
-      return price ? priceExtractor.clean(price) : undefined;
-    } catch (error) {
-      console.error("Price extraction failed:", error);
+      for (const element of priceElements) {
+        if (
+          element.tagName === "SCRIPT" ||
+          element.tagName === "STYLE" ||
+          element.closest("script") ||
+          element.closest("style")
+        )
+          continue;
+
+        const price = cleanPrice(element.textContent?.trim());
+        if (price) candidates.push(price);
+      }
+
+      return candidates.length > 0 ? Math.min(...candidates) : undefined;
+    } catch {
       return undefined;
     }
   },
-
-  clean: (price: string): number => {
-    try {
-      // Remove currency symbols and other non-numeric characters
-      const cleaned = price.replace(/[^\d., ]/g, "").trim();
-      if (!cleaned || cleaned.match(/^[., ]+$/)) return 0;
-
-      const noSpaces = cleaned.replace(/\s+/g, "");
-
-      // Early validation for extremely large numbers
-      const simpleCheck = parseFloat(noSpaces.replace(/[, ]/g, ""));
-      if (simpleCheck > MAX_SAFE_PRICE && simpleCheck !== 1000000000) {
-        return 0;
-      }
-
-      // Handle numbers without separators
-      if (!noSpaces.includes(".") && !noSpaces.includes(",")) {
-        return parseFloat(noSpaces);
-      }
-
-      // Try to match known formats first
-      if (noSpaces.match(PRICE_PATTERNS.US_FORMAT)) {
-        return parseFloat(noSpaces.replace(/,/g, ""));
-      }
-      if (noSpaces.match(PRICE_PATTERNS.EU_FORMAT)) {
-        return parseFloat(noSpaces.replace(/\./g, "").replace(",", "."));
-      }
-
-      // Split by both separators to check format
-      const parts = noSpaces.split(/[.,]/);
-
-      // Handle multiple parts
-      if (parts.length > 2) {
-        // Special case: concatenated decimals (1.299.99 -> 129999)
-        if (
-          parts.length === 3 &&
-          parts[1].length === 3 &&
-          parts[2].length === 2
-        ) {
-          return parseFloat(parts.join(""));
-        }
-        return 0; // Malformed input
-      }
-
-      // Get the last separator - this will be our decimal point
-      const lastDot = noSpaces.lastIndexOf(".");
-      const lastComma = noSpaces.lastIndexOf(",");
-
-      // If we have both separators, check if it's a valid format
-      if (lastDot >= 0 && lastComma >= 0) {
-        // Only allow known formats with both separators
-        if (noSpaces.match(PRICE_PATTERNS.EU_FORMAT)) {
-          return parseFloat(noSpaces.replace(/\./g, "").replace(",", "."));
-        }
-        if (noSpaces.match(PRICE_PATTERNS.US_FORMAT)) {
-          return parseFloat(noSpaces.replace(/,/g, ""));
-        }
-        return 0; // Unknown format with multiple separators
-      }
-
-      const lastSeparator = lastDot > lastComma ? "." : ",";
-      const [beforeSeparator, afterSeparator] = noSpaces
-        .split(lastSeparator)
-        .slice(-2);
-
-      // Clean the integer part (remove thousand separators)
-      const otherSeparator = lastSeparator === "." ? "," : ".";
-      const cleanInteger = beforeSeparator.replace(
-        new RegExp(`\\${otherSeparator}`, "g"),
-        ""
-      );
-
-      // Construct the final number
-      const finalNumber = parseFloat(
-        `${cleanInteger}.${afterSeparator || "0"}`
-      );
-      return Number.isFinite(finalNumber) ? finalNumber : 0;
-    } catch (error) {
-      console.error("Price cleaning failed:", error);
-      return 0;
-    }
-  },
 };
+
+function cleanPrice(price: string | undefined): number | undefined {
+  if (!price) return undefined;
+
+  try {
+    // 1. Clean the input
+    const cleaned = price
+      .replace(/<[^>]*>/g, " ") // Remove HTML tags
+      .replace(/[^\d.,\s\-~～]/g, "") // Keep only digits, decimal points, commas, spaces, and range indicators
+      .trim();
+
+    // Special handling for space-separated numbers before splitting
+    if (
+      cleaned.includes(" ") &&
+      !cleaned.includes("-") &&
+      !cleaned.includes("~") &&
+      !cleaned.includes("～")
+    ) {
+      const spaceNumber = parseNumber(cleaned);
+      if (spaceNumber) return spaceNumber;
+    }
+
+    // 2. Split on common delimiters and process each potential number
+    const numbers = cleaned
+      .split(/(?:\s*[-~～]\s*|\s+to\s+|\s+from\s+|\s+)/)
+      .map((str) => parseNumber(str))
+      .filter(
+        (n): n is number => n !== undefined && n > 0 && n <= MAX_SAFE_PRICE
+      )
+      .sort((a, b) => a - b);
+
+    return numbers[0];
+  } catch {
+    return undefined;
+  }
+}
+
+function parseNumber(str: string): number | undefined {
+  if (!str || str.startsWith("-")) return undefined;
+
+  // Skip strings that look like dates or phone numbers
+  if (str.includes("/") || str.length > 10) return undefined;
+
+  // Try each format, but in a specific order to avoid misinterpretation
+  const formats = [
+    // First try formats with both group and decimal separators
+    (s: string) => {
+      if (s.includes(".") && s.includes(",")) {
+        // European format (1.234,56)
+        const lastDot = s.lastIndexOf(".");
+        const lastComma = s.lastIndexOf(",");
+        if (lastDot < lastComma) {
+          return Number(s.replace(/\./g, "").replace(",", "."));
+        }
+        // US format (1,234.56)
+        return Number(s.replace(/,/g, ""));
+      }
+      return NaN;
+    },
+    // Then try space with comma (1 234,56)
+    (s: string) => {
+      if (s.includes(" ") && s.includes(",")) {
+        return Number(s.replace(/\s/g, "").replace(",", "."));
+      }
+      return NaN;
+    },
+    // Then try space with dot (1 234.56)
+    (s: string) => {
+      if (s.includes(" ") && s.includes(".")) {
+        return Number(s.replace(/\s/g, ""));
+      }
+      return NaN;
+    },
+    // Then try space only (1 234)
+    (s: string) => {
+      if (s.includes(" ") && !s.includes(",") && !s.includes(".")) {
+        // Verify spaces are used as group separators (every 3 digits)
+        const parts = s.split(" ");
+        if (parts.every((part) => /^\d{1,3}$/.test(part))) {
+          return Number(s.replace(/\s/g, ""));
+        }
+      }
+      return NaN;
+    },
+    // Then try single separator cases
+    (s: string) => {
+      // Only decimal point (123.45)
+      if (!s.includes(",") && s.includes(".")) {
+        return Number(s);
+      }
+      // Only comma, treat as group separator (1,234)
+      if (s.includes(",") && !s.includes(".")) {
+        return Number(s.replace(/,/g, ""));
+      }
+      // No separators (1234)
+      if (!s.includes(",") && !s.includes(".") && !s.includes(" ")) {
+        return Number(s);
+      }
+      return NaN;
+    },
+  ];
+
+  for (const format of formats) {
+    try {
+      const num = format(str);
+      if (isFinite(num) && num > 0) {
+        return Math.round(num * 100) / 100;
+      }
+    } catch {}
+  }
+
+  return undefined;
+}

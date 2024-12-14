@@ -12,6 +12,7 @@ import {
   CURRENCY_CONFIDENCE,
   CURRENCY_SELECTORS,
 } from "@/constants";
+import { MinimalDocument } from "../fetchers/types";
 
 // Pre-compile selectors for performance
 const PRICE_ELEMENTS_SELECTOR = CURRENCY_SELECTORS.PRICE.join(", ");
@@ -47,8 +48,18 @@ type FoundCurrencies = Map<
   }
 >;
 
-export const currencyExtractor: BaseMetadataExtractor = {
-  extract: (document: Document): string | undefined => {
+// Add near the top with other utility functions
+function getTldFromUrl(url: string): string | undefined {
+  try {
+    const hostname = new URL(url).hostname;
+    return hostname.split(".").slice(-1)[0];
+  } catch {
+    return undefined;
+  }
+}
+
+export const currencyExtractor: BaseMetadataExtractor<string> = {
+  extract: (document: Document | MinimalDocument): string | undefined => {
     try {
       // 1. Check JSON-LD (highest priority)
       const jsonLdCurrency = extractFromJsonLd(
@@ -69,9 +80,27 @@ export const currencyExtractor: BaseMetadataExtractor = {
         if (normalized) return normalized;
       }
 
-      // 3. Try currency codes and symbols in price-related elements
-      const priceElements = document.querySelectorAll(PRICE_ELEMENTS_SELECTOR);
+      // 3. Initialize foundCurrencies map before using it
       const foundCurrencies: FoundCurrencies = new Map();
+
+      // Add TLD-based detection after metadata checks but before symbol detection
+      const tld = getTldFromUrl(document.URL);
+      if (tld) {
+        // Find currency matching TLD
+        const currencyFromTld = CURRENCIES.find((curr) =>
+          curr.tlds.some((t) => t.endsWith(tld))
+        )?.value;
+
+        if (currencyFromTld) {
+          foundCurrencies.set(currencyFromTld, {
+            confidence: CURRENCY_CONFIDENCE.TLD,
+            source: "code",
+          });
+        }
+      }
+
+      // 4. Try currency codes and symbols in price-related elements
+      const priceElements = document.querySelectorAll(PRICE_ELEMENTS_SELECTOR);
 
       // First check for language hints at document level
       const documentLang = document.documentElement.lang
@@ -149,7 +178,6 @@ export const currencyExtractor: BaseMetadataExtractor = {
         const [currency] = Array.from(foundCurrencies.entries()).sort(
           (a, b) => {
             const confidenceDiff = b[1].confidence - a[1].confidence;
-            // If same confidence, prefer code over symbol
             return confidenceDiff !== 0
               ? confidenceDiff
               : a[1].source === "code"

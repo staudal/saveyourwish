@@ -1,4 +1,7 @@
 import { Currency, CURRENCIES, EXCHANGE_RATES } from "@/constants";
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+import { MinimalDocument } from "./fetchers/types";
 
 // Currency validation and normalization
 export const isValidCurrency = (currency: string): boolean =>
@@ -85,7 +88,7 @@ export const LANGUAGE_CODE_REGEX = /^[a-z]{2}(?:-[a-z]{2})?$/i;
 
 // DOM utilities
 export function extractFromJsonLd(
-  document: Document,
+  document: Document | MinimalDocument,
   paths: (string | number)[][]
 ): string | undefined {
   try {
@@ -113,7 +116,7 @@ export function extractFromJsonLd(
 }
 
 export function extractFromSelectors(
-  document: Document,
+  document: Document | MinimalDocument,
   selectors: { selector: string; attr: string }[]
 ): string | undefined {
   for (const { selector, attr } of selectors) {
@@ -127,4 +130,8 @@ export function extractFromSelectors(
     }
   }
   return undefined;
+}
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
 }

@@ -177,7 +177,7 @@ export function WishForm({
         form.setValue("autoUpdatePrice", true);
         return true;
       }
-      toast.error("Could not enable auto-sync because the URL is invalid");
+      toast.error("Could not find price on the website");
     } catch (e) {
       toast.error("Failed to sync price");
       console.error(e);

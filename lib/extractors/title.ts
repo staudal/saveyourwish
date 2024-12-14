@@ -1,44 +1,49 @@
 import { MetadataExtractorWithClean, Selector } from "./types";
-import { extractFromSelectors } from "./utils";
+import { extractFromSelectors, extractFromJsonLd } from "./utils";
+import { MinimalDocument } from "../fetchers/types";
+import { TITLE_SELECTORS, TITLE_CLEANING } from "@/constants";
 
 export const titleExtractor: MetadataExtractorWithClean = {
-  extract: (document: Document) => {
+  extract: (document: Document | MinimalDocument): string | undefined => {
+    // First try JSON-LD
+    const jsonLdTitle = extractFromJsonLd(document, [
+      ["name"],
+      ["headline"],
+      ["product", "name"],
+    ]);
+    if (jsonLdTitle?.trim()) {
+      return titleExtractor.clean(jsonLdTitle);
+    }
+
+    // Then try selectors
     const titleSelectors: Selector[] = [
-      { selector: 'meta[property="og:title"]', attr: "content" },
-      { selector: 'meta[name="title"]', attr: "content" },
-      { selector: 'meta[property="product:name"]', attr: "content" },
-      { selector: 'meta[name="twitter:title"]', attr: "content" },
-      { selector: '[itemprop="name"]', attr: "content" },
-      { selector: ".product-title", attr: "textContent" },
-      { selector: ".product-name", attr: "textContent" },
-      { selector: "#product-title", attr: "textContent" },
-      { selector: "h1", attr: "textContent" },
-      { selector: "title", attr: "textContent" },
+      ...TITLE_SELECTORS.META,
+      ...TITLE_SELECTORS.HTML,
     ];
 
-    return extractFromSelectors(document, titleSelectors);
+    const rawTitle = extractFromSelectors(document, titleSelectors);
+    if (!rawTitle?.trim()) return undefined;
+
+    return titleExtractor.clean(rawTitle);
   },
 
   clean: (title: string): string => {
-    const separators = [",", " - ", " – ", " — ", " : ", ": ", " | ", "| "];
-    const metadataPatterns = [
-      /\.(com|net|org|dk|co\.uk|de)(\s|:|$)/i,
-      /^[0-9\s,]+$/,
-      /^[A-Z\s]+$/,
-      /^.*\.(com|net|org|dk|co\.uk|de)\b/i,
-      /^[^:]+:[^:]+$/,
-      /^[A-Z][A-Z\s]+$/,
-      /.+/,
-    ];
+    if (!title || title.length > TITLE_CLEANING.MAX_LENGTH) {
+      return title?.slice(0, TITLE_CLEANING.MAX_LENGTH) || "";
+    }
 
     let cleanedTitle = title;
-    for (const separator of separators) {
+    for (const separator of TITLE_CLEANING.SEPARATORS) {
       const parts = cleanedTitle.split(separator);
       if (parts.length > 1) {
         const mainPart = parts[0];
         const latterPart = parts.slice(1).join(separator).toLowerCase().trim();
 
-        if (metadataPatterns.some((pattern) => pattern.test(latterPart))) {
+        if (
+          TITLE_CLEANING.METADATA_PATTERNS.some((pattern) =>
+            pattern.test(latterPart)
+          )
+        ) {
           cleanedTitle = mainPart;
         }
       }

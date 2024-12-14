@@ -1,19 +1,17 @@
-export interface BaseMetadataExtractor {
-  extract: (document: Document, url?: string) => string | undefined;
+import { MinimalDocument } from "@/lib/fetchers/types";
+
+export interface BaseMetadataExtractor<T> {
+  extract: (document: Document | MinimalDocument) => T | undefined;
 }
 
-export interface MetadataExtractorWithClean extends BaseMetadataExtractor {
+export interface MetadataExtractorWithClean
+  extends BaseMetadataExtractor<string> {
   clean: (value: string, url?: string) => string;
-}
-
-export interface PriceExtractor {
-  extract: (document: Document) => number | undefined;
-  clean: (price: string) => number;
 }
 
 export interface ImageExtractor {
-  extract: (document: Document) => string[];
-  clean: (value: string, url?: string) => string;
+  extract: (document: Document | MinimalDocument) => string[];
+  clean: (imageUrl: string, baseUrl?: string) => string;
 }
 
 export type Selector = {
