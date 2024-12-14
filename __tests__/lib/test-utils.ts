@@ -5,12 +5,15 @@ export function setupTestEnv() {
   return {
     createMockDocument: (html: string): MinimalDocument => {
       const root = parse(html);
+
       return {
         querySelector: (sel: string) => root.querySelector(sel),
-        querySelectorAll: (sel: string) => root.querySelectorAll(sel),
-        getElementsByTagName: (tag: string) => root.getElementsByTagName(tag),
+        querySelectorAll: (sel: string) =>
+          Array.from(root.querySelectorAll(sel)),
+        getElementsByTagName: (tag: string) =>
+          Array.from(root.getElementsByTagName(tag)),
         documentElement: {
-          lang: root.querySelector("html")?.getAttribute("lang") || "",
+          lang: root.getAttribute("lang") || "",
           outerHTML: root.toString(),
         },
         URL: "https://test.com",

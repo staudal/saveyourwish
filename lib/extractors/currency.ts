@@ -2,7 +2,6 @@ import { BaseMetadataExtractor } from "./types";
 import {
   extractFromSelectors,
   extractFromJsonLd,
-  normalizeCurrency,
   extractCurrencyFromText,
   LANGUAGE_CODE_REGEX,
 } from "@/lib/utils";
@@ -16,17 +15,6 @@ import { MinimalDocument } from "../fetchers/types";
 
 // Pre-compile selectors for performance
 const PRICE_ELEMENTS_SELECTOR = CURRENCY_SELECTORS.PRICE.join(", ");
-
-// Create a map of symbols to arrays of possible currencies
-const SYMBOL_TO_CURRENCIES = CURRENCIES.reduce((acc, curr) => {
-  if (curr.symbol) {
-    if (!acc[curr.symbol]) {
-      acc[curr.symbol] = [];
-    }
-    acc[curr.symbol].push(curr.value);
-  }
-  return acc;
-}, {} as Record<string, string[]>);
 
 // Create language to currency mapping from TLDs
 const LANG_TO_CURRENCY = CURRENCIES.reduce((acc, curr) => {
@@ -66,25 +54,25 @@ export const currencyExtractor: BaseMetadataExtractor<string> = {
         document,
         CURRENCY_SELECTORS.JSONLD_PATHS.map((path) => [...path])
       );
-      if (jsonLdCurrency) {
-        const normalized = normalizeCurrency(jsonLdCurrency);
-        if (normalized) return normalized;
-      }
+      console.log("JSON-LD currency:", jsonLdCurrency);
 
       // 2. Check meta tags and microdata
       const metaCurrency = extractFromSelectors(document, [
         ...CURRENCY_SELECTORS.META,
       ]);
-      if (metaCurrency) {
-        const normalized = normalizeCurrency(metaCurrency);
-        if (normalized) return normalized;
-      }
+      console.log("Meta currency:", metaCurrency);
 
       // 3. Initialize foundCurrencies map before using it
       const foundCurrencies: FoundCurrencies = new Map();
 
-      // Add TLD-based detection after metadata checks but before symbol detection
+      // Add TLD-based detection
       const tld = getTldFromUrl(document.URL);
+      console.log("TLD:", tld);
+
+      // Log document language
+      console.log("Document language:", document.documentElement.lang);
+
+      // Add TLD-based detection after metadata checks but before symbol detection
       if (tld) {
         // Find currency matching TLD
         const currencyFromTld = CURRENCIES.find((curr) =>
@@ -150,28 +138,24 @@ export const currencyExtractor: BaseMetadataExtractor<string> = {
         }
 
         // Then check for symbols (lower confidence)
-        for (const [symbol, currencies] of Object.entries(
-          SYMBOL_TO_CURRENCIES
-        )) {
-          if (priceText.includes(symbol)) {
-            if (currencies.length === 1) {
-              // Unambiguous symbol
-              foundCurrencies.set(currencies[0], {
-                confidence: CURRENCY_CONFIDENCE.UNAMBIGUOUS_SYMBOL,
-                source: "symbol",
-              });
-            } else {
-              // For ambiguous symbols, add all possibilities with lower confidence
-              currencies.forEach((curr) => {
-                foundCurrencies.set(curr, {
-                  confidence: CURRENCY_CONFIDENCE.AMBIGUOUS_SYMBOL,
-                  source: "symbol",
-                });
-              });
-            }
-          }
+        const symbolCurrency = extractCurrencyFromText(priceText);
+        if (symbolCurrency) {
+          foundCurrencies.set(symbolCurrency, {
+            confidence: CURRENCY_CONFIDENCE.UNAMBIGUOUS_SYMBOL,
+            source: "symbol",
+          });
         }
       }
+
+      // Before returning, log what we found
+      console.log(
+        "Found currencies:",
+        Array.from(foundCurrencies.entries()).map(([curr, info]) => ({
+          currency: curr,
+          confidence: info.confidence,
+          source: info.source,
+        }))
+      );
 
       // Return the currency with highest confidence
       if (foundCurrencies.size > 0) {
@@ -185,16 +169,13 @@ export const currencyExtractor: BaseMetadataExtractor<string> = {
               : 1;
           }
         )[0];
+        console.log("Selected currency:", currency);
         return currency;
       }
 
       return undefined;
     } catch (error) {
-      if (error instanceof DOMException) {
-        console.error("DOM manipulation error:", error);
-      } else {
-        console.error("Currency extraction failed:", error);
-      }
+      console.error("Currency extraction error:", error);
       return undefined;
     }
   },

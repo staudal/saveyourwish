@@ -24,7 +24,13 @@ export const CURRENCIES: readonly CurrencyInfo[] = [
     tlds: ["us"],
     locale: "en-US",
   },
-  { value: "EUR", label: "Euro", symbol: "€", tlds: ["eu"], locale: "de-DE" }, // Using German as primary Euro locale
+  {
+    value: "EUR",
+    label: "Euro",
+    symbol: "€",
+    tlds: ["eu", "de", "fr", "it", "es"],
+    locale: "de-DE",
+  },
   {
     value: "DKK",
     label: "Danish Krone",
@@ -115,10 +121,10 @@ export type Currency = (typeof CURRENCIES)[number]["value"];
 
 // Currency extraction confidence scores
 export const CURRENCY_CONFIDENCE = {
-  LANGUAGE: 2.5,
-  CODE: 2.0,
-  TLD: 1.8,
-  UNAMBIGUOUS_SYMBOL: 1.0,
+  TLD: 3.0,
+  CODE: 2.5,
+  UNAMBIGUOUS_SYMBOL: 2.0,
+  LANGUAGE: 1.5,
   AMBIGUOUS_SYMBOL: 0.5,
 } as const;
 
@@ -188,14 +194,22 @@ export const PRICE_SELECTORS = {
     { selector: 'meta[property="product:price:amount"]', attr: "content" },
     { selector: 'meta[itemprop="price"]', attr: "content" },
   ],
-  PRICE: [".price", "[itemprop='price']"],
+  PRICE: [
+    ".price",
+    "[itemprop='price']",
+    // Add more specific selectors
+    ".a-price .a-offscreen", // Amazon price text
+    ".a-price-whole", // Amazon main price
+    ".product-price",
+    ".sale-price",
+    ".current-price",
+    "[data-price]", // Generic price attribute
+    "[data-product-price]", // Generic price attribute
+  ],
 } as const;
 
 // Add to existing constants
-export const PROBLEMATIC_SITES = [
-  "walmart.ca",
-  // Add other sites that need special handling
-] as const;
+export const PROBLEMATIC_SITES = ["walmart.ca", "careofcarl.dk"] as const;
 
 export const BOT_DETECTION_PATTERNS = [
   "verify yourself",

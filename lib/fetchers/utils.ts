@@ -2,148 +2,105 @@ import { parse } from "node-html-parser";
 import { MinimalDocument } from "./types";
 import { BOT_DETECTION_PATTERNS } from "@/constants";
 
-// Update cache type
-const documentCache = new Map<string, MinimalDocument>();
+const FETCH_TIMEOUT = 5000;
+const BOT_DETECTION_TIMEOUT = 3000;
 
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-const MAX_CONCURRENT_REQUESTS = 3;
+const headers = {
+  "User-Agent":
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+  Accept:
+    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+  "Accept-Language": "en-US,en;q=0.9",
+  "Accept-Encoding": "gzip, deflate, br",
+  "Cache-Control": "no-cache",
+  Pragma: "no-cache",
+};
 
-// Semaphore for limiting concurrent requests
-let activeRequests = 0;
-const requestQueue: (() => void)[] = [];
+async function fetchWithRetry(url: string, retries = 2): Promise<Response> {
+  let lastError: Error | null = null;
 
-// Add cache size limit
-const MAX_CACHE_SIZE = 100;
-
-async function acquireRequestSlot(): Promise<void> {
-  if (activeRequests < MAX_CONCURRENT_REQUESTS) {
-    activeRequests++;
-    return;
-  }
-  return new Promise<void>((resolve) => requestQueue.push(resolve));
-}
-
-function releaseRequestSlot(): void {
-  activeRequests--;
-  const next = requestQueue.shift();
-  if (next) {
-    activeRequests++;
-    next();
-  }
-}
-
-export async function fetchWithHeaders(url: string): Promise<Response> {
-  return fetch(url, {
-    headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-      Accept:
-        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-      "Accept-Language": "en-US,en;q=0.5",
-      "Accept-Encoding": "gzip, deflate, br",
-      DNT: "1",
-      Connection: "keep-alive",
-      "Upgrade-Insecure-Requests": "1",
-      "Sec-Fetch-Dest": "document",
-      "Sec-Fetch-Mode": "navigate",
-      "Sec-Fetch-Site": "none",
-      "Sec-Fetch-User": "?1",
-    },
-    redirect: "follow",
-    referrerPolicy: "no-referrer",
-  });
-}
-
-async function fetchWithRetry(url: string, retries = 3): Promise<Response> {
   for (let i = 0; i < retries; i++) {
     try {
-      const response = await fetchWithHeaders(url);
-      if (response.ok) {
-        const text = await response.text();
-        if (
-          BOT_DETECTION_PATTERNS.some((pattern) =>
-            text.toLowerCase().includes(pattern)
-          )
-        ) {
-          throw new Error("Bot detection encountered");
-        }
-        return new Response(text, response);
+      // Initial fetch with general timeout
+      const response = await fetch(url, {
+        headers,
+        signal: AbortSignal.timeout(FETCH_TIMEOUT),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      if (response.status === 429 || response.status >= 500) {
-        const waitTime = Math.pow(2, i) * 1000;
-        await new Promise((resolve) => setTimeout(resolve, waitTime));
-        continue;
+      // Bot detection check with shorter timeout
+      const textPromise = response.text();
+      const botCheckPromise = new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error("Bot check timeout")),
+          BOT_DETECTION_TIMEOUT
+        )
+      );
+
+      const text = await Promise.race([textPromise, botCheckPromise]);
+
+      if (isBotDetected(text, response)) {
+        throw new Error("Bot detection encountered");
       }
 
-      throw new Error(`HTTP error! status: ${response.status}`);
+      return new Response(text, response);
     } catch (error) {
-      if (i === retries - 1) throw error;
+      lastError = error instanceof Error ? error : new Error(String(error));
+      if (i === retries - 1) break;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   }
-  throw new Error("Max retries reached");
+
+  throw lastError || new Error("Max retries reached");
+}
+
+function isBotDetected(text: string, response: Response): boolean {
+  const isBot =
+    BOT_DETECTION_PATTERNS.some((pattern) =>
+      text.toLowerCase().includes(pattern)
+    ) ||
+    !!response.headers.get("cf-chl-bypass") ||
+    text.includes("captcha") ||
+    text.includes("robot verification") ||
+    text.includes("cloudflare") ||
+    text.includes("ddos");
+
+  return isBot;
 }
 
 export async function getDocument(url: string): Promise<MinimalDocument> {
   try {
-    const cached = documentCache.get(url);
-    if (cached) return cached;
+    const response = await fetchWithRetry(url);
+    const html = await response.text();
+    const root = parse(html);
 
-    await acquireRequestSlot();
-
-    try {
-      const response = await fetchWithRetry(url);
-      const html = await response.text();
-      const root = parse(html);
-
-      const doc = {
-        querySelector: (sel: string) => root.querySelector(sel),
-        querySelectorAll: (sel: string) => root.querySelectorAll(sel),
-        getElementsByTagName: (tag: string) => root.getElementsByTagName(tag),
-        documentElement: {
-          lang: root.querySelector("html")?.getAttribute("lang") || "",
-          outerHTML: root.toString(),
-        },
-        URL: url,
-      };
-
-      // Implement LRU-like cache cleanup
-      if (documentCache.size >= MAX_CACHE_SIZE) {
-        const firstKey = documentCache.keys().next().value;
-        documentCache.delete(firstKey);
-      }
-
-      documentCache.set(url, doc);
-      setTimeout(() => documentCache.delete(url), CACHE_DURATION);
-
-      return doc;
-    } finally {
-      releaseRequestSlot();
-    }
+    return {
+      querySelector: (sel: string) => root.querySelector(sel),
+      querySelectorAll: (sel: string) => Array.from(root.querySelectorAll(sel)),
+      getElementsByTagName: (tag: string) =>
+        Array.from(root.getElementsByTagName(tag)),
+      documentElement: {
+        lang: root.getAttribute("lang") || "",
+        outerHTML: root.toString(),
+      },
+      URL: url,
+    };
   } catch (error) {
     console.error(`Failed to fetch document from ${url}:`, error);
+    if (
+      error instanceof Error &&
+      (error.message === "Bot detection encountered" ||
+        error.message === "Bot check timeout")
+    ) {
+      throw new Error(
+        "This website is blocking automatic data fetching. Please enter the details manually."
+      );
+    }
     throw error;
   }
-}
-
-export const FETCH_TIMEOUT = 5000;
-
-export type FetcherConfig = {
-  timeout?: number;
-};
-
-export function createTimeoutPromise(timeout: number = FETCH_TIMEOUT) {
-  return new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error("Timeout")), timeout)
-  );
-}
-
-export function handleFetchError(error: unknown): string {
-  return error instanceof Error && error.message === "Timeout"
-    ? "Extraction timed out"
-    : error instanceof Error
-    ? error.message
-    : "Unknown error";
 }
 
 export function validateUrlInput(url: string): string | null {

@@ -1,9 +1,8 @@
 import { Selector } from "./types";
 import { MinimalDocument } from "@/lib/fetchers/types";
-import { IMAGE_SCORING } from "@/constants";
-import { HTMLElement as NodeHtmlElement } from "node-html-parser";
+import { CURRENCIES, IMAGE_SCORING } from "@/constants";
 
-type ElementType = Element | NodeHtmlElement;
+type ElementType = Element;
 
 export function extractFromJsonLd(
   document: Document | MinimalDocument,
@@ -181,4 +180,40 @@ export function scoreImage(element: ElementType, url: string): number {
   }
 
   return score;
+}
+
+// Create a map of symbols to arrays of possible currencies
+const SYMBOL_TO_CURRENCIES = CURRENCIES.reduce((acc, curr) => {
+  if (curr.symbol) {
+    if (!acc[curr.symbol]) {
+      acc[curr.symbol] = [];
+    }
+    acc[curr.symbol].push(curr.value);
+  }
+  return acc;
+}, {} as Record<string, string[]>);
+
+export function extractCurrencyFromText(text: string): string | undefined {
+  // First try to find an exact currency code match
+  const currencyMatch = text.match(/[A-Z]{3}/);
+  if (currencyMatch) {
+    const code = currencyMatch[0];
+    if (CURRENCIES.some((c) => c.value === code)) {
+      return code;
+    }
+  }
+
+  // Then look for currency symbols
+  for (const [symbol, currencies] of Object.entries(SYMBOL_TO_CURRENCIES)) {
+    // Make sure we're finding actual currency symbols, not just any text
+    const symbolRegex = new RegExp(`(?:^|\\s|\\d)${symbol}(?:\\s|\\d|$)`);
+    if (symbolRegex.test(text)) {
+      // If there's only one possible currency for this symbol, return it
+      if (currencies.length === 1) {
+        return currencies[0];
+      }
+    }
+  }
+
+  return undefined;
 }

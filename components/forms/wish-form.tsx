@@ -23,6 +23,10 @@ import imageCompression from "browser-image-compression";
 import { getUrlMetadata } from "@/actions/wish";
 import toast from "react-hot-toast";
 
+const isCurrencyValue = (value: string | undefined): value is string => {
+  return !!value && CURRENCIES.some((c) => c.value === value);
+};
+
 export const formSchema = z.object({
   title: z.string().min(2, "Must be at least 2 characters").max(100),
   price: z.preprocess(
@@ -128,6 +132,81 @@ export function WishForm({
     }
   }, [form]);
 
+  React.useEffect(() => {
+    const subscription = form.watch(async (value, { name }) => {
+      if (
+        name === "destinationUrl" &&
+        value.destinationUrl &&
+        validateUrl(value.destinationUrl)
+      ) {
+        try {
+          const result = await getUrlMetadata(value.destinationUrl);
+
+          if (
+            !result.success &&
+            (result.error?.includes("browser verification") ||
+              result.error?.includes("Bot detection") ||
+              result.error?.includes("Bot check timeout"))
+          ) {
+            toast.error(
+              "This website is blocking automatic data fetching. Please enter the details manually."
+            );
+            return;
+          }
+
+          if (!result.success) {
+            toast.error(
+              "Could not fetch product details. Please enter them manually."
+            );
+            return;
+          }
+
+          if (result.data) {
+            if (result.data.images?.length) {
+              setLocalAvailableImages(result.data.images);
+              form.setValue("imageUrl", result.data.images[0]);
+            }
+
+            const canAutoSync =
+              result.data.price !== undefined &&
+              result.data.currency !== undefined &&
+              isCurrencyValue(result.data.currency);
+
+            form.setValue("title", result.data.title || "");
+            if (result.data.price) form.setValue("price", result.data.price);
+            if (result.data.currency)
+              form.setValue("currency", result.data.currency);
+            if (result.data.description)
+              form.setValue("description", result.data.description);
+            form.setValue("autoUpdatePrice", canAutoSync);
+            if (result.data.imageUrl)
+              form.setValue("imageUrl", result.data.imageUrl);
+          }
+        } catch (error) {
+          console.error("[form] Error in URL change effect:", error);
+          const errorMsg =
+            error instanceof Error ? error.message : String(error);
+
+          if (
+            errorMsg.includes("Bot detection") ||
+            errorMsg.includes("Bot check timeout") ||
+            errorMsg.includes("browser verification")
+          ) {
+            toast.error(
+              "This website is blocking automatic data fetching. Please enter the details manually."
+            );
+          } else {
+            toast.error(
+              "Failed to fetch product details. Please try entering them manually."
+            );
+          }
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form]);
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -177,10 +256,32 @@ export function WishForm({
         form.setValue("autoUpdatePrice", true);
         return true;
       }
-      toast.error("Could not find price on the website");
-    } catch (e) {
-      toast.error("Failed to sync price");
-      console.error(e);
+      if (
+        result.error?.includes("Bot detection") ||
+        result.error?.includes("Bot check timeout")
+      ) {
+        toast.error(
+          "This website is blocking automatic price fetching. Please enter the price manually."
+        );
+      } else {
+        toast.error(
+          "Could not find price on the website. Please enter it manually."
+        );
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Unknown error";
+      if (
+        errorMsg.includes("Bot detection") ||
+        errorMsg.includes("Bot check timeout")
+      ) {
+        toast.error(
+          "This website is blocking automatic price fetching. Please enter the price manually."
+        );
+      } else {
+        toast.error(
+          "Failed to sync price. Please try again or enter it manually."
+        );
+      }
     } finally {
       setIsPriceSyncing(false);
     }
@@ -196,8 +297,29 @@ export function WishForm({
         const result = await getUrlMetadata(form.watch("destinationUrl"));
         if (result.success && result.data?.images?.length) {
           setLocalAvailableImages(result.data.images);
+        } else {
+          if (result.error?.includes("Bot detection")) {
+            toast.error(
+              "This website is blocking automatic image fetching. Please upload an image manually."
+            );
+          } else {
+            toast.error(
+              "Could not find any images on the website. Please upload one manually."
+            );
+          }
         }
       } catch (error) {
+        const errorMsg =
+          error instanceof Error ? error.message : "Unknown error";
+        if (errorMsg.includes("Bot detection")) {
+          toast.error(
+            "This website is blocking automatic image fetching. Please upload an image manually."
+          );
+        } else {
+          toast.error(
+            "Failed to fetch images. Please try uploading one manually."
+          );
+        }
         console.error("Error fetching images:", error);
       } finally {
         setLocalIsLoadingImages(false);
@@ -209,9 +331,9 @@ export function WishForm({
 
   const CarouselSkeleton = () => (
     <Carousel className="w-full">
-      <CarouselContent>
+      <CarouselContent className="-ml-2 sm:-ml-4">
         {[1, 2, 3].map((i) => (
-          <CarouselItem key={i} className="basis-1/3">
+          <CarouselItem key={i} className="pl-2 sm:pl-4 basis-1/3">
             <div className="relative aspect-square rounded-lg overflow-hidden">
               <div className="w-full h-full bg-muted animate-pulse" />
             </div>
@@ -354,14 +476,17 @@ export function WishForm({
               )}
             </div>
             {isImagesExpanded && form.watch("destinationUrl") && (
-              <div className="bg-muted/50 border-t border-border p-4">
+              <div className="bg-muted/50 border-t border-border p-2 sm:p-4">
                 {localIsLoadingImages ? (
                   <CarouselSkeleton />
                 ) : localAvailableImages?.length ? (
                   <Carousel className="w-full">
-                    <CarouselContent>
+                    <CarouselContent className="-ml-2 sm:-ml-4">
                       {localAvailableImages.map((url, index) => (
-                        <CarouselItem key={url} className="basis-1/3">
+                        <CarouselItem
+                          key={url}
+                          className="pl-2 sm:pl-4 basis-1/3"
+                        >
                           <div
                             className={cn(
                               "relative aspect-square cursor-pointer rounded-lg overflow-hidden border-2",
@@ -381,13 +506,13 @@ export function WishForm({
                               src={url}
                               alt={`Product image ${index + 1}`}
                               fill
-                              sizes="(max-width: 768px) 100vw, 33vw"
+                              sizes="33vw"
                               className="object-cover"
                             />
                           </div>
                         </CarouselItem>
                       ))}
-                      <CarouselItem className="basis-1/3">
+                      <CarouselItem className="pl-2 sm:pl-4 basis-1/3">
                         <div
                           className="relative aspect-square cursor-pointer rounded-lg overflow-hidden border-2 border-dashed border-border hover:border-primary bg-muted/50 hover:bg-muted/70 transition-colors"
                           role="button"
@@ -407,8 +532,14 @@ export function WishForm({
                     </CarouselContent>
                     {localAvailableImages.length >= 3 && (
                       <>
-                        <CarouselPrevious type="button" />
-                        <CarouselNext type="button" />
+                        <CarouselPrevious
+                          type="button"
+                          className="-left-3 sm:-left-4"
+                        />
+                        <CarouselNext
+                          type="button"
+                          className="-right-3 sm:-right-4"
+                        />
                       </>
                     )}
                   </Carousel>

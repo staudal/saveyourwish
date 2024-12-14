@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { priceFetcher } from "@/lib/fetchers/price";
 import { priceExtractor } from "@/lib/extractors/price";
 import { setupTestEnv } from "../test-utils";
-import { PROBLEMATIC_SITES } from "@/constants";
 
 // Mock the utils module with all required exports
 vi.mock("@/lib/fetchers/utils", async () => {
@@ -98,11 +97,18 @@ describe("priceFetcher", () => {
     });
   });
 
-  it("handles problematic sites", async () => {
-    const problematicUrl = `https://${PROBLEMATIC_SITES[0]}/some-product`;
-    expect(await priceFetcher.fetch(problematicUrl)).toEqual({
+  it("handles bot detection", async () => {
+    const { getDocument } = await import("@/lib/fetchers/utils");
+    vi.mocked(getDocument).mockRejectedValue(
+      new Error(
+        "This website is blocking automatic data fetching. Please enter the details manually."
+      )
+    );
+
+    expect(await priceFetcher.fetch("https://example.com")).toEqual({
       success: false,
-      error: "This retailer requires browser verification",
+      error:
+        "This website is blocking automatic data fetching. Please enter the details manually.",
     });
   });
 

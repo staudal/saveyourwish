@@ -2,7 +2,6 @@ import { DocumentInput, FetchResponse, PriceData } from "./types";
 import { getDocument } from "./utils";
 import { priceExtractor } from "../extractors/price";
 import { currencyExtractor } from "../extractors/currency";
-import { PROBLEMATIC_SITES } from "@/constants";
 
 const FETCH_TIMEOUT = 5000;
 
@@ -15,14 +14,6 @@ export const priceFetcher = {
       if (typeof input === "string") {
         if (!input.startsWith("http")) {
           return { success: false, error: "Invalid URL format" };
-        }
-
-        const url = new URL(input);
-        if (PROBLEMATIC_SITES.some((site) => url.hostname.includes(site))) {
-          return {
-            success: false,
-            error: "This retailer requires browser verification",
-          };
         }
       }
 
@@ -48,12 +39,27 @@ export const priceFetcher = {
       return { success: true, data: { price, currency } };
     } catch (error) {
       console.error("Error fetching price:", error);
+      if (error instanceof Error) {
+        // Handle bot detection errors
+        if (error.message.includes("blocking automatic data fetching")) {
+          return {
+            success: false,
+            error: error.message,
+          };
+        }
+        // Handle timeout errors
+        if (error.message === "Timeout") {
+          return {
+            success: false,
+            error: "Price extraction timed out",
+          };
+        }
+      }
+      // Handle other errors
       return {
         success: false,
         error:
-          error instanceof Error && error.message === "Timeout"
-            ? "Price extraction timed out"
-            : typeof input === "string"
+          typeof input === "string"
             ? "Failed to fetch price"
             : "Failed to extract price",
       };

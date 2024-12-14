@@ -79,6 +79,13 @@ export const imageFetcher = {
     } catch (error) {
       console.error("Error fetching images:", error);
       if (error instanceof Error) {
+        // Handle bot detection errors
+        if (error.message.includes("blocking automatic data fetching")) {
+          return {
+            success: false,
+            error: error.message,
+          };
+        }
         if (error.message === "Timeout") {
           return {
             success: false,

@@ -91,7 +91,7 @@ export function DeleteWishDialog({
   }
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} repositionInputs={false}>
+    <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
         <DrawerHeader>
           <DrawerTitle>Delete wish</DrawerTitle>
