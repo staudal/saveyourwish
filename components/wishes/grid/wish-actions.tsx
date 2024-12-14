@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal, PencilIcon, Trash2Icon, Move } from "lucide-react";
 import {
@@ -26,9 +27,16 @@ export function WishActions({
   onAdjustImage,
   onEdit,
 }: WishActionsProps) {
+  const [open, setOpen] = useState(false);
+
+  const handleAction = (action: (wish: Wish) => void) => {
+    setOpen(false); // Close dropdown before triggering action
+    action(wish);
+  };
+
   return (
     <div className="absolute right-2 top-2 z-10">
-      <DropdownMenu>
+      <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="icon" className="h-8 w-8">
             <MoreHorizontal className="h-4 w-4" />
@@ -37,17 +45,17 @@ export function WishActions({
         <DropdownMenuContent align="end" className="w-40">
           <DropdownMenuLabel>Manage</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => onEdit(wish)}>
+          <DropdownMenuItem onSelect={() => handleAction(onEdit)}>
             <PencilIcon className="h-4 w-4 mr-2" />
             <span>Edit</span>
           </DropdownMenuItem>
           {wish.imageUrl && (
-            <DropdownMenuItem onSelect={() => onAdjustImage(wish)}>
+            <DropdownMenuItem onSelect={() => handleAction(onAdjustImage)}>
               <Move className="h-4 w-4 mr-2" />
               <span>Adjust image</span>
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem onSelect={() => onDelete(wish)}>
+          <DropdownMenuItem onSelect={() => handleAction(onDelete)}>
             <Trash2Icon className="h-4 w-4 mr-2" />
             <span>Delete</span>
           </DropdownMenuItem>
