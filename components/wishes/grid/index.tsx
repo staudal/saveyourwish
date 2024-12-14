@@ -236,44 +236,66 @@ export function WishesGrid({
     </div>
   );
 
+  const renderEmptyState = () => (
+    <div className="flex flex-col items-center justify-center p-8 mt-8 border-2 border-dashed rounded-lg border-muted">
+      <div className="flex flex-col items-center gap-2 text-center">
+        <h3 className="text-lg font-medium">No wishes yet</h3>
+        <p className="text-sm text-muted-foreground">
+          Start by adding your first wish to this list
+        </p>
+        <Button
+          onClick={() => setDialogState((prev) => ({ ...prev, create: true }))}
+          className="mt-4"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add your first wish
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       {renderHeader()}
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext
-          items={items.map((item) => item.id)}
-          strategy={rectSortingStrategy}
-          disabled={!reorderState.isReordering}
+      {items.length === 0 && !readonly ? (
+        renderEmptyState()
+      ) : (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
         >
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {items.map((wish) => (
-              <WishCard
-                key={wish.id}
-                wish={wish}
-                isReordering={reorderState.isReordering}
-                readonly={readonly}
-                isSharedView={isShared}
-                imageDimensions={imageDimensions}
-                setImageDimensions={setImageDimensions}
-                onDelete={() => openDialog("delete", wish)}
-                onAdjustImage={() => openDialog("imagePosition", wish)}
-                onEdit={() => openDialog("edit", wish)}
-                onReserve={() =>
-                  openDialog(
-                    wish.reservation ? "removeReservation" : "reserve",
-                    wish
-                  )
-                }
-              />
-            ))}
-          </div>
-        </SortableContext>
-      </DndContext>
+          <SortableContext
+            items={items.map((item) => item.id)}
+            strategy={rectSortingStrategy}
+            disabled={!reorderState.isReordering}
+          >
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {items.map((wish) => (
+                <WishCard
+                  key={wish.id}
+                  wish={wish}
+                  isReordering={reorderState.isReordering}
+                  readonly={readonly}
+                  isSharedView={isShared}
+                  imageDimensions={imageDimensions}
+                  setImageDimensions={setImageDimensions}
+                  onDelete={() => openDialog("delete", wish)}
+                  onAdjustImage={() => openDialog("imagePosition", wish)}
+                  onEdit={() => openDialog("edit", wish)}
+                  onReserve={() =>
+                    openDialog(
+                      wish.reservation ? "removeReservation" : "reserve",
+                      wish
+                    )
+                  }
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+      )}
 
       {/* Dialogs */}
       <WishDialog
