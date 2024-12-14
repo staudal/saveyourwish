@@ -117,9 +117,23 @@ export const imageExtractor: ImageExtractor = {
 
   clean: (imageUrl: string, baseUrl?: string): string => {
     try {
+      // Early return for obviously invalid URLs
+      if (!imageUrl.includes(".") || imageUrl.includes(" ")) {
+        return imageUrl;
+      }
+
       let normalizedUrl = imageUrl;
       if (imageUrl.startsWith("//")) {
         normalizedUrl = `${IMAGE_URL_NORMALIZATION.PROTOCOL_PREFIX}${imageUrl}`;
+      }
+
+      // Add protocol if missing and not starting with slash and looks like a URL
+      if (
+        !normalizedUrl.startsWith("http") &&
+        !normalizedUrl.startsWith("/") &&
+        /^[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]/.test(normalizedUrl)
+      ) {
+        normalizedUrl = `${IMAGE_URL_NORMALIZATION.PROTOCOL_PREFIX}${normalizedUrl}`;
       }
 
       if (baseUrl) {
@@ -129,7 +143,6 @@ export const imageExtractor: ImageExtractor = {
       return new URL(normalizedUrl).href;
     } catch (e) {
       // Return original URL if invalid
-      console.error("Invalid image URL:", e);
       return imageUrl;
     }
   },

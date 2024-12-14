@@ -1,10 +1,18 @@
 import { imageExtractor } from "@/lib/extractors/image";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { setupTestEnv } from "@/__tests__/lib/test-utils";
 import { IMAGE_LIMITS } from "@/constants";
 
 describe("imageExtractor", () => {
   const { createMockDocument } = setupTestEnv();
+
+  beforeEach(() => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
 
   describe("metadata extraction", () => {
     it("extracts images from meta tags in order of priority", () => {
