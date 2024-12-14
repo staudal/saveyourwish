@@ -107,9 +107,9 @@ export const imageExtractor: ImageExtractor = {
             });
           }
         }
-      } catch (e) {
-        console.error("Error parsing JSON-LD:", e);
-        // Silently continue on JSON parse errors to allow fallback to other methods
+      } catch {
+        // Silently continue on JSON parse errors
+        continue;
       }
     }
 
