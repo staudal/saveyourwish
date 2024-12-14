@@ -16,6 +16,13 @@ export const extractCurrencyFromText = (text: string): string | undefined => {
   const cleanText = text.replace(/<[^>]*>/g, "").trim();
   if (!cleanText) return undefined;
 
+  // First check for prefixed currency codes (e.g., "US $")
+  const prefixMatch = cleanText.match(/^(US|AU|CA|NZ)\s*\$/i);
+  if (prefixMatch) {
+    return `${prefixMatch[1].toUpperCase()}D`; // US$ -> USD, AU$ -> AUD, etc.
+  }
+
+  // Then check for regular currency codes
   const words = cleanText.toUpperCase().split(/\s+/);
   for (const word of words) {
     const cleaned = word.replace(/[^A-Z]/g, "");

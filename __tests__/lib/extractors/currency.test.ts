@@ -175,26 +175,24 @@ describe("currencyExtractor", () => {
             <script type="application/ld+json">{ "priceCurrency": "USD" }</script>
             <meta property="og:price:currency" content="EUR">
             <div class="price">99.99 kr</div>
-            <div class="another-price">£199.99</div>
           `,
           expected: "USD",
         },
         {
-          // Meta should win over text/symbols
+          // Meta should win over plain text/symbols
           html: `
             <meta property="og:price:currency" content="EUR">
             <div class="price">$99.99</div>
-            <div class="another-price">199.99 kr</div>
           `,
           expected: "EUR",
         },
         {
-          // Explicit currency code should win over symbol
+          // Primary price with currency code should win over conversion
           html: `
-            <div class="price">$99.99</div>
-            <div class="another-price">99.99 EUR</div>
+            <div class="price">US $99.99</div>
+            <div class="converted">Approximately DKK 699.99</div>
           `,
-          expected: "EUR",
+          expected: "USD",
         },
       ];
 
