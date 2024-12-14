@@ -2,7 +2,6 @@ import { DocumentInput, FetchResponse, PriceData } from "./types";
 import { getDocument } from "./utils";
 import { priceExtractor } from "../extractors/price";
 import { currencyExtractor } from "../extractors/currency";
-import { PROBLEMATIC_SITES } from "@/constants";
 
 const FETCH_TIMEOUT = 5000;
 
@@ -15,14 +14,6 @@ export const priceFetcher = {
       if (typeof input === "string") {
         if (!input.startsWith("http")) {
           return { success: false, error: "Invalid URL format" };
-        }
-
-        const url = new URL(input);
-        if (PROBLEMATIC_SITES.some((site) => url.hostname.includes(site))) {
-          return {
-            success: false,
-            error: "This retailer requires browser verification",
-          };
         }
       }
 

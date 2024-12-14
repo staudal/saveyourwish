@@ -191,19 +191,6 @@ export const PRICE_SELECTORS = {
   PRICE: [".price", "[itemprop='price']"],
 } as const;
 
-// Add to existing constants
-export const PROBLEMATIC_SITES = [
-  "walmart.ca",
-  // Add other sites that need special handling
-] as const;
-
-export const BOT_DETECTION_PATTERNS = [
-  "verify yourself",
-  "not robots",
-  "captcha",
-  "bot check",
-] as const;
-
 export const IMAGE_LIMITS = {
   MAX_IMAGES: 8,
 } as const;

@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { priceFetcher } from "@/lib/fetchers/price";
 import { priceExtractor } from "@/lib/extractors/price";
 import { setupTestEnv } from "../test-utils";
-import { PROBLEMATIC_SITES } from "@/constants";
 
 // Mock the utils module with all required exports
 vi.mock("@/lib/fetchers/utils", async () => {
@@ -95,14 +94,6 @@ describe("priceFetcher", () => {
     expect(await priceFetcher.fetch("not-a-url")).toEqual({
       success: false,
       error: "Invalid URL format",
-    });
-  });
-
-  it("handles problematic sites", async () => {
-    const problematicUrl = `https://${PROBLEMATIC_SITES[0]}/some-product`;
-    expect(await priceFetcher.fetch(problematicUrl)).toEqual({
-      success: false,
-      error: "This retailer requires browser verification",
     });
   });
 
