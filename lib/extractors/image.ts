@@ -141,7 +141,7 @@ export const imageExtractor: ImageExtractor = {
       }
 
       return new URL(normalizedUrl).href;
-    } catch (e) {
+    } catch {
       // Return original URL if invalid
       return imageUrl;
     }
