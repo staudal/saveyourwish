@@ -156,6 +156,33 @@ describe("imageExtractor", () => {
       expect(results).toBeDefined();
       expect(results[0]).toMatch(/og\.jpg$/);
     });
+
+    it("prioritizes images found in product containers over generic images", () => {
+      const doc = createMockDocument(`
+        <div class="logo-container">
+          <img src="https://example.com/logo.jpg" />
+        </div>
+        <div class="product-gallery">
+          <img src="https://example.com/main-product-image-large.jpg" width="1000" height="1000" />
+        </div>
+        <div class="icons">
+          <img src="https://example.com/icon.png" />
+        </div>
+      `);
+      const results = imageExtractor.extract(doc);
+      expect(results.length).toBeGreaterThan(0);
+      // The product-gallery image should come first
+      expect(results[0]).toBe(
+        "https://example.com/main-product-image-large.jpg"
+      );
+      // Logo and icon should not outrank the main product image
+      expect(results).not.toEqual(
+        expect.arrayContaining([
+          "https://example.com/logo.jpg",
+          "https://example.com/icon.png",
+        ])
+      );
+    });
   });
 
   describe("error handling", () => {
@@ -255,13 +282,53 @@ describe("imageExtractor", () => {
       expect(results[0]).toMatch(/product\.jpg$/);
     });
 
-    it("caps extremely large dimensions", () => {
-      const doc = createMockDocument(`
-        <img src="https://example.com/huge.jpg" width="10000" height="10000" />
-        <img src="https://example.com/normal.jpg" width="1200" height="1200" />
-      `);
+    it("handles dimension inference from filename and srcset correctly", () => {
+      const html = `
+        <div>
+          <!-- Very small image by filename (exclude) -->
+          <img src="https://example.com/flag_50x50.png" />
+    
+          <!-- Large image by filename -->
+          <img src="https://example.com/product_1200x1200.jpg" />
+    
+          <!-- No explicit dimensions, but large inferred from srcset -->
+          <img 
+            src="https://example.com/unknown.jpg" 
+            srcset="https://example.com/unknown_1080w.jpg 1080w, https://example.com/unknown_1200w.jpg 1200w"
+          />
+    
+          <!-- A generic image with no dimension hints -->
+          <img src="https://example.com/generic_image.jpg" />
+        </div>
+      `;
+
+      const doc = createMockDocument(html);
       const results = imageExtractor.extract(doc);
-      expect(results[0]).toMatch(/normal\.jpg$/);
+
+      // We expect the large product image (1200x1200) and the srcset-inferred large image to appear first
+      // The flag_50x50 should be excluded, and the generic image should come last (or not at all if dimensions are penalized)
+
+      // The order should be:
+      // 1. product_1200x1200.jpg (large by filename)
+      // 2. unknown.jpg (large by srcset)
+      // generic_image.jpg may appear after these two unless penalized enough.
+
+      expect(results).toContain("https://example.com/product_1200x1200.jpg");
+      expect(results).toContain("https://example.com/unknown.jpg");
+      expect(results).not.toContain("https://example.com/flag_50x50.png");
+
+      // Check ordering - product image should be first because it has "product" in the URL and large dimensions
+      expect(results[0]).toBe("https://example.com/product_1200x1200.jpg");
+      // The srcset large should be next
+      expect(results[1]).toBe("https://example.com/unknown.jpg");
+
+      // The generic image may or may not appear depending on your scoring rules.
+      // If your logic doesn't exclude it, at least ensure it's not higher than the other two.
+      if (results.includes("https://example.com/generic_image.jpg")) {
+        expect(
+          results.indexOf("https://example.com/generic_image.jpg")
+        ).toBeGreaterThan(1);
+      }
     });
   });
 

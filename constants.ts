@@ -269,16 +269,16 @@ export const IMAGE_URL_NORMALIZATION = {
 } as const;
 
 export const IMAGE_SCORING = {
-  MIN_WIDTH: 200,
-  MIN_HEIGHT: 200,
+  MIN_WIDTH: 400,
+  MIN_HEIGHT: 400,
   PREFERRED_WIDTH: 800,
   PREFERRED_HEIGHT: 800,
   SCORES: {
     META: 100,
-    PRODUCT: 80,
+    PRODUCT: 90,
     GALLERY: 60,
     GENERIC: 40,
-    SIZE_BONUS: 20, // Bonus for images meeting preferred dimensions
-    SIZE_PENALTY: -30, // Penalty for images below minimum dimensions
+    SIZE_BONUS: 20,
+    SIZE_PENALTY: -30,
   },
 } as const;
