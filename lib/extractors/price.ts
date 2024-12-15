@@ -8,74 +8,93 @@ const MAX_SAFE_PRICE = 999999999.99;
 export const priceExtractor: BaseMetadataExtractor<number> = {
   extract: (document: Document | MinimalDocument): number | undefined => {
     try {
-      // 1. Try JSON-LD (highest priority)
+      // 1. Try JSON-LD first
       const jsonLdPrice = extractFromJsonLd(
         document,
         PRICE_SELECTORS.JSONLD_PATHS.map((path) => [...path])
       );
       if (jsonLdPrice) {
         const price = cleanPrice(jsonLdPrice);
-        if (price) {
-          return price;
-        }
+        if (price) return price;
       }
 
       // 2. Try meta tags
-      const metaPrice = extractFromSelectors(document, [
-        ...PRICE_SELECTORS.META,
-      ]);
+      const metaPrice = extractFromSelectors(
+        document,
+        PRICE_SELECTORS.META as Array<{
+          selector: string;
+          attr:
+            | "data-price"
+            | "content"
+            | "textContent"
+            | "src"
+            | "data-amount"
+            | "data-price-value";
+        }>
+      );
       if (metaPrice) {
         const price = cleanPrice(metaPrice);
-        if (price) {
-          return price;
-        }
+        if (price) return price;
       }
 
-      // 3. Try specific price selectors first
+      // 3. Try known price selectors
       const priceSelector = PRICE_SELECTORS.PRICE.join(", ");
       const priceElements = document.querySelectorAll(priceSelector);
-      const candidates: number[] = [];
 
       for (const element of priceElements) {
-        const text = element.textContent?.trim();
-        const price = cleanPrice(text);
-        if (price) {
-          candidates.push(price);
+        // Try attributes like data-price-amount or content first
+        const attrPrice = extractNumberFromAttributes(element as Element);
+        if (attrPrice !== undefined) {
+          return attrPrice;
         }
-      }
 
-      // 4. If no prices found, try all elements as fallback
-      if (candidates.length === 0) {
-        const allElements = document.querySelectorAll("*");
-        for (const element of allElements) {
-          if (
-            element.tagName === "SCRIPT" ||
-            element.tagName === "STYLE" ||
-            element.closest("script") ||
-            element.closest("style")
-          )
-            continue;
-
-          const text = element.textContent?.trim();
-          const price = cleanPrice(text);
-          if (price) {
-            candidates.push(price);
+        // If no attribute, parse textContent
+        const text = element.textContent?.trim();
+        if (text) {
+          const parsedPrice = cleanPrice(text);
+          if (parsedPrice) {
+            // Return immediately the first recognized price
+            return parsedPrice;
           }
         }
       }
 
-      if (candidates.length > 0) {
-        // Get the most frequent price
+      // 4. Fallback: If no known price selectors matched, search entire doc
+      // (only do this if necessary)
+      const allElements = document.querySelectorAll("*");
+      const fallbackCandidates: number[] = [];
+      for (const element of allElements) {
+        if (
+          element.tagName === "SCRIPT" ||
+          element.tagName === "STYLE" ||
+          element.closest("script") ||
+          element.closest("style")
+        )
+          continue;
+
+        const text = element.textContent?.trim();
+        if (!text) continue;
+        const price = cleanPrice(text);
+        if (price) {
+          fallbackCandidates.push(price);
+        }
+      }
+
+      if (fallbackCandidates.length > 0) {
+        // If we got multiple candidates from fallback, pick the most frequent as before
+        // This is a fallback scenario anyway.
         const priceFrequency = new Map<number, number>();
-        candidates.forEach((price) => {
-          priceFrequency.set(price, (priceFrequency.get(price) || 0) + 1);
+        fallbackCandidates.forEach((p) => {
+          priceFrequency.set(p, (priceFrequency.get(p) || 0) + 1);
         });
 
-        const [selectedPrice] = [...priceFrequency.entries()].sort(
-          (a, b) => b[1] - a[1]
-        ); // Sort by frequency
+        // Sort by frequency descending, then by value ascending to break ties
+        const sorted = [...priceFrequency.entries()].sort((a, b) => {
+          if (b[1] === a[1]) return a[0] - b[0];
+          return b[1] - a[1];
+        });
 
-        return selectedPrice[0];
+        return sorted[0][0];
       }
 
       return undefined;
@@ -85,29 +104,45 @@ export const priceExtractor: BaseMetadataExtractor<number> = {
   },
 };
 
+function extractNumberFromAttributes(element: Element): number | undefined {
+  const attrNames = ["data-price-amount", "data-price", "content"];
+  for (const attr of attrNames) {
+    const val = element.getAttribute(attr);
+    if (val) {
+      const price = cleanPrice(val);
+      if (price) return price;
+    }
+  }
+  return undefined;
+}
+
 function cleanPrice(price: string | undefined): number | undefined {
   if (!price) return undefined;
 
   try {
-    // 1. Clean the input
-    const cleaned = price
-      .replace(/<[^>]*>/g, " ") // Remove HTML tags
-      .replace(/[^\d.,\s\-~～]/g, "") // Keep only digits, decimal points, commas, spaces, and range indicators
-      .trim();
+    // Normalize non-breaking spaces
+    price = price.replace(/\u00A0/g, " ");
 
-    // Special handling for space-separated numbers before splitting
+    // Remove HTML tags
+    price = price.replace(/<[^>]*>/g, " ");
+
+    // Keep only digits, decimal points, commas, spaces, and range indicators
+    // Remove currency letters and other alphabets
+    price = price.replace(/[^\d.,\s\-~～]/g, "").trim();
+
+    // If we have a space-separated single number with no range symbols, try directly
     if (
-      cleaned.includes(" ") &&
-      !cleaned.includes("-") &&
-      !cleaned.includes("~") &&
-      !cleaned.includes("～")
+      price.includes(" ") &&
+      !price.includes("-") &&
+      !price.includes("~") &&
+      !price.includes("～")
     ) {
-      const spaceNumber = parseNumber(cleaned);
-      if (spaceNumber) return spaceNumber;
+      const directNumber = parseNumber(price);
+      if (directNumber) return directNumber;
     }
 
-    // 2. Split on common delimiters and process each potential number
-    const numbers = cleaned
+    // Split on ranges or words that indicate ranges
+    const segments = price
       .split(/(?:\s*[-~～]\s*|\s+to\s+|\s+from\s+|\s+)/)
       .map((str) => parseNumber(str))
       .filter(
@@ -115,7 +150,7 @@ function cleanPrice(price: string | undefined): number | undefined {
       )
       .sort((a, b) => a - b);
 
-    return numbers[0];
+    return segments[0];
   } catch {
     return undefined;
   }
@@ -123,19 +158,16 @@ function cleanPrice(price: string | undefined): number | undefined {
 
 function parseNumber(str: string): number | undefined {
   if (!str || str.startsWith("-")) return undefined;
+  if (str.includes("/") || str.length > 10) return undefined; // Avoid dates or long nonsense
 
-  // Skip strings that look like dates or phone numbers
-  if (str.includes("/") || str.length > 10) return undefined;
-
-  // Try each format, but in a specific order to avoid misinterpretation
   const formats = [
-    // First try formats with both group and decimal separators
     (s: string) => {
+      // Mixed separators (European vs US)
       if (s.includes(".") && s.includes(",")) {
-        // European format (1.234,56)
         const lastDot = s.lastIndexOf(".");
         const lastComma = s.lastIndexOf(",");
         if (lastDot < lastComma) {
+          // European format (1.234,56)
           return Number(s.replace(/\./g, "").replace(",", "."));
         }
         // US format (1,234.56)
@@ -143,24 +175,23 @@ function parseNumber(str: string): number | undefined {
       }
       return NaN;
     },
-    // Then try space with comma (1 234,56)
     (s: string) => {
+      // Space with comma decimal (1 234,56)
       if (s.includes(" ") && s.includes(",")) {
         return Number(s.replace(/\s/g, "").replace(",", "."));
       }
       return NaN;
     },
-    // Then try space with dot (1 234.56)
     (s: string) => {
+      // Space with dot decimal (1 234.56)
       if (s.includes(" ") && s.includes(".")) {
         return Number(s.replace(/\s/g, ""));
       }
       return NaN;
     },
-    // Then try space only (1 234)
     (s: string) => {
+      // Space as thousand separator (1 234)
       if (s.includes(" ") && !s.includes(",") && !s.includes(".")) {
-        // Verify spaces are used as group separators (every 3 digits)
         const parts = s.split(" ");
         if (parts.every((part) => /^\d{1,3}$/.test(part))) {
           return Number(s.replace(/\s/g, ""));
@@ -168,24 +199,22 @@ function parseNumber(str: string): number | undefined {
       }
       return NaN;
     },
-    // Then try single separator cases
     (s: string) => {
-      // Only decimal point (123.45)
+      // Simple formats
       if (!s.includes(",") && s.includes(".")) {
-        return Number(s);
+        return Number(s); // 123.45
       }
-      // Comma could be decimal or group separator
       if (s.includes(",") && !s.includes(".")) {
-        // If comma is followed by exactly 2 digits, it's a decimal separator
+        // Check if comma is decimal (e.g., 123,45)
         const parts = s.split(",");
         if (parts[1]?.length === 2) {
           return Number(s.replace(",", "."));
         }
-        // Otherwise treat as group separator
+        // Otherwise treat comma as thousand separator
         return Number(s.replace(/,/g, ""));
       }
-      // No separators (1234)
       if (!s.includes(",") && !s.includes(".") && !s.includes(" ")) {
+        // Plain integer
         return Number(s);
       }
       return NaN;
@@ -193,13 +222,10 @@ function parseNumber(str: string): number | undefined {
   ];
 
   for (const format of formats) {
-    try {
-      const num = format(str);
-      if (isFinite(num) && num > 0) {
-        return Math.round(num * 100) / 100;
-      }
-    } catch {}
+    const num = format(str);
+    if (isFinite(num) && num > 0) {
+      return Math.round(num * 100) / 100;
+    }
   }
-
   return undefined;
 }

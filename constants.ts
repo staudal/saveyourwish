@@ -193,14 +193,15 @@ export const PRICE_SELECTORS = {
     ".current-price",
     "#priceblock_ourprice",
     "#priceblock_dealprice",
-    ".a-price .a-offscreen", // Amazon specific
-    "#price_inside_buybox", // Amazon specific
+    ".a-price .a-offscreen",
+    "#price_inside_buybox",
     "[data-price-type='finalPrice']",
     "[data-price-amount]",
     ".product-info-price .price",
     ".product-price-value",
+    "[class*='price']", // Added to handle dynamic classes
   ],
-} as const;
+};
 
 export const IMAGE_LIMITS = {
   MAX_IMAGES: 8,
