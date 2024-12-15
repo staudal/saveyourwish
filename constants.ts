@@ -161,15 +161,6 @@ export const CURRENCY_SELECTORS = {
   ],
 } as const;
 
-// Map TLDs to ISO language codes
-export const TLD_TO_LANGUAGE: Record<string, string> = {
-  dk: "da", // Danish
-  se: "sv", // Swedish
-  no: "no", // Norwegian
-  jp: "ja", // Japanese
-  cn: "zh", // Chinese
-} as const;
-
 // Exchange rates and currency conversion
 export const EXCHANGE_RATES: Record<Currency, number> = {
   USD: 1,

@@ -9,11 +9,8 @@ describe("currencyExtractor", () => {
   describe("metadata extraction", () => {
     it("extracts currency from JSON-LD", () => {
       const variations = [
-        // Direct path (most common)
         { json: `{ "priceCurrency": "USD" }`, expected: "USD" },
-        // Common schema.org structure
         { json: `{ "offers": { "priceCurrency": "EUR" } }`, expected: "EUR" },
-        // Price specification
         {
           json: `{ "offers": { "priceSpecification": { "priceCurrency": "GBP" } } }`,
           expected: "GBP",
@@ -505,11 +502,16 @@ describe("currencyExtractor", () => {
       }
     });
 
-    it("ignores currency hints from subdomains", () => {
-      const doc = createMockDocument('<div class="price">32.99</div>');
-      doc.URL = "https://ca.example.com";
-      // Should not use 'ca' subdomain as currency hint
-      expect(currencyExtractor.extract(doc)).toBeUndefined();
+    it("uses subdomains to determine currency if available", () => {
+      const doc = createMockDocument('<div class="price">$32.99</div>');
+      doc.URL = "https://ca.gymshark.com";
+      // Expect CAD now, due to 'ca' subdomain
+      expect(currencyExtractor.extract(doc)).toBe("CAD");
+
+      const dkDoc = createMockDocument('<div class="price">299 kr</div>');
+      dkDoc.URL = "https://dk.gymshark.com";
+      // Expect DKK now, due to 'dk' subdomain
+      expect(currencyExtractor.extract(dkDoc)).toBe("DKK");
     });
   });
 
