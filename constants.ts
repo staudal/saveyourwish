@@ -1,5 +1,3 @@
-export type DialogState = "url" | "configure";
-
 // Currency-related types and constants
 type CurrencyInfo = {
   readonly value: string;
@@ -182,14 +180,6 @@ export const EXCHANGE_RATES: Record<Currency, number> = {
   GBP: 0.82,
   CAD: 1.35,
 };
-
-// Add these with the other currency-related constants
-export const PRICE_CONFIDENCE = {
-  JSONLD: 3.0,
-  META: 2.0,
-  MICRODATA: 1.5,
-  TEXT: 1.0,
-} as const;
 
 export const PRICE_SELECTORS = {
   JSONLD_PATHS: [

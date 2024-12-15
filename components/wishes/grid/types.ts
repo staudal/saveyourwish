@@ -1,11 +1,6 @@
 import { wishlists, type wishes } from "@/lib/db";
 import { type InferSelectModel } from "drizzle-orm";
 
-export interface ImageDimension {
-  imageRatio: number;
-  isImageTallerThanContainer: boolean;
-}
-
 export type Wish = InferSelectModel<typeof wishes> & {
   id: string;
   reservation?: {
@@ -17,11 +12,3 @@ export type Wish = InferSelectModel<typeof wishes> & {
 export type Wishlist = InferSelectModel<typeof wishlists> & {
   wishes: Wish[];
 };
-
-// Create a subset of Wishlist properties that we actually need
-export interface WishlistDisplay {
-  id: string;
-  title: string;
-  shared: boolean;
-  shareId: string | null;
-}

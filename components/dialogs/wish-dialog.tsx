@@ -42,7 +42,7 @@ import { cn } from "@/lib/utils";
 
 type Wish = InferSelectModel<typeof wishes>;
 
-export const initialFormValues: FormValues = {
+const initialFormValues: FormValues = {
   title: "",
   price: undefined,
   currency: "USD",

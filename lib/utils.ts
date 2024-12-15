@@ -4,7 +4,7 @@ import { twMerge } from "tailwind-merge";
 import { MinimalDocument } from "./fetchers/types";
 
 // Currency validation and normalization
-export const isValidCurrency = (currency: string): boolean =>
+const isValidCurrency = (currency: string): boolean =>
   CURRENCIES.some((c) => c.value === currency.toUpperCase());
 
 export const normalizeCurrency = (currency: string): string | undefined => {
@@ -41,7 +41,7 @@ export function convertToUSD(amount: number, fromCurrency: Currency): number {
   return amount / rate;
 }
 
-export function convertCurrency(
+function convertCurrency(
   amount: number,
   fromCurrency: Currency,
   toCurrency: Currency
@@ -52,7 +52,7 @@ export function convertCurrency(
   return amountInUSD * EXCHANGE_RATES[toCurrency];
 }
 
-export function getMostCommonCurrency(
+function getMostCommonCurrency(
   wishes: { price: number | null; currency: Currency }[]
 ): Currency {
   const validWishes = wishes.filter((wish) => wish.price !== null);
