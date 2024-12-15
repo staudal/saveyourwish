@@ -42,7 +42,3 @@ export async function handleLoginWithEmail(formData: FormData) {
 export async function handleLoginWithGoogle() {
   await signIn("google");
 }
-
-export async function handleLoginWithApple() {
-  await signIn("apple");
-}
