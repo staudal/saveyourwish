@@ -5,29 +5,16 @@ import { ArrowUpDown, Pencil, Trash2, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/components/ui/currency-select";
 import { calculateAveragePrice, convertToUSD } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { DeleteWishlistDialog } from "../dialogs/delete-wishlist-dialog";
-import { EditWishlistDialog } from "../dialogs/edit-wishlist-dialog";
 import { Wishlist } from "../wishes/grid/types";
 import { ShareWishlistDialog } from "../dialogs/share-wishlist-dialog";
+import { WishlistDialog } from "../dialogs/wishlist-dialog";
 
 function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
-  const [currentWishlist, setCurrentWishlist] = useState(wishlist);
-
-  useEffect(() => {
-    setCurrentWishlist(wishlist);
-  }, [wishlist]);
-
-  const handleShareChange = (isShared: boolean) => {
-    setCurrentWishlist((prev) => ({
-      ...prev,
-      shared: isShared,
-      shareId: isShared ? prev.id : null,
-    }));
-  };
 
   return (
     <>
@@ -43,17 +30,22 @@ function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
           <span className="sr-only">Share</span>
           <Share2 className="h-4 w-4" />
         </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowEditDialog(true);
-          }}
-        >
-          <span className="sr-only">Edit</span>
-          <Pencil className="h-4 w-4" />
-        </Button>
+        <WishlistDialog
+          mode="edit"
+          wishlist={wishlist}
+          open={showEditDialog}
+          setOpen={setShowEditDialog}
+          trigger={
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <span className="sr-only">Edit</span>
+              <Pencil className="h-4 w-4" />
+            </Button>
+          }
+        />
         <Button
           variant="outline"
           size="icon"
@@ -68,24 +60,18 @@ function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
       </div>
 
       <ShareWishlistDialog
-        wishlistId={currentWishlist.id}
-        isShared={currentWishlist.shared}
-        shareId={currentWishlist.shareId}
+        wishlistId={wishlist.id}
+        isShared={wishlist.shared}
+        shareId={wishlist.shareId}
         open={showShareDialog}
         setOpen={setShowShareDialog}
-        onShareChange={handleShareChange}
       />
       <DeleteWishlistDialog
-        id={currentWishlist.id}
-        title={currentWishlist.title}
-        isShared={currentWishlist.shared}
+        id={wishlist.id}
+        title={wishlist.title}
+        isShared={wishlist.shared}
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
-      />
-      <EditWishlistDialog
-        open={showEditDialog}
-        setOpen={setShowEditDialog}
-        wishlist={currentWishlist}
       />
     </>
   );

@@ -54,7 +54,10 @@ export async function getWishlists() {
   }));
 }
 
-export async function createWishlist(title: string) {
+export async function createWishlist(data: {
+  title: string;
+  coverImage: string | null;
+}) {
   try {
     const session = await auth();
     if (!session?.user?.id) throw new Error("Unauthorized");
@@ -62,8 +65,9 @@ export async function createWishlist(title: string) {
     const result = await db
       .insert(wishlists)
       .values({
-        title,
+        title: data.title,
         userId: session.user.id,
+        coverImage: data.coverImage,
       })
       .returning({ id: wishlists.id });
 
@@ -178,7 +182,13 @@ export async function getSharedWishlist(shareId: string) {
     .then((rows) => rows[0]);
 }
 
-export async function updateWishlist(id: string, data: { title: string }) {
+export async function updateWishlist(
+  id: string,
+  data: {
+    title: string;
+    coverImage: string | null;
+  }
+) {
   try {
     const session = await auth();
     if (!session?.user?.id) throw new Error("Unauthorized");
@@ -187,6 +197,7 @@ export async function updateWishlist(id: string, data: { title: string }) {
       .update(wishlists)
       .set({
         title: data.title,
+        coverImage: data.coverImage,
       })
       .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)));
 

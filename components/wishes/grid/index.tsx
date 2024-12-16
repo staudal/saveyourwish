@@ -29,7 +29,7 @@ import { RemoveReservationDialog } from "@/components/dialogs/remove-reservation
 import { Wish } from "./types";
 import Image from "next/image";
 import { WishDialog } from "@/components/dialogs/wish-dialog";
-import { EditWishlistDialog } from "@/components/dialogs/edit-wishlist-dialog";
+import { WishlistDialog } from "@/components/dialogs/wishlist-dialog";
 
 interface WishesGridProps {
   wishes: Wish[];
@@ -138,6 +138,7 @@ export function WishesGrid({
           className="w-full h-full object-cover"
           width={1000}
           height={1000}
+          priority
         />
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
@@ -357,12 +358,21 @@ export function WishesGrid({
           />
         </>
       )}
-      <EditWishlistDialog
+      <WishlistDialog
+        mode="edit"
         open={dialogState.editWishlist}
         setOpen={(open) =>
           setDialogState((prev) => ({ ...prev, editWishlist: open }))
         }
-        wishlist={{ id: wishlistId, title, coverImage }}
+        wishlist={{
+          id: wishlistId,
+          title,
+          coverImage: coverImage ?? null,
+          userId: "",
+          favorite: false,
+          shared: isShared,
+          shareId: shareId ?? null,
+        }}
       />
     </div>
   );

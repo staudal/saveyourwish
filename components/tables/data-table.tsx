@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CreateWishlistDialog } from "../dialogs/create-wishlist-dialog";
+import { WishlistDialog } from "../dialogs/wishlist-dialog";
 import { Wishlist } from "../wishes/grid/types";
 
 interface DataTableProps<TData, TValue> {
@@ -61,7 +61,10 @@ export function DataTable<TData extends Wishlist, TValue>({
     <div className="w-full space-y-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center justify-between gap-4 w-full">
-          <CreateWishlistDialog />
+          <WishlistDialog
+            mode="create"
+            trigger={<Button>Create wishlist</Button>}
+          />
           <div className="flex items-center gap-4">
             <Input
               placeholder="Search"
