@@ -5,7 +5,6 @@ import {
   ColumnDef,
   ColumnFiltersState,
   SortingState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -31,25 +30,17 @@ import { Wishlist } from "../wishes/grid/types";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  initialColumnVisibility?: VisibilityState;
 }
 
 export function DataTable<TData extends Wishlist, TValue>({
   columns,
   data,
-  initialColumnVisibility,
 }: DataTableProps<TData, TValue>) {
   const router = useRouter();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>(initialColumnVisibility || {});
-
-  React.useEffect(() => {
-    setColumnVisibility(initialColumnVisibility || {});
-  }, [initialColumnVisibility]);
 
   const table = useReactTable({
     data,
@@ -60,11 +51,9 @@ export function DataTable<TData extends Wishlist, TValue>({
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
     state: {
       sorting,
       columnFilters,
-      columnVisibility,
     },
   });
 

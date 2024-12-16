@@ -1,17 +1,15 @@
+import { Suspense } from "react";
 import { WishesGrid } from "@/components/wishes/grid/index";
 import { getWishes } from "@/actions/wish";
 import { getSharedWishlist } from "@/actions/wishlist";
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { OwnerSharedViewWarningWrapper } from "@/components/dialogs/owner-shared-view-warning-wrapper";
+import SharedWishlistLoading from "./loading";
 
-export default async function SharedWishlistPage({
-  params,
-}: {
-  params: { shareId: string };
-}) {
+async function SharedWishlistContent({ shareId }: { shareId: string }) {
   const session = await auth();
-  const wishlist = await getSharedWishlist(params.shareId);
+  const wishlist = await getSharedWishlist(shareId);
 
   if (!wishlist) {
     notFound();
@@ -33,5 +31,17 @@ export default async function SharedWishlistPage({
         coverImage={wishlist.coverImage}
       />
     </div>
+  );
+}
+
+export default function SharedWishlistPage({
+  params,
+}: {
+  params: { shareId: string };
+}) {
+  return (
+    <Suspense fallback={<SharedWishlistLoading />}>
+      <SharedWishlistContent shareId={params.shareId} />
+    </Suspense>
   );
 }

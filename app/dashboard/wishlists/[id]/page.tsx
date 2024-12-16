@@ -1,16 +1,14 @@
+import { Suspense } from "react";
 import { getWishes } from "@/actions/wish";
 import { getWishlist } from "@/actions/wishlist";
 import { notFound } from "next/navigation";
 import { WishesGrid } from "@/components/wishes/grid";
+import WishlistLoading from "./loading";
 
-export default async function WishlistPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+async function WishlistContent({ id }: { id: string }) {
   const [wishlist, wishes] = await Promise.all([
-    getWishlist(params.id),
-    getWishes(params.id),
+    getWishlist(id),
+    getWishes(id),
   ]);
 
   if (!wishlist) notFound();
@@ -24,5 +22,13 @@ export default async function WishlistPage({
       title={wishlist.title}
       coverImage={wishlist.coverImage}
     />
+  );
+}
+
+export default function WishlistPage({ params }: { params: { id: string } }) {
+  return (
+    <Suspense fallback={<WishlistLoading />}>
+      <WishlistContent id={params.id} />
+    </Suspense>
   );
 }

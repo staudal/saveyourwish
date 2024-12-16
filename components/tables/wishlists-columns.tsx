@@ -8,33 +8,28 @@ import { calculateAveragePrice, convertToUSD } from "@/lib/utils";
 import { useState } from "react";
 import { DeleteWishlistDialog } from "../dialogs/delete-wishlist-dialog";
 import { EditWishlistDialog } from "../dialogs/edit-wishlist-dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Wishlist } from "../wishes/grid/types";
 import { ShareWishlistDialog } from "../dialogs/share-wishlist-dialog";
-import { useMediaQuery } from "@/hooks/use-media-query";
 
 function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
-  const isDesktop = useMediaQuery("(min-width: 768px)");
 
   return (
     <>
       <div className="flex items-center gap-2">
-        {isDesktop && (
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowShareDialog(true);
-            }}
-          >
-            <span className="sr-only">Share</span>
-            <Share2 className="h-4 w-4" />
-          </Button>
-        )}
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowShareDialog(true);
+          }}
+        >
+          <span className="sr-only">Share</span>
+          <Share2 className="h-4 w-4" />
+        </Button>
         <Button
           variant="outline"
           size="icon"
@@ -80,44 +75,6 @@ function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
   );
 }
 
-function WishAvatarGroup({ wishes }: { wishes: Wishlist["wishes"] }) {
-  const maxVisibleAvatars = 3;
-
-  return (
-    <div className="flex items-center">
-      {wishes.length > 0 ? (
-        <div className="flex -space-x-4">
-          {wishes.slice(0, maxVisibleAvatars).map((wish, index) => (
-            <Avatar
-              key={index}
-              className="border-2 border-background ring-0 h-10 w-10"
-              style={{
-                zIndex: maxVisibleAvatars - index,
-              }}
-            >
-              <AvatarImage
-                src={wish.imageUrl || undefined}
-                alt="Wish image"
-                className="object-cover"
-              />
-              <AvatarFallback className="bg-muted">{index + 1}</AvatarFallback>
-            </Avatar>
-          ))}
-          {wishes.length > maxVisibleAvatars && (
-            <div className="flex items-center justify-center w-10 h-10 text-xs font-medium text-foreground bg-muted border-2 border-background rounded-full">
-              +{wishes.length - maxVisibleAvatars}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="flex items-center justify-center w-10 h-10 text-xs font-medium text-muted-foreground bg-muted/50 border-2 border-background rounded-full">
-          0
-        </div>
-      )}
-    </div>
-  );
-}
-
 export function useWishlistColumns() {
   const columns: ColumnDef<Wishlist>[] = [
     {
@@ -149,7 +106,7 @@ export function useWishlistColumns() {
       header: ({ column }) => {
         return (
           <div className="flex items-center">
-            Wish count
+            Wishes
             <Button
               variant="ghost"
               size="icon"
@@ -164,7 +121,11 @@ export function useWishlistColumns() {
         );
       },
       cell: ({ row }) => {
-        return <WishAvatarGroup wishes={row.original.wishes} />;
+        return (
+          <span className="text-muted-foreground">
+            {row.original.wishes.length}
+          </span>
+        );
       },
     },
     {
