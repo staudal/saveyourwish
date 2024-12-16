@@ -5,7 +5,7 @@ import { ArrowUpDown, Pencil, Trash2, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/components/ui/currency-select";
 import { calculateAveragePrice, convertToUSD } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DeleteWishlistDialog } from "../dialogs/delete-wishlist-dialog";
 import { EditWishlistDialog } from "../dialogs/edit-wishlist-dialog";
 import { Wishlist } from "../wishes/grid/types";
@@ -15,6 +15,19 @@ function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
+  const [currentWishlist, setCurrentWishlist] = useState(wishlist);
+
+  useEffect(() => {
+    setCurrentWishlist(wishlist);
+  }, [wishlist]);
+
+  const handleShareChange = (isShared: boolean) => {
+    setCurrentWishlist((prev) => ({
+      ...prev,
+      shared: isShared,
+      shareId: isShared ? prev.id : null,
+    }));
+  };
 
   return (
     <>
@@ -55,21 +68,24 @@ function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
       </div>
 
       <ShareWishlistDialog
-        wishlistId={wishlist.id}
-        isShared={wishlist.shared}
-        shareId={wishlist.shareId}
+        wishlistId={currentWishlist.id}
+        isShared={currentWishlist.shared}
+        shareId={currentWishlist.shareId}
         open={showShareDialog}
         setOpen={setShowShareDialog}
+        onShareChange={handleShareChange}
       />
       <DeleteWishlistDialog
-        id={wishlist.id}
+        id={currentWishlist.id}
+        title={currentWishlist.title}
+        isShared={currentWishlist.shared}
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
       />
       <EditWishlistDialog
         open={showEditDialog}
         setOpen={setShowEditDialog}
-        wishlist={wishlist}
+        wishlist={currentWishlist}
       />
     </>
   );

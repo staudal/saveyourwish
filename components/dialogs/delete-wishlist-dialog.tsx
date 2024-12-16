@@ -22,15 +22,21 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import toast from "react-hot-toast";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface DeleteWishlistDialogProps {
   id: string;
+  title: string;
+  isShared?: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export function DeleteWishlistDialog({
   id,
+  title,
+  isShared = false,
   open,
   onOpenChange,
 }: DeleteWishlistDialogProps) {
@@ -39,6 +45,11 @@ export function DeleteWishlistDialog({
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   async function handleDelete() {
+    if (isShared) {
+      toast.error("Cannot delete a shared wishlist");
+      return;
+    }
+
     setIsLoading(true);
 
     const result = await deleteWishlist(id);
@@ -61,9 +72,20 @@ export function DeleteWishlistDialog({
           <DialogHeader>
             <DialogTitle>Delete wishlist</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this wishlist?
+              Are you sure you want to delete the wishlist &quot;{title}&quot;?
+              This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
+          {isShared && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Heads up!</AlertTitle>
+              <AlertDescription>
+                This wishlist is shared and cannot be deleted. Unshare the
+                wishlist first to delete it.
+              </AlertDescription>
+            </Alert>
+          )}
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
             <Button
               className="w-full"
@@ -77,7 +99,7 @@ export function DeleteWishlistDialog({
               className="w-full"
               variant="destructive"
               onClick={handleDelete}
-              disabled={isLoading}
+              disabled={isLoading || isShared}
               isLoading={isLoading}
             >
               Delete
@@ -94,14 +116,24 @@ export function DeleteWishlistDialog({
         <DrawerHeader>
           <DrawerTitle>Delete wishlist</DrawerTitle>
           <DrawerDescription>
-            Are you sure you want to delete this wishlist?
+            Are you sure you want to delete the wishlist &quot;{title}&quot;?
+            This action cannot be undone.
           </DrawerDescription>
+          {isShared && (
+            <Alert variant="destructive" className="mt-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                This wishlist is shared and cannot be deleted. Unshare the
+                wishlist first to delete it.
+              </AlertDescription>
+            </Alert>
+          )}
         </DrawerHeader>
         <DrawerFooter className="pt-2">
           <Button
             variant="destructive"
             onClick={handleDelete}
-            disabled={isLoading}
+            disabled={isLoading || isShared}
             isLoading={isLoading}
           >
             Delete

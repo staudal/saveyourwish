@@ -149,7 +149,10 @@ export async function toggleWishlistSharing(id: string) {
       })
       .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)));
 
-    // Don't revalidate immediately, let the client handle the UI update
+    // Don't revalidate immediately to keep dialog open
+    // But do revalidate after a short delay
+    await revalidateWishlist(id, wasShared, wishlist.shareId);
+
     return {
       success: true,
       isShared: !wasShared,
@@ -239,4 +242,19 @@ export async function updateWishlistCoverImage(id: string, coverImage: string) {
     console.error("Failed to update wishlist cover image:", error);
     return { success: false, error: "Failed to update wishlist cover image" };
   }
+}
+
+export async function revalidateWishlist(
+  id: string,
+  wasShared?: boolean,
+  shareId?: string | null
+) {
+  // Use setTimeout to ensure this runs after the UI update
+  setTimeout(() => {
+    revalidatePath("/dashboard/wishlists");
+    revalidatePath(`/dashboard/wishlists/${id}`);
+    if (wasShared && shareId) {
+      revalidatePath(`/shared/${shareId}`);
+    }
+  }, 0);
 }
