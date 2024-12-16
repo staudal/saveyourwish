@@ -31,7 +31,7 @@ interface ShareWishlistDialogProps {
   shareId: string | null;
   open: boolean;
   setOpen: (open: boolean) => void;
-  onShareChange?: (isShared: boolean) => void;
+  onShareChange?: (isShared: boolean, shareId: string | null) => void;
 }
 
 export function ShareWishlistDialog({
@@ -75,7 +75,7 @@ export function ShareWishlistDialog({
       if (result.success && typeof result.isShared === "boolean") {
         setSharing(result.isShared);
         setCurrentShareId(result.shareId);
-        onShareChange?.(result.isShared);
+        onShareChange?.(result.isShared, result.shareId);
         toast.success(
           result.isShared
             ? "Wishlist shared successfully"

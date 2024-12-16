@@ -20,7 +20,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { updateBulkWishPositions } from "@/actions/wish";
 import toast from "react-hot-toast";
-import { DeleteWishDialog } from "@/components/dialogs/delete-wish-dialog";
 import { ImagePositionDialog } from "@/components/dialogs/image-position-dialog";
 import { ShareWishlistDialog } from "@/components/dialogs/share-wishlist-dialog";
 import { ArrowUpDown, Check, Plus, Share2, X, Pencil } from "lucide-react";
@@ -30,6 +29,7 @@ import { Wish } from "./types";
 import Image from "next/image";
 import { WishDialog } from "@/components/dialogs/wish-dialog";
 import { WishlistDialog } from "@/components/dialogs/wishlist-dialog";
+import { DeleteWishlistDialog } from "@/components/dialogs/delete-wishlist-dialog";
 
 interface WishesGridProps {
   wishes: Wish[];
@@ -39,7 +39,11 @@ interface WishesGridProps {
   shareId?: string | null;
   title: string;
   coverImage?: string | null;
+  unsplashId?: string | null;
   onEdit?: () => void;
+  onShareChange?: (isShared: boolean, shareId: string | null) => void;
+  onDelete?: () => void;
+  onWishlistUpdate?: () => void;
 }
 
 export function WishesGrid({
@@ -50,7 +54,9 @@ export function WishesGrid({
   shareId = null,
   title,
   coverImage,
+  unsplashId,
   onEdit,
+  onShareChange,
 }: WishesGridProps) {
   const [items, setItems] = useState(wishes);
   const [reorderState, setReorderState] = useState({
@@ -71,6 +77,7 @@ export function WishesGrid({
     removeReservation: false,
     share: false,
     editWishlist: false,
+    deleteWishlist: false,
   });
 
   const sensors = useSensors(
@@ -131,17 +138,37 @@ export function WishesGrid({
 
   const renderHeader = () => (
     <div className="w-full h-[200px] md:h-[300px] relative rounded-lg overflow-hidden border border-border">
-      {coverImage && (
+      {/* Background image or fallback */}
+      {coverImage ? (
         <Image
           src={coverImage}
           alt={title}
-          className="w-full h-full object-cover"
-          width={1000}
-          height={1000}
-          priority
+          className="object-cover"
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
+      ) : (
+        <div className="absolute inset-0 bg-muted" />
       )}
+
+      {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+
+      {/* Unsplash attribution */}
+      {coverImage && unsplashId && (
+        <div className="absolute top-4 right-4">
+          <a
+            href={`https://unsplash.com/photos/${unsplashId}?utm_source=saveyourwish&utm_medium=referral`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-white hover:underline bg-black/50 px-2 py-1 rounded-md"
+          >
+            Photo from Unsplash
+          </a>
+        </div>
+      )}
+
+      {/* Title and buttons */}
       <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
         <h1 className="text-2xl md:text-3xl font-semibold text-foreground">
           {title}
@@ -313,6 +340,7 @@ export function WishesGrid({
         shareId={shareId}
         open={dialogState.share}
         setOpen={(open) => setDialogState((prev) => ({ ...prev, share: open }))}
+        onShareChange={onShareChange}
       />
       {selectedWish && (
         <>
@@ -324,14 +352,6 @@ export function WishesGrid({
             }
             wish={selectedWish}
             wishlistId={wishlistId}
-          />
-          <DeleteWishDialog
-            id={selectedWish.id}
-            wishlistId={selectedWish.wishlistId}
-            open={dialogState.delete}
-            onOpenChange={(open) =>
-              setDialogState((prev) => ({ ...prev, delete: open }))
-            }
           />
           {selectedWish.imageUrl && (
             <ImagePositionDialog
@@ -372,7 +392,17 @@ export function WishesGrid({
           favorite: false,
           shared: isShared,
           shareId: shareId ?? null,
+          unsplashId: unsplashId ?? null,
         }}
+      />
+      <DeleteWishlistDialog
+        id={wishlistId}
+        title={title}
+        isShared={isShared}
+        open={dialogState.deleteWishlist}
+        onOpenChange={(open) =>
+          setDialogState((prev) => ({ ...prev, deleteWishlist: open }))
+        }
       />
     </div>
   );

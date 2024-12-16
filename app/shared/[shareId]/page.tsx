@@ -29,6 +29,7 @@ async function SharedWishlistContent({ shareId }: { shareId: string }) {
         shareId={wishlist.shareId}
         title={wishlist.title}
         coverImage={wishlist.coverImage}
+        unsplashId={wishlist.unsplashId}
       />
     </div>
   );

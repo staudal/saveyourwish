@@ -127,6 +127,7 @@ export function WishlistForm({
 
     try {
       let coverImageUrl = selectedImage?.url || null;
+      const unsplashId = selectedImage?.unsplashId || null;
 
       // If it's an uploaded file (not Unsplash)
       if (selectedFile && !selectedImage?.unsplashId) {
@@ -159,10 +160,12 @@ export function WishlistForm({
           ? await updateWishlist(wishlist.id, {
               title: data.title,
               coverImage: coverImageUrl,
+              unsplashId,
             })
           : await createWishlist({
               title: data.title,
               coverImage: coverImageUrl,
+              unsplashId,
             });
 
       if (!result.success) {
@@ -278,6 +281,18 @@ export function WishlistForm({
                         >
                           Remove
                         </Button>
+                        {selectedImage.unsplashId && (
+                          <div className="absolute bottom-2 right-2">
+                            <a
+                              href={`https://unsplash.com/?utm_source=saveyourwish&utm_medium=referral`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-white hover:underline bg-black/50 px-2 py-1 rounded-md"
+                            >
+                              Photo from Unsplash
+                            </a>
+                          </div>
+                        )}
                       </>
                     ) : (
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">

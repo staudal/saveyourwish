@@ -1,6 +1,6 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef, Row } from "@tanstack/react-table";
 import { ArrowUpDown, Pencil, Trash2, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/components/ui/currency-select";
@@ -11,10 +11,16 @@ import { Wishlist } from "../wishes/grid/types";
 import { ShareWishlistDialog } from "../dialogs/share-wishlist-dialog";
 import { WishlistDialog } from "../dialogs/wishlist-dialog";
 
-function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
+function WishlistActions({
+  wishlist,
+  onShareClick,
+  onDeleteClick,
+}: {
+  wishlist: Wishlist;
+  onShareClick: () => void;
+  onDeleteClick: () => void;
+}) {
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showShareDialog, setShowShareDialog] = useState(false);
 
   return (
     <>
@@ -24,7 +30,7 @@ function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
           size="icon"
           onClick={(e) => {
             e.stopPropagation();
-            setShowShareDialog(true);
+            onShareClick();
           }}
         >
           <span className="sr-only">Share</span>
@@ -51,25 +57,52 @@ function WishlistActions({ wishlist }: { wishlist: Wishlist }) {
           size="icon"
           onClick={(e) => {
             e.stopPropagation();
-            setShowDeleteDialog(true);
+            onDeleteClick();
           }}
         >
           <span className="sr-only">Delete</span>
           <Trash2 className="h-4 w-4" />
         </Button>
       </div>
+    </>
+  );
+}
+
+function WishlistActionsCell({ row }: { row: Row<Wishlist> }) {
+  const wishlist = row.original;
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [isShared, setIsShared] = useState(wishlist.shared);
+
+  const handleShareChange = (newIsShared: boolean, shareId: string | null) => {
+    setIsShared(newIsShared);
+    row.original.shared = newIsShared;
+    row.original.shareId = shareId;
+  };
+
+  return (
+    <>
+      <div className="flex justify-end">
+        <WishlistActions
+          wishlist={wishlist}
+          onShareClick={() => setShowShareDialog(true)}
+          onDeleteClick={() => setShowDeleteDialog(true)}
+        />
+      </div>
 
       <ShareWishlistDialog
         wishlistId={wishlist.id}
-        isShared={wishlist.shared}
+        isShared={isShared}
         shareId={wishlist.shareId}
         open={showShareDialog}
         setOpen={setShowShareDialog}
+        onShareChange={handleShareChange}
       />
+
       <DeleteWishlistDialog
         id={wishlist.id}
         title={wishlist.title}
-        isShared={wishlist.shared}
+        isShared={isShared}
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
       />
@@ -177,11 +210,7 @@ export function useWishlistColumns() {
     },
     {
       id: "actions",
-      cell: ({ row }) => (
-        <div className="flex justify-end">
-          <WishlistActions wishlist={row.original} />
-        </div>
-      ),
+      cell: ({ row }) => <WishlistActionsCell row={row} />,
       enableHiding: false,
     },
   ];

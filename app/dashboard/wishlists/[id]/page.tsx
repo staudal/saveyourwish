@@ -21,6 +21,7 @@ async function WishlistContent({ id }: { id: string }) {
       shareId={wishlist.shareId}
       title={wishlist.title}
       coverImage={wishlist.coverImage}
+      unsplashId={wishlist.unsplashId}
     />
   );
 }

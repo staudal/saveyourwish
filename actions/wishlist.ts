@@ -20,6 +20,7 @@ export async function getWishlists() {
       shared: wishlists.shared,
       shareId: wishlists.shareId,
       coverImage: wishlists.coverImage,
+      unsplashId: wishlists.unsplashId,
       wishCount: sql<number>`count(${wishes.id})::integer`,
       wishes: sql<
         { price: number | null; currency: Currency; imageUrl: string | null }[]
@@ -57,6 +58,7 @@ export async function getWishlists() {
 export async function createWishlist(data: {
   title: string;
   coverImage: string | null;
+  unsplashId: string | null;
 }) {
   try {
     const session = await auth();
@@ -68,6 +70,7 @@ export async function createWishlist(data: {
         title: data.title,
         userId: session.user.id,
         coverImage: data.coverImage,
+        unsplashId: data.unsplashId,
       })
       .returning({ id: wishlists.id });
 
@@ -124,6 +127,7 @@ export async function getWishlist(id: string) {
       shared: wishlists.shared,
       shareId: wishlists.shareId,
       coverImage: wishlists.coverImage,
+      unsplashId: wishlists.unsplashId,
     })
     .from(wishlists)
     .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)))
@@ -176,6 +180,7 @@ export async function getSharedWishlist(shareId: string) {
       shareId: wishlists.shareId,
       userId: wishlists.userId,
       coverImage: wishlists.coverImage,
+      unsplashId: wishlists.unsplashId,
     })
     .from(wishlists)
     .where(and(eq(wishlists.shareId, shareId), eq(wishlists.shared, true)))
@@ -187,6 +192,7 @@ export async function updateWishlist(
   data: {
     title: string;
     coverImage: string | null;
+    unsplashId: string | null;
   }
 ) {
   try {
@@ -198,6 +204,7 @@ export async function updateWishlist(
       .set({
         title: data.title,
         coverImage: data.coverImage,
+        unsplashId: data.unsplashId,
       })
       .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)));
 
@@ -222,7 +229,11 @@ export async function updateWishlist(
   }
 }
 
-export async function updateWishlistCoverImage(id: string, coverImage: string) {
+export async function updateWishlistCoverImage(
+  id: string,
+  coverImage: string,
+  unsplashId?: string | null
+) {
   try {
     const session = await auth();
     if (!session?.user?.id) throw new Error("Unauthorized");
@@ -241,10 +252,13 @@ export async function updateWishlistCoverImage(id: string, coverImage: string) {
       await deleteImageFromBlob(currentWishlist.coverImage);
     }
 
-    // Update with new cover image
+    // Update with new cover image and unsplashId
     await db
       .update(wishlists)
-      .set({ coverImage })
+      .set({
+        coverImage,
+        unsplashId: unsplashId ?? null,
+      })
       .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)));
 
     revalidatePath("/wishlists");
