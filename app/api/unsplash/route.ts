@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     if (!response.ok) throw new Error("Failed to track download");
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to track download" },
       { status: 500 }
