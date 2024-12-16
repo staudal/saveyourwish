@@ -1,5 +1,3 @@
-const ACCESS_KEY = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY!;
-
 export interface UnsplashSearchResponse {
   total: number;
   total_pages: number;
@@ -28,14 +26,9 @@ export interface UnsplashSearchResponse {
 
 export async function searchUnsplash(query: string, page = 1, perPage = 8) {
   const response = await fetch(
-    `https://api.unsplash.com/search/photos?query=${encodeURIComponent(
+    `/api/unsplash?query=${encodeURIComponent(
       query
-    )}&page=${page}&per_page=${perPage}`,
-    {
-      headers: {
-        Authorization: `Client-ID ${process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY}`,
-      },
-    }
+    )}&page=${page}&perPage=${perPage}`
   );
 
   if (!response.ok) {
@@ -47,9 +40,11 @@ export async function searchUnsplash(query: string, page = 1, perPage = 8) {
 
 export async function trackDownload(downloadLocation: string) {
   try {
-    await fetch(downloadLocation, {
+    await fetch("/api/unsplash", {
+      method: "POST",
+      body: JSON.stringify({ downloadLocation }),
       headers: {
-        Authorization: `Client-ID ${ACCESS_KEY}`,
+        "Content-Type": "application/json",
       },
     });
   } catch (error) {
