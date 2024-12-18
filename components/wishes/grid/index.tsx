@@ -30,6 +30,7 @@ import Image from "next/image";
 import { WishDialog } from "@/components/dialogs/wish-dialog";
 import { WishlistDialog } from "@/components/dialogs/wishlist-dialog";
 import { DeleteWishlistDialog } from "@/components/dialogs/delete-wishlist-dialog";
+import { DeleteWishDialog } from "@/components/dialogs/delete-wish-dialog";
 
 interface WishesGridProps {
   wishes: Wish[];
@@ -196,7 +197,6 @@ export function WishesGrid({
                   size="icon"
                   onClick={handleSave}
                   disabled={!reorderState.hasChanges || reorderState.isSaving}
-                  isLoading={reorderState.isSaving}
                   className="relative"
                 >
                   <Check className="h-4 w-4" />
@@ -376,6 +376,14 @@ export function WishesGrid({
               setDialogState((prev) => ({ ...prev, removeReservation: open }))
             }
           />
+          <DeleteWishDialog
+            id={selectedWish.id}
+            wishlistId={wishlistId}
+            open={dialogState.delete}
+            onOpenChange={(open) =>
+              setDialogState((prev) => ({ ...prev, delete: open }))
+            }
+          />
         </>
       )}
       <WishlistDialog
@@ -388,11 +396,12 @@ export function WishesGrid({
           id: wishlistId,
           title,
           coverImage: coverImage ?? null,
-          userId: "",
           favorite: false,
           shared: isShared,
           shareId: shareId ?? null,
           unsplashId: unsplashId ?? null,
+          wishes: [],
+          wishCount: 0,
         }}
       />
       <DeleteWishlistDialog
