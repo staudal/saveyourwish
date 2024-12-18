@@ -59,7 +59,7 @@ export function DeleteWishlistDialog({
       router.refresh();
       onOpenChange(false);
     } else {
-      toast.error(result.error || "Failed to delete wishlist");
+      toast.error(result.response || "Failed to delete wishlist");
     }
 
     setIsLoading(false);
@@ -100,7 +100,6 @@ export function DeleteWishlistDialog({
               variant="destructive"
               onClick={handleDelete}
               disabled={isLoading || isShared}
-              isLoading={isLoading}
             >
               Delete
             </Button>
@@ -134,7 +133,6 @@ export function DeleteWishlistDialog({
             variant="destructive"
             onClick={handleDelete}
             disabled={isLoading || isShared}
-            isLoading={isLoading}
           >
             Delete
           </Button>
