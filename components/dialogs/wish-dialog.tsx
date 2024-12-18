@@ -518,7 +518,7 @@ export function WishDialog({
       </DialogContent>
     </Dialog>
   ) : (
-    <Drawer open={open} onOpenChange={setOpen}>
+    <Drawer open={open} onOpenChange={setOpen} repositionInputs={false}>
       <DrawerContent className="max-h-[90vh]">
         <DrawerHeader
           className={cn(
