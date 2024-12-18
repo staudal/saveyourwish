@@ -187,7 +187,7 @@ export function WishlistDialog({
   }
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
+    <Drawer open={open} onOpenChange={setOpen} repositionInputs={false}>
       <DrawerTrigger asChild>{trigger}</DrawerTrigger>
       <DrawerContent className="max-h-[90vh]">
         <DrawerHeader className="border-b shadow-[0_2px_4px_rgba(0,0,0,0.025)]">
