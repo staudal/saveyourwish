@@ -112,7 +112,6 @@ export function ReserveWishDialog({
             <Button
               onClick={form.handleSubmit(handleReserve)}
               disabled={!form.formState.isValid || isLoading}
-              isLoading={isLoading}
             >
               Reserve
             </Button>
@@ -134,7 +133,6 @@ export function ReserveWishDialog({
           <Button
             onClick={form.handleSubmit(handleReserve)}
             disabled={!form.formState.isValid || isLoading}
-            isLoading={isLoading}
           >
             Reserve
           </Button>

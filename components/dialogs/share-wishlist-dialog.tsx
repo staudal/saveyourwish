@@ -149,7 +149,6 @@ export function ShareWishlistDialog({
               onClick={handleToggleSharing}
               variant={sharing ? "destructive" : "default"}
               disabled={isLoading}
-              isLoading={isLoading}
             >
               {sharing ? "Hide" : "Share"}
             </Button>
@@ -188,7 +187,6 @@ export function ShareWishlistDialog({
           <Button
             onClick={handleToggleSharing}
             variant={sharing ? "destructive" : "default"}
-            isLoading={isLoading}
           >
             {sharing ? "Hide" : "Share"}
           </Button>

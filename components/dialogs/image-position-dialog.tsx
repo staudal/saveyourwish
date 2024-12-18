@@ -187,11 +187,7 @@ export function ImagePositionDialog({
             >
               Cancel
             </Button>
-            <Button
-              onClick={handleSave}
-              disabled={isLoading}
-              isLoading={isLoading}
-            >
+            <Button onClick={handleSave} disabled={isLoading}>
               Save
             </Button>
           </div>

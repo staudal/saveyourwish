@@ -97,7 +97,6 @@ export function RemoveReservationDialog({
             onClick={handleRemove}
             disabled={isLoading}
             variant="destructive"
-            isLoading={isLoading}
           >
             Remove
           </Button>
