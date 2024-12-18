@@ -83,3 +83,8 @@
     @apply bg-background text-foreground;
   }
 }
+
+html,
+body {
+  touch-action: pan-x pan-y;
+}
