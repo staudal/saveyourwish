@@ -80,7 +80,6 @@ export function DeleteWishDialog({
               variant="destructive"
               onClick={handleDelete}
               disabled={isLoading}
-              isLoading={isLoading}
             >
               Delete
             </Button>
@@ -104,7 +103,6 @@ export function DeleteWishDialog({
             variant="destructive"
             onClick={handleDelete}
             disabled={isLoading}
-            isLoading={isLoading}
           >
             Delete
           </Button>
