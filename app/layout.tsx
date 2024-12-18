@@ -98,10 +98,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div
-            data-vaul-drawer-wrapper=""
-            className="min-h-screen bg-background"
-          >
+          <div data-vaul-drawer-wrapper="" className="min-h-dvh bg-background">
             {children}
           </div>
         </ThemeProvider>
