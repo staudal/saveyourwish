@@ -90,6 +90,24 @@ export function calculateAveragePrice(
   };
 }
 
+export function calculatePriceRange(
+  wishes: { price: number | null; currency: Currency }[]
+): { min: number; max: number; currency: Currency } | null {
+  const validWishes = wishes.filter((wish) => wish.price !== null);
+  if (validWishes.length === 0) return null;
+
+  const targetCurrency = getMostCommonCurrency(validWishes);
+  const convertedPrices = validWishes.map((wish) =>
+    convertCurrency(wish.price!, wish.currency, targetCurrency)
+  );
+
+  return {
+    min: Math.min(...convertedPrices),
+    max: Math.max(...convertedPrices),
+    currency: targetCurrency,
+  };
+}
+
 // Common regex patterns
 export const LANGUAGE_CODE_REGEX = /^[a-z]{2}(?:-[a-z]{2})?$/i;
 

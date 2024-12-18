@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { eq, and, sql } from "drizzle-orm";
 import { deleteImageFromBlob, uploadImageToBlob } from "@/lib/blob";
 import { priceFetcher, titleFetcher, imageFetcher } from "@/lib/fetchers";
+import { notFound } from "next/navigation";
 
 type WishInput = {
   title: string;
@@ -78,7 +79,9 @@ export async function getWishes(wishlistId: string, isSharedAccess?: boolean) {
       )
       .then((rows) => rows[0]);
 
-    if (!wishlist) throw new Error("Wishlist not found");
+    if (!wishlist) {
+      notFound();
+    }
   }
 
   const results = await db

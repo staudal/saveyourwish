@@ -22,33 +22,31 @@ export async function getWishlists() {
       coverImage: wishlists.coverImage,
       unsplashId: wishlists.unsplashId,
       wishCount: sql<number>`count(${wishes.id})::integer`,
+      averagePrice: sql<number>`round(avg(${wishes.price})::numeric, 2)`,
       wishes: sql<
         { price: number | null; currency: Currency; imageUrl: string | null }[]
       >`
-        json_agg(
-          json_build_object(
-            'price', ${wishes.price},
-            'currency', ${wishes.currency}::text,
-            'imageUrl', ${wishes.imageUrl}
-          )
-          ORDER BY ${wishes.position}
-        ) filter (where ${wishes.id} is not null)
+        coalesce(
+          json_agg(
+            json_build_object(
+              'price', ${wishes.price},
+              'currency', ${wishes.currency}::text,
+              'imageUrl', ${wishes.imageUrl}
+            )
+            ORDER BY ${wishes.position}
+          ) filter (where ${wishes.id} is not null),
+          '[]'
+        )
       `,
     })
     .from(wishlists)
     .leftJoin(wishes, eq(wishes.wishlistId, wishlists.id))
     .where(eq(wishlists.userId, session.user.id))
-    .groupBy(
-      wishlists.id,
-      wishlists.title,
-      wishlists.favorite,
-      wishlists.shared,
-      wishlists.shareId
-    );
+    .groupBy(wishlists.id);
 
   return wishlistsWithWishes.map((wishlist) => ({
     ...wishlist,
-    wishes: (wishlist.wishes || []).map((wish) => ({
+    wishes: wishlist.wishes.map((wish) => ({
       ...wish,
       currency: wish.currency as Currency,
     })),
@@ -84,35 +82,48 @@ export async function createWishlist(data: {
 }
 
 export async function deleteWishlist(id: string) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) throw new Error("Unauthorized");
-
-    // Get the wishlist first to check for cover image
-    const wishlist = await db
-      .select({
-        coverImage: wishlists.coverImage,
-      })
-      .from(wishlists)
-      .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)))
-      .then((rows) => rows[0]);
-
-    // Delete the wishlist
-    await db
-      .delete(wishlists)
-      .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)));
-
-    // If there was a cover image, delete it from blob storage
-    if (wishlist?.coverImage) {
-      await deleteImageFromBlob(wishlist.coverImage);
-    }
-
-    revalidatePath("/wishlists");
-    return { success: true };
-  } catch (error) {
-    console.error("Failed to delete wishlist:", error);
-    return { success: false, error: "Failed to delete wishlist" };
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, response: "Unauthorized" };
   }
+
+  const wishlist = await db
+    .select({
+      coverImage: wishlists.coverImage,
+      title: wishlists.title,
+      shared: wishlists.shared,
+    })
+    .from(wishlists)
+    .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)))
+    .then((rows) => rows[0]);
+
+  if (!wishlist) {
+    return { success: false, response: "Wishlist not found" };
+  }
+
+  if (wishlist.shared) {
+    return { success: false, response: "Cannot delete shared wishlists" };
+  }
+
+  const deleteResult = await db
+    .delete(wishlists)
+    .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)));
+
+  if (deleteResult.rowCount === 0) {
+    return { success: false, response: "Failed to delete wishlist" };
+  }
+
+  if (wishlist.coverImage) {
+    await deleteImageFromBlob(wishlist.coverImage).catch((error) => {
+      console.error("Failed to delete cover image:", error);
+    });
+  }
+
+  revalidatePath("/wishlists");
+  return {
+    success: true,
+    response: `Wishlist ${wishlist.title} has been deleted`,
+  };
 }
 
 export async function getWishlist(id: string) {
@@ -157,9 +168,8 @@ export async function toggleWishlistSharing(id: string) {
       })
       .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)));
 
-    // Don't revalidate immediately to keep dialog open
-    // But do revalidate after a short delay
-    await revalidateWishlist(id, wasShared, wishlist.shareId);
+    revalidatePath(`/dashboard/wishlists`);
+    revalidatePath(`/dashboard/wishlists/${id}`);
 
     return {
       success: true,

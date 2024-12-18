@@ -1,11 +1,10 @@
 import { Inter } from "next/font/google";
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { Toaster } from "react-hot-toast";
+import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Toaster as SonnerToaster } from "sonner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -94,18 +93,7 @@ export default function RootLayout({
             {children}
           </div>
         </ThemeProvider>
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 3000,
-            style: {
-              background: "hsl(var(--background))",
-              color: "hsl(var(--foreground))",
-              border: "1px solid hsl(var(--border))",
-            },
-          }}
-        />
-        <SonnerToaster />
+        <Toaster />
         <Analytics />
         <SpeedInsights />
       </body>

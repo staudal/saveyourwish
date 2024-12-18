@@ -22,12 +22,9 @@ import {
 } from "@/components/ui/drawer";
 import { WishlistForm } from "../forms/wishlist-form";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { type wishlists } from "@/lib/db";
-import { type InferSelectModel } from "drizzle-orm";
-import { Loader2, BadgePlus, RotateCcw } from "lucide-react";
+import { Loader2, BadgePlus, RotateCcw, X } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-type Wishlist = InferSelectModel<typeof wishlists>;
+import { Wishlist } from "../wishlists/schema";
 
 interface WishlistDialogProps {
   mode: "create" | "edit";
@@ -83,7 +80,7 @@ export function WishlistDialog({
             variant="outline"
             onClick={() => setOpen(false)}
           >
-            <RotateCcw className="mr-2 h-4 w-4" />
+            <X className="mr-2 h-4 w-4" />
             Cancel
           </Button>
           <Button type="submit" form="wishlist-form" disabled={isLoading}>

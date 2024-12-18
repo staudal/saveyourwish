@@ -1,12 +1,18 @@
 import { Suspense } from "react";
-import WishlistsTable from "@/components/tables/wishlists-table";
 import { getWishlists } from "@/actions/wishlist";
-import type { Wishlist } from "@/components/wishes/grid/types";
 import WishlistsLoading from "./loading";
+import { DataTable } from "@/components/wishlists/table";
+import { columns } from "@/components/wishlists/columns";
+import WishlistHeader from "@/components/wishlists/header";
 
 async function WishlistsContent() {
   const wishlists = await getWishlists();
-  return <WishlistsTable wishlists={wishlists as unknown as Wishlist[]} />;
+  return (
+    <div className="flex flex-col gap-4">
+      <WishlistHeader />
+      <DataTable columns={columns} data={wishlists} />
+    </div>
+  );
 }
 
 export default function WishlistsPage() {
