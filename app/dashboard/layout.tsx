@@ -25,7 +25,7 @@ export default async function DashboardLayout({
       <AppSidebar user={user} />
       <SidebarInset>
         <div className="lg:container w-full mx-auto p-4 lg:p-8">{children}</div>
-        <div className="fixed bottom-4 left-4 lg:hidden">
+        <div className="fixed bottom-4 left-4 lg:hidden overflow-hidden">
           <SidebarTrigger />
         </div>
       </SidebarInset>
