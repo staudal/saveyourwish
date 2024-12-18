@@ -31,6 +31,7 @@ interface WishlistFormProps {
     id: string;
     title: string;
     coverImage?: string | null;
+    unsplashId?: string | null;
   };
   onSuccess?: () => void;
   onLoadingChange?: (isLoading: boolean) => void;
@@ -46,7 +47,14 @@ export function WishlistForm({
   const [selectedImage, setSelectedImage] = useState<{
     url: string;
     unsplashId?: string;
-  } | null>(wishlist?.coverImage ? { url: wishlist.coverImage } : null);
+  } | null>(
+    wishlist?.coverImage
+      ? {
+          url: wishlist.coverImage,
+          unsplashId: wishlist.unsplashId ?? undefined,
+        }
+      : null
+  );
   const [imageTab, setImageTab] = useState<"unsplash" | "upload">("unsplash");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(

@@ -1,33 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Search, ImageIcon, X } from "lucide-react";
 import Image from "next/image";
-import { searchUnsplash } from "@/lib/unsplash";
-import type { UnsplashSearchResponse } from "@/lib/unsplash";
+import { searchUnsplash, UnsplashSearchResponse } from "@/lib/unsplash";
 import toast from "react-hot-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import React from "react";
 
 interface UnsplashImagePickerProps {
   onSelect: (
     imageUrl: string,
     unsplashId: string,
-    downloadLocation: string,
-    photographer: {
-      name: string;
-      username: string;
-    }
+    downloadLocation: string
   ) => void;
   selectedImage: {
     url: string;
     unsplashId?: string;
-    photographer?: {
-      name: string;
-      username: string;
-    };
   } | null;
   onRemove: () => void;
 }
@@ -45,58 +35,59 @@ export function UnsplashImagePicker({
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (selectedImage) {
       setImages([]);
       setQuery("");
     }
   }, [selectedImage]);
 
-  const searchImages = async (newSearch = false) => {
-    if (!query.trim()) {
-      toast.error("Please enter a search term");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const currentPage = newSearch ? 1 : page;
-      const response = await searchUnsplash(
-        query,
-        currentPage,
-        IMAGES_PER_PAGE
-      );
-
-      setImages((prev) =>
-        newSearch ? response.results : [...prev, ...response.results]
-      );
-      setHasMore(response.total_pages > currentPage);
-      if (newSearch) {
-        setPage(1);
+  const fetchImages = useCallback(
+    async (isNewSearch: boolean) => {
+      if (!query.trim()) {
+        toast.error("Please enter a search term");
+        return;
       }
 
-      if (response.results.length === 0 && newSearch) {
-        toast.error("No images found");
+      setIsLoading(true);
+      const currentPage = isNewSearch ? 1 : page;
+      try {
+        const response = await searchUnsplash(
+          query,
+          currentPage,
+          IMAGES_PER_PAGE
+        );
+        setImages((prev) =>
+          isNewSearch ? response.results : [...prev, ...response.results]
+        );
+        setHasMore(response.total_pages > currentPage);
+        if (isNewSearch) {
+          setPage(1);
+        }
+        if (isNewSearch && response.results.length === 0) {
+          toast.error("No images found");
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to search images");
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to search images");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    [query, page]
+  );
 
   const loadMore = async () => {
+    setIsLoading(true);
     const nextPage = page + 1;
-    setPage(nextPage);
     try {
       const response = await searchUnsplash(query, nextPage, IMAGES_PER_PAGE);
       setImages((prev) => [...prev, ...response.results]);
       setHasMore(response.total_pages > nextPage);
+      setPage(nextPage);
     } catch (error) {
       console.error(error);
       toast.error("Failed to load more images");
-      setPage(page);
     } finally {
       setIsLoading(false);
     }
@@ -113,13 +104,13 @@ export function UnsplashImagePicker({
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
-                searchImages(true);
+                fetchImages(true);
               }
             }}
           />
           <Button
             type="button"
-            onClick={() => searchImages(true)}
+            onClick={() => fetchImages(true)}
             disabled={isLoading}
             size="icon"
             className="shrink-0"
@@ -171,15 +162,17 @@ export function UnsplashImagePicker({
             >
               Remove
             </Button>
-            {selectedImage?.unsplashId && (
-              <div className="absolute bottom-2 right-2">
+
+            {/* Unsplash attribution */}
+            {selectedImage.unsplashId && (
+              <div className="absolute bottom-4 right-4">
                 <a
-                  href={`https://unsplash.com/@${selectedImage.photographer?.username}?utm_source=saveyourwish&utm_medium=referral`}
+                  href={`https://unsplash.com/photos/${selectedImage.unsplashId}?utm_source=saveyourwish&utm_medium=referral`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-white hover:underline bg-black/50 px-2 py-1 rounded-md"
                 >
-                  Photo by {selectedImage.photographer?.name} on Unsplash
+                  Photo from Unsplash
                 </a>
               </div>
             )}
@@ -203,17 +196,13 @@ export function UnsplashImagePicker({
                     onSelect(
                       image.urls.regular,
                       image.id,
-                      image.links.download_location,
-                      {
-                        name: image.user.name,
-                        username: image.user.username,
-                      }
+                      image.links.download_location
                     )
                   }
                 >
                   <Image
                     src={image.urls.small}
-                    alt={`Photo by ${image.user.name} on Unsplash`}
+                    alt="Unsplash photo"
                     className="object-cover group-hover:scale-105 transition-transform duration-300 rounded-md"
                     fill
                     sizes="(max-width: 768px) 50vw, 33vw"
@@ -229,10 +218,7 @@ export function UnsplashImagePicker({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={async () => {
-                    setIsLoading(true);
-                    await loadMore();
-                  }}
+                  onClick={loadMore}
                   disabled={isLoading}
                 >
                   {isLoading ? <>Loading...</> : <>Load more images</>}
