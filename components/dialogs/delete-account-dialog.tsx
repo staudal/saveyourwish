@@ -75,7 +75,6 @@ export function DeleteAccountDialog({
               variant="destructive"
               onClick={handleDelete}
               disabled={isLoading}
-              isLoading={isLoading}
             >
               Delete account
             </Button>
@@ -99,7 +98,6 @@ export function DeleteAccountDialog({
             variant="destructive"
             onClick={handleDelete}
             disabled={isLoading}
-            isLoading={isLoading}
           >
             Delete account
           </Button>
