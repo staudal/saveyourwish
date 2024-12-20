@@ -13,11 +13,15 @@ interface UnsplashImagePickerProps {
   onSelect: (
     imageUrl: string,
     unsplashId: string,
-    downloadLocation: string
+    downloadLocation: string,
+    userName: string
   ) => void;
   selectedImage: {
     url: string;
     unsplashId?: string;
+    user?: {
+      name: string;
+    };
   } | null;
   onRemove: () => void;
 }
@@ -162,20 +166,6 @@ export function UnsplashImagePicker({
             >
               Remove
             </Button>
-
-            {/* Unsplash attribution */}
-            {selectedImage.unsplashId && (
-              <div className="absolute bottom-4 right-4">
-                <a
-                  href={`https://unsplash.com/photos/${selectedImage.unsplashId}?utm_source=saveyourwish&utm_medium=referral`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-white hover:underline bg-black/50 px-2 py-1 rounded-md"
-                >
-                  Photo from Unsplash
-                </a>
-              </div>
-            )}
           </div>
         ) : images.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground border-2 border-dashed rounded-lg">
@@ -196,7 +186,8 @@ export function UnsplashImagePicker({
                     onSelect(
                       image.urls.regular,
                       image.id,
-                      image.links.download_location
+                      image.links.download_location,
+                      image.user.name
                     )
                   }
                 >

@@ -41,6 +41,7 @@ interface WishesGridProps {
   title: string;
   coverImage?: string | null;
   unsplashId?: string | null;
+  unsplashUsername?: string | null;
   onEdit?: () => void;
   onShareChange?: (isShared: boolean, shareId: string | null) => void;
   onDelete?: () => void;
@@ -56,6 +57,7 @@ export function WishesGrid({
   title,
   coverImage,
   unsplashId,
+  unsplashUsername,
   onEdit,
   onShareChange,
 }: WishesGridProps) {
@@ -156,7 +158,7 @@ export function WishesGrid({
       <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
 
       {/* Unsplash attribution */}
-      {coverImage && unsplashId && (
+      {coverImage && unsplashId && unsplashUsername && (
         <div className="absolute top-4 right-4">
           <a
             href={`https://unsplash.com/photos/${unsplashId}?utm_source=saveyourwish&utm_medium=referral`}
@@ -164,7 +166,7 @@ export function WishesGrid({
             rel="noopener noreferrer"
             className="text-xs text-white hover:underline bg-black/50 px-2 py-1 rounded-md"
           >
-            Photo from Unsplash
+            Photo by {unsplashUsername}
           </a>
         </div>
       )}
@@ -400,6 +402,7 @@ export function WishesGrid({
           shared: isShared,
           shareId: shareId ?? null,
           unsplashId: unsplashId ?? null,
+          unsplashUsername: null,
           wishes: [],
           wishCount: 0,
         }}

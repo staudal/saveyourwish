@@ -103,6 +103,7 @@ export const wishlists = pgTable("wishlist", {
   shareId: text("shareId").unique(),
   coverImage: text("coverImage"),
   unsplashId: text("unsplashId"),
+  unsplashUsername: text("unsplashUsername"),
 });
 
 export const wishes = pgTable("wish", {

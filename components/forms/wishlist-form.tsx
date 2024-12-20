@@ -32,6 +32,7 @@ interface WishlistFormProps {
     title: string;
     coverImage?: string | null;
     unsplashId?: string | null;
+    unsplashUsername?: string | null;
   };
   onSuccess?: () => void;
   onLoadingChange?: (isLoading: boolean) => void;
@@ -47,11 +48,13 @@ export function WishlistForm({
   const [selectedImage, setSelectedImage] = useState<{
     url: string;
     unsplashId?: string;
+    userName?: string;
   } | null>(
     wishlist?.coverImage
       ? {
           url: wishlist.coverImage,
           unsplashId: wishlist.unsplashId ?? undefined,
+          userName: wishlist.unsplashUsername ?? undefined,
         }
       : null
   );
@@ -115,9 +118,10 @@ export function WishlistForm({
   const handleUnsplashSelect = async (
     imageUrl: string,
     unsplashId: string,
-    downloadLocation: string
+    downloadLocation: string,
+    userName: string
   ) => {
-    setSelectedImage({ url: imageUrl, unsplashId });
+    setSelectedImage({ url: imageUrl, unsplashId, userName });
     await trackDownload(downloadLocation);
   };
 
@@ -136,6 +140,7 @@ export function WishlistForm({
     try {
       let coverImageUrl = selectedImage?.url || null;
       const unsplashId = selectedImage?.unsplashId || null;
+      const unsplashUsername = selectedImage?.userName || null;
 
       // If it's an uploaded file (not Unsplash)
       if (selectedFile && !selectedImage?.unsplashId) {
@@ -169,11 +174,13 @@ export function WishlistForm({
               title: data.title,
               coverImage: coverImageUrl,
               unsplashId,
+              unsplashUsername,
             })
           : await createWishlist({
               title: data.title,
               coverImage: coverImageUrl,
               unsplashId,
+              unsplashUsername,
             });
 
       if (!result.success) {

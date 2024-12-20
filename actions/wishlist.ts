@@ -21,6 +21,7 @@ export async function getWishlists() {
       shareId: wishlists.shareId,
       coverImage: wishlists.coverImage,
       unsplashId: wishlists.unsplashId,
+      unsplashUsername: wishlists.unsplashUsername,
       wishCount: sql<number>`count(${wishes.id})::integer`,
       averagePrice: sql<number>`round(avg(${wishes.price})::numeric, 2)`,
       wishes: sql<
@@ -57,6 +58,7 @@ export async function createWishlist(data: {
   title: string;
   coverImage: string | null;
   unsplashId: string | null;
+  unsplashUsername: string | null;
 }) {
   try {
     const session = await auth();
@@ -69,6 +71,7 @@ export async function createWishlist(data: {
         userId: session.user.id,
         coverImage: data.coverImage,
         unsplashId: data.unsplashId,
+        unsplashUsername: data.unsplashUsername,
       })
       .returning({ id: wishlists.id });
 
@@ -139,6 +142,7 @@ export async function getWishlist(id: string) {
       shareId: wishlists.shareId,
       coverImage: wishlists.coverImage,
       unsplashId: wishlists.unsplashId,
+      unsplashUsername: wishlists.unsplashUsername,
     })
     .from(wishlists)
     .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)))
@@ -191,6 +195,7 @@ export async function getSharedWishlist(shareId: string) {
       userId: wishlists.userId,
       coverImage: wishlists.coverImage,
       unsplashId: wishlists.unsplashId,
+      unsplashUsername: wishlists.unsplashUsername,
     })
     .from(wishlists)
     .where(and(eq(wishlists.shareId, shareId), eq(wishlists.shared, true)))
@@ -203,6 +208,7 @@ export async function updateWishlist(
     title: string;
     coverImage: string | null;
     unsplashId: string | null;
+    unsplashUsername: string | null;
   }
 ) {
   try {
@@ -215,6 +221,7 @@ export async function updateWishlist(
         title: data.title,
         coverImage: data.coverImage,
         unsplashId: data.unsplashId,
+        unsplashUsername: data.unsplashUsername,
       })
       .where(and(eq(wishlists.id, id), eq(wishlists.userId, session.user.id)));
 

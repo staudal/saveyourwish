@@ -9,6 +9,9 @@ export interface UnsplashSearchResponse {
     links: {
       download_location: string;
     };
+    user: {
+      name: string;
+    };
   }>;
 }
 
@@ -23,7 +26,7 @@ export async function searchUnsplash(query: string, page = 1, perPage = 8) {
     throw new Error("Failed to fetch images");
   }
 
-  return response.json();
+  return response.json() as Promise<UnsplashSearchResponse>;
 }
 
 export async function trackDownload(downloadLocation: string) {

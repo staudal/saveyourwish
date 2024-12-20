@@ -17,6 +17,7 @@ export const wishlistSchema = z.object({
       imageUrl: z.string().nullable(),
     })
   ),
+  unsplashUsername: z.string().nullable(),
 });
 
 export type Wishlist = z.infer<typeof wishlistSchema>;
