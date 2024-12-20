@@ -31,7 +31,11 @@ export const formSchema = z.object({
   ),
   currency: z.enum(CURRENCIES.map((c) => c.value) as [string, ...string[]]),
   imageUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  destinationUrl: z.string().url("Must be a valid URL"),
+  destinationUrl: z
+    .string()
+    .url("Must be a valid URL")
+    .optional()
+    .or(z.literal("")),
   description: z.string().max(1000).optional(),
   quantity: z.preprocess(
     (val) => (val === "" || isNaN(Number(val)) ? 1 : Number(val)),
@@ -193,7 +197,7 @@ export function WishForm({
       setLocalIsLoadingImages(true);
       setLocalAvailableImages([]);
       try {
-        const result = await getUrlMetadata(form.watch("destinationUrl"));
+        const result = await getUrlMetadata(form.watch("destinationUrl") || "");
         if (result.success && result.data?.images?.length) {
           setLocalAvailableImages(result.data.images);
         }
